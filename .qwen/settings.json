@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/gafardgnane/Downloads/claudy/**)",
+      "Bash(git checkout *)"
+    ]
+  },
+  "$version": 3
+}
