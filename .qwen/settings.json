@@ -10,7 +10,11 @@
       "Bash(tr *)",
       "Bash(iconv *)",
       "Bash(mv *)",
-      "Bash(python3 *)"
+      "Bash(python3 *)",
+      "Bash(git add *)",
+      "Bash(ls *)",
+      "Bash(rm *)",
+      "Bash(git commit *)"
     ]
   },
   "$version": 3
