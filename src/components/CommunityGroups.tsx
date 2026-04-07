@@ -452,7 +452,7 @@ function GroupDetailTabs({
   setDetailCallLink: (val: string) => void;
   setFeedback: (val: string | null) => void;
 }) {
-  const [activeTab, setActiveTab] = useState<'discussion' | 'members' | 'about'>('discussion');
+  const [activeTab, setActiveTab] = useState<'salon' | 'programme' | 'members' | 'about'>('salon');
 
   const isAdmin = isGroupAdmin(selectedGroup, actor.deviceId);
   const isCreator = selectedGroup.created_by_device_id === actor.deviceId;
@@ -460,477 +460,429 @@ function GroupDetailTabs({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-3">
-        <button
-          type="button"
-          onClick={onCloseGroupPage}
-          className="inline-flex items-center gap-2 rounded-full border border-[#e5e7eb] bg-white px-4 py-2.5 text-xs font-semibold text-[#475467] transition hover:border-[#d0d5dd] hover:text-[#111827]"
-        >
-          ← Retour
-        </button>
+      {/* 1. Header Workspace */}
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={onCloseGroupPage}
+            className="grid h-10 w-10 place-items-center rounded-xl border border-[#e6e8ec] bg-white text-[#667085] transition hover:text-[#101828] hover:border-[#d0d5dd]"
+          >
+            ←
+          </button>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-black uppercase tracking-[0.14em] text-[#c89f2d]">
+                {renderTypeLabel(selectedGroup.group_type)}
+              </span>
+              {selectedGroup.is_paid && (
+                <span className="h-1 w-1 rounded-full bg-[#cbd5e1]" />
+              )}
+              {selectedGroup.is_paid && (
+                <span className="text-[10px] font-black uppercase tracking-[0.14em] text-[#b54708]">
+                  FORMATION PAYANTE
+                </span>
+              )}
+            </div>
+            <h1 className="text-xl font-black tracking-tight text-[#101828] sm:text-2xl">
+              {selectedGroup.name}
+            </h1>
+          </div>
+        </div>
 
-        <button
-          type="button"
-          onClick={() => onShareGroup(selectedGroup.id)}
-          className="inline-flex items-center gap-2 rounded-full border border-[#e5e7eb] bg-white px-4 py-2.5 text-xs font-semibold text-[#475467] transition hover:border-[#d0d5dd] hover:text-[#111827]"
-        >
-          <Link2 size={14} />
-          Partager
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => onShareGroup(selectedGroup.id)}
+            className="inline-flex h-10 items-center gap-2 rounded-xl border border-[#e6e8ec] bg-white px-4 text-xs font-bold text-[#667085] transition hover:text-[#101828]"
+          >
+            <Link2 size={14} />
+            Partager l'espace
+          </button>
+        </div>
       </div>
 
-      {/* HERO */}
-      <div className="overflow-hidden rounded-[32px] border border-[#e9eaeb] bg-white shadow-[0_20px_45px_rgba(16,24,40,0.06)]">
-        <div className="bg-[linear-gradient(135deg,#fff7e8_0%,#ffffff_55%,#f8fafc_100%)] px-6 py-6 sm:px-8">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-            <div className="flex min-w-0 items-start gap-4">
-              <div className="flex h-[74px] w-[74px] shrink-0 items-center justify-center rounded-[24px] bg-[#111827] text-xl font-black text-white shadow-lg">
-                {initials(selectedGroup.name)}
-              </div>
-
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full bg-[#f2f4f7] px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#667085]">
-                    {renderTypeLabel(selectedGroup.group_type)}
-                  </span>
-
-                  {selectedGroup.is_paid && (
-                    <span className="rounded-full bg-[#fff4e5] px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#b54708]">
-                      Premium · {selectedGroup.price} FCFA
-                    </span>
-                  )}
-
-                  {hasLiveCall && (
-                    <span className="rounded-full bg-rose-500 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-white animate-pulse">
-                      En direct
-                    </span>
-                  )}
+      {/* 2. Bandeau Session / Live */}
+      <div className="overflow-hidden rounded-[32px] border border-[#e9eaeb] bg-white shadow-[0_12px_30px_rgba(16,24,40,0.04)]">
+        <div className="flex flex-col lg:flex-row lg:items-stretch">
+          <div className="flex-1 p-6 sm:p-8">
+            <div className="flex items-center gap-3">
+              {hasLiveCall ? (
+                <div className="flex items-center gap-2 rounded-full bg-rose-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-rose-600">
+                  <span className="h-2 w-2 animate-pulse rounded-full bg-rose-500" />
+                  Session en direct
                 </div>
-
-                <h1 className="mt-3 text-3xl font-black tracking-tight text-[#101828]">
-                  {selectedGroup.name}
-                </h1>
-
-                <p className="mt-3 max-w-3xl text-sm leading-7 text-[#667085]">
-                  {selectedGroup.description || 'Espace de groupe, d’appel et de formation chrétienne.'}
-                </p>
-              </div>
+              ) : (
+                <div className="flex items-center gap-2 rounded-full bg-slate-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
+                  Prochaine session
+                </div>
+              )}
             </div>
 
-            <div className="flex flex-wrap gap-3">
-              {isAdmin ? (
-                <button
-                  type="button"
-                  onClick={() => void onStartGroupCall()}
-                  disabled={callBusy}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-[#111827] px-5 py-3 text-sm font-bold text-white shadow-[0_16px_32px_rgba(17,24,39,0.18)] transition hover:translate-y-[-1px] disabled:opacity-60"
-                >
-                  {callBusy ? <Loader2 size={16} className="animate-spin" /> : '📞'}
-                  {hasLiveCall ? "Ouvrir l'appel" : 'Lancer une session'}
-                </button>
-              ) : hasLiveCall && currentUserStatus === 'approved' ? (
-                <button
-                  type="button"
-                  onClick={onOpenCallRoom}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-rose-500 px-5 py-3 text-sm font-bold text-white shadow-[0_16px_32px_rgba(244,63,94,0.2)] transition hover:translate-y-[-1px]"
-                >
-                  Rejoindre l’appel
-                </button>
-              ) : null}
-            </div>
-          </div>
-
-          {/* KPIs */}
-          <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <div className="rounded-2xl border border-[#eaecf0] bg-white px-4 py-4">
-              <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#98a2b3]">Membres</div>
-              <div className="mt-2 text-2xl font-black text-[#101828]">{selectedGroup.members_count}</div>
-            </div>
-
-            <div className="rounded-2xl border border-[#eaecf0] bg-white px-4 py-4">
-              <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#98a2b3]">Accès</div>
-              <div className="mt-2 text-sm font-bold text-[#101828]">
-                {selectedGroup.is_paid ? 'Formation payante' : 'Accès gratuit'}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-[#eaecf0] bg-white px-4 py-4">
-              <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#98a2b3]">Prochaine session</div>
-              <div className="mt-2 text-sm font-bold text-[#101828]">
-                {selectedGroup.next_call_at ? formatWhen(selectedGroup.next_call_at) : 'Non planifiée'}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-[#eaecf0] bg-white px-4 py-4">
-              <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#98a2b3]">Format</div>
-              <div className="mt-2 text-sm font-bold text-[#101828]">
-                Appel · Chat · Bible sync
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* JOIN / ACCESS */}
-      {!selectedGroup.joined ? (
-        <div className="rounded-[28px] border border-[#e9eaeb] bg-white p-6 shadow-[0_20px_45px_rgba(16,24,40,0.05)]">
-          {selectedGroup.is_paid && (
-            <div className="mb-4 rounded-2xl border border-[#fedf89] bg-[#fffaeb] p-4">
-              <div className="mb-2 text-[11px] font-black uppercase tracking-[0.14em] text-[#b54708]">
-                Accès formation
-              </div>
-              <input
-                type="text"
-                placeholder="Clé d'accès (CHARIS-XXXXX)"
-                value={passCodeInput}
-                onChange={(e) => setPassCodeInput(e.target.value.toUpperCase())}
-                className="w-full rounded-xl border border-[#f5d08a] bg-white px-4 py-3 text-sm font-semibold text-[#101828] outline-none focus:ring-2 focus:ring-[#fdb022]/25"
-              />
-            </div>
-          )}
-
-          <button
-            type="button"
-            disabled={!!actionState[selectedGroup.id]}
-            onClick={() => onJoin(selectedGroup.id, passCodeInput)}
-            className="w-full rounded-2xl bg-[#111827] px-6 py-3.5 text-sm font-bold text-white shadow-[0_16px_32px_rgba(17,24,39,0.16)] transition hover:translate-y-[-1px] disabled:opacity-50"
-          >
-            {selectedGroup.is_paid ? "Valider l'accès" : 'Rejoindre ce groupe'}
-          </button>
-        </div>
-      ) : (
-        <div className="rounded-[28px] border border-[#e9eaeb] bg-white p-4 shadow-[0_20px_45px_rgba(16,24,40,0.05)]">
-          <button
-            type="button"
-            disabled={!!actionState[selectedGroup.id]}
-            onClick={() => onLeave(selectedGroup.id)}
-            className="w-full rounded-2xl border border-[#eaecf0] bg-white px-6 py-3.5 text-sm font-semibold text-[#475467] transition hover:border-rose-200 hover:text-rose-600 disabled:opacity-50"
-          >
-            Quitter le groupe
-          </button>
-        </div>
-      )}
-
-      {/* SESSION PANEL */}
-      <div className="rounded-[32px] border border-[#e9eaeb] bg-white p-6 shadow-[0_20px_45px_rgba(16,24,40,0.05)]">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-          <div className="min-w-0 flex-1">
-            <div className="text-[11px] font-black uppercase tracking-[0.14em] text-[#98a2b3]">
-              Session & pilotage
-            </div>
-            <h2 className="mt-2 text-2xl font-black tracking-tight text-[#101828]">
-              Prochaine session
+            <h2 className="mt-4 text-2xl font-black tracking-tight text-[#101828]">
+              {hasLiveCall ? "Rejoignez l'enseignement en cours" : (selectedGroup.next_call_at ? formatWhen(selectedGroup.next_call_at) : 'Aucun rendez-vous planifié')}
             </h2>
-            <p className="mt-2 text-sm leading-7 text-[#667085]">
-              Planifie l’appel, définis le déroulé et prépare les points à aborder avec ton groupe.
+            
+            <p className="mt-2 text-sm leading-6 text-[#667085]">
+              {hasLiveCall 
+                ? "Plusieurs membres sont déjà connectés. Entrez dans la salle pour participer à la session biblique."
+                : "Consultez le déroulé de la session dans l'onglet Programme pour vous préparer."
+              }
             </p>
           </div>
 
-          {selectedGroup.next_call_at && (
-            <div className="rounded-2xl bg-[#f8fafc] px-4 py-3 text-sm font-bold text-[#101828] border border-[#eaecf0]">
-              {formatWhen(selectedGroup.next_call_at)}
-            </div>
-          )}
-        </div>
-
-        <div className="mt-6 grid gap-4 lg:grid-cols-2">
-          <div className="rounded-2xl border border-[#eaecf0] bg-[#fcfcfd] p-4">
-            <label className="block">
-              <span className="mb-2 block text-[11px] font-bold uppercase tracking-[0.14em] text-[#98a2b3]">
-                Description
-              </span>
-              <textarea
-                value={detailDescription}
-                onChange={(event) => setDetailDescription(event.target.value)}
-                rows={3}
-                placeholder="Décris l’objectif de la session ou de la formation..."
-                className="w-full resize-none rounded-xl border border-[#eaecf0] bg-white px-4 py-3 text-sm text-[#101828] outline-none focus:ring-2 focus:ring-[#d6bbfb]/25"
-              />
-            </label>
-          </div>
-
-          <div className="rounded-2xl border border-[#eaecf0] bg-[#fcfcfd] p-4">
-            <label className="block">
-              <span className="mb-2 block text-[11px] font-bold uppercase tracking-[0.14em] text-[#98a2b3]">
-                Date & heure
-              </span>
-              <input
-                value={detailNextCallAt}
-                onChange={(event) => setDetailNextCallAt(event.target.value)}
-                type="datetime-local"
-                className="w-full rounded-xl border border-[#eaecf0] bg-white px-4 py-3 text-sm text-[#101828] outline-none focus:ring-2 focus:ring-[#d6bbfb]/25"
-              />
-            </label>
-
-            <div className="mt-4">
-              <span className="mb-2 block text-[11px] font-bold uppercase tracking-[0.14em] text-[#98a2b3]">
-                Plateforme d’appel
-              </span>
-              <div className="grid grid-cols-2 gap-2">
-                {(['google_meet', 'facetime', 'skype', 'other'] as CommunityCallProvider[]).map((prov) => (
+          <div className="flex flex-col justify-center border-t border-[#f2f4f7] bg-[#fcfcfd] p-6 lg:w-[280px] lg:border-l lg:border-t-0 sm:p-8">
+            {isAdmin ? (
+              <button
+                type="button"
+                onClick={() => void onStartGroupCall()}
+                disabled={callBusy}
+                className="w-full rounded-2xl bg-[#161c35] px-6 py-4 text-sm font-black text-white shadow-[0_12px_24px_rgba(22,28,53,0.15)] transition hover:translate-y-[-1px] disabled:opacity-60"
+              >
+                {callBusy ? <Loader2 size={16} className="animate-spin" /> : (hasLiveCall ? "Ouvrir la salle" : "Lancer la session")}
+              </button>
+            ) : (
+              selectedGroup.joined ? (
+                hasLiveCall ? (
                   <button
-                    key={prov}
                     type="button"
-                    onClick={() => setDetailCallProvider(prov)}
-                    className={`rounded-xl px-3 py-2 text-[11px] font-bold uppercase transition ${
-                      detailCallProvider === prov
-                        ? 'bg-[#111827] text-white'
-                        : 'border border-[#eaecf0] bg-white text-[#667085] hover:border-[#d0d5dd]'
-                    }`}
+                    onClick={onOpenCallRoom}
+                    className="w-full rounded-2xl bg-rose-600 px-6 py-4 text-sm font-black text-white shadow-[0_12px_24px_rgba(244,63,94,0.15)] transition hover:translate-y-[-1px]"
                   >
-                    {prov.replace('_', ' ')}
+                    Entrer dans la session
                   </button>
-                ))}
-              </div>
-
-              <input
-                value={detailCallLink}
-                onChange={(e) => setDetailCallLink(e.target.value)}
-                placeholder="Lien d’appel externe (optionnel)"
-                className="mt-3 w-full rounded-xl border border-[#eaecf0] bg-white px-4 py-3 text-sm text-[#101828] outline-none focus:ring-2 focus:ring-[#d6bbfb]/25"
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-4 rounded-2xl border border-[#eaecf0] bg-[#fcfcfd] p-4">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#98a2b3]">
-              Programme de session
-            </span>
-            <span className="text-xs font-bold text-[#667085]">
-              {sessionTasks.length} point{sessionTasks.length > 1 ? 's' : ''}
-            </span>
-          </div>
-
-          <div className="mt-4 space-y-2">
-            {sessionTasks.map((task, idx) => (
-              <div key={idx} className="flex items-center gap-3 rounded-xl border border-[#eaecf0] bg-white px-3 py-3">
-                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#f2f4f7] text-[10px] font-black text-[#111827]">
-                  {idx + 1}
+                ) : (
+                  <div className="text-center text-xs font-bold text-[#98a2b3]">
+                    En attente du lancement
+                  </div>
+                )
+              ) : (
+                <div className="text-center text-xs font-bold text-[#c89f2d]">
+                  Rejoins l'espace pour participer
                 </div>
-                <div className="flex-1 text-sm font-medium text-[#101828]">{task}</div>
-                <button
-                  type="button"
-                  onClick={() => setSessionTasks(prev => prev.filter((_, i) => i !== idx))}
-                  className="text-[#98a2b3] transition hover:text-rose-500"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-4 flex gap-2">
-            <input
-              value={taskDraft}
-              onChange={(e) => setTaskDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && taskDraft.trim()) {
-                  setSessionTasks(prev => [...prev, taskDraft.trim()]);
-                  setTaskDraft('');
-                }
-              }}
-              placeholder="Ajouter un point à traiter..."
-              className="h-11 flex-1 rounded-xl border border-[#eaecf0] bg-white px-4 text-sm text-[#101828] outline-none focus:ring-2 focus:ring-[#d6bbfb]/25"
-            />
-            <button
-              type="button"
-              onClick={() => {
-                if (taskDraft.trim()) {
-                  setSessionTasks(prev => [...prev, taskDraft.trim()]);
-                  setTaskDraft('');
-                }
-              }}
-              disabled={!taskDraft.trim()}
-              className="h-11 rounded-xl bg-[#111827] px-4 text-sm font-bold text-white disabled:opacity-40"
-            >
-              Ajouter
-            </button>
+              )
+            )}
           </div>
         </div>
-
-        {isAdmin && (
-          <button
-            type="button"
-            onClick={onSaveGroupSettings}
-            disabled={savingGroupState}
-            className="mt-5 w-full rounded-2xl bg-[#111827] px-6 py-3.5 text-sm font-bold text-white shadow-[0_16px_32px_rgba(17,24,39,0.14)] transition hover:translate-y-[-1px] disabled:opacity-60"
-          >
-            {savingGroupState ? 'Enregistrement...' : 'Enregistrer la session'}
-          </button>
-        )}
       </div>
 
-      {/* CONTENT TABS */}
-      <div className="rounded-[32px] border border-[#e9eaeb] bg-white shadow-[0_20px_45px_rgba(16,24,40,0.05)]">
-        <div className="flex border-b border-[#eaecf0]">
-          {[
-            { key: 'discussion', label: 'Discussion' },
-            { key: 'members', label: 'Membres' },
-            { key: 'about', label: 'Présentation' },
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              type="button"
-              onClick={() => setActiveTab(tab.key as 'discussion' | 'members' | 'about')}
-              className={`flex-1 px-4 py-4 text-sm font-bold transition ${
-                activeTab === tab.key
-                  ? 'text-[#111827] border-b-2 border-[#111827]'
-                  : 'text-[#667085] hover:text-[#111827]'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+      {/* 3. Layout Principal 2 Colonnes */}
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
+        
+        {/* Colonne GAUCHE (Main Content) */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="overflow-hidden rounded-[32px] border border-[#e9eaeb] bg-white shadow-[0_12px_24px_rgba(16,24,40,0.03)]">
+            <div className="flex border-b border-[#f2f4f7] bg-[#fcfcfd]/50">
+              {[
+                { key: 'salon', label: 'Salon' },
+                { key: 'programme', label: 'Programme' },
+              ].map((tab) => (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => setActiveTab(tab.key as any)}
+                  className={`relative px-8 py-4 text-xs font-black uppercase tracking-[0.14em] transition ${
+                    activeTab === tab.key
+                      ? 'text-[#161c35]'
+                      : 'text-[#98a2b3] hover:text-[#667085]'
+                  }`}
+                >
+                  {tab.label}
+                  {activeTab === tab.key && (
+                    <div className="absolute bottom-0 left-8 right-8 h-1 rounded-t-full bg-[#161c35]" />
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <div className="p-1 sm:p-4">
+              {activeTab === 'salon' && (
+                !selectedGroup.joined ? (
+                  <div className="p-8 text-center">
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#f9fafb] text-2xl">
+                      🔒
+                    </div>
+                    <h3 className="mt-4 font-black text-[#101828]">Salon réservé aux membres</h3>
+                    <p className="mt-2 text-sm text-[#667085]">
+                      Rejoignez cet espace pour participer aux échanges et poser vos questions.
+                    </p>
+                  </div>
+                ) : (
+                  currentUserStatus === 'pending' ? (
+                    <div className="p-8 text-center">
+                      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#fffbeb] text-2xl">
+                        ⏳
+                      </div>
+                      <h3 className="mt-4 font-black text-[#101828]">Demande en attente</h3>
+                      <p className="mt-2 text-sm text-[#667085]">
+                        Un administrateur doit valider votre accès au salon.
+                      </p>
+                    </div>
+                  ) : (
+                    <CommunityGroupChat groupId={selectedGroup.id} actor={actor} />
+                  )
+                )
+              )}
+
+              {activeTab === 'programme' && (
+                <div className="p-4 sm:p-6 space-y-8">
+                  <div>
+                    <div className="text-[10px] font-black uppercase tracking-[0.14em] text-[#98a2b3]">Objectifs</div>
+                    <h3 className="mt-2 text-lg font-black text-[#101828]">Déroulé de la session</h3>
+                    <p className="mt-2 text-sm leading-7 text-[#667085]">
+                      Voici les points clés qui seront abordés durant la rencontre.
+                    </p>
+                  </div>
+
+                  <div className="space-y-3">
+                    {sessionTasks.length > 0 ? sessionTasks.map((task, idx) => (
+                      <div key={idx} className="flex items-center gap-4 rounded-2xl border border-[#f2f4f7] bg-white p-4">
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#f8fafc] text-[11px] font-black text-[#161c35] border border-[#e2e8f0]">
+                          {idx + 1}
+                        </div>
+                        <div className="flex-1 text-sm font-bold text-[#344054]">{task}</div>
+                        {isAdmin && (
+                          <button
+                            type="button"
+                            onClick={() => setSessionTasks(prev => prev.filter((_, i) => i !== idx))}
+                            className="text-[#98a2b3] hover:text-rose-500"
+                          >
+                            <X size={16} />
+                          </button>
+                        )}
+                      </div>
+                    )) : (
+                      <div className="rounded-2xl border-2 border-dashed border-[#f2f4f7] p-8 text-center text-sm font-medium text-[#98a2b3]">
+                        Aucun point inscrit au programme pour le moment.
+                      </div>
+                    )}
+                  </div>
+
+                  {isAdmin && (
+                    <div className="pt-4 border-t border-[#f2f4f7]">
+                       <div className="flex gap-2">
+                        <input
+                          value={taskDraft}
+                          onChange={(e) => setTaskDraft(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && taskDraft.trim()) {
+                              setSessionTasks(prev => [...prev, taskDraft.trim()]);
+                              setTaskDraft('');
+                            }
+                          }}
+                          placeholder="Ajouter un point au programme..."
+                          className="h-11 flex-1 rounded-xl border border-[#e6e8ec] bg-[#fcfcfd] px-4 text-sm font-medium text-[#101828] outline-none focus:border-[#161c35]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (taskDraft.trim()) {
+                              setSessionTasks(prev => [...prev, taskDraft.trim()]);
+                              setTaskDraft('');
+                            }
+                          }}
+                          disabled={!taskDraft.trim()}
+                          className="h-11 rounded-xl bg-[#161c35] px-4 text-xs font-black uppercase tracking-[0.1em] text-white disabled:opacity-40"
+                        >
+                          Ajouter
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
-        <div className="p-6">
-          {activeTab === 'discussion' && (
-            currentUserStatus === 'pending' ? (
-              <div className="rounded-2xl border border-[#fedf89] bg-[#fffaeb] p-6 text-center">
-                <div className="text-3xl">⏳</div>
-                <h3 className="mt-3 font-bold text-[#101828]">Validation en cours</h3>
-                <p className="mt-2 text-sm text-[#667085]">
-                  Un administrateur doit valider votre adhésion avant l’accès complet au groupe.
-                </p>
-              </div>
-            ) : (
-              <CommunityGroupChat groupId={selectedGroup.id} actor={actor} />
-            )
+        {/* Colonne DROITE (Sidebar) */}
+        <div className="space-y-6">
+          {/* Section Rejoindre si non membre */}
+          {!selectedGroup.joined && (
+             <div className="rounded-[32px] border border-[#e9eaeb] bg-white p-6 shadow-[0_12px_24px_rgba(16,24,40,0.03)]">
+                <div className="text-[10px] font-black uppercase tracking-[0.14em] text-[#c89f2d]">Accès</div>
+                <h3 className="mt-2 text-lg font-black text-[#101828]">Rejoindre l'espace</h3>
+                
+                {selectedGroup.is_paid && (
+                  <div className="mt-4 space-y-3">
+                    <p className="text-xs font-bold text-[#b54708]">Clé requise pour cette formation</p>
+                    <input
+                      type="text"
+                      placeholder="CHARIS-XXXXX"
+                      value={passCodeInput}
+                      onChange={(e) => setPassCodeInput(e.target.value.toUpperCase())}
+                      className="w-full rounded-xl border border-[#fedf89] bg-[#fffcf5] px-4 py-3 text-sm font-bold text-[#101828] outline-none"
+                    />
+                  </div>
+                )}
+
+                <button
+                  onClick={() => onJoin(selectedGroup.id, passCodeInput)}
+                  disabled={!!actionState[selectedGroup.id]}
+                  className="mt-6 w-full rounded-2xl bg-[#161c35] py-4 text-sm font-black text-white transition hover:-translate-y-[1px]"
+                >
+                  {selectedGroup.is_paid ? "Valider mon code" : "Rejoindre l'espace"}
+                </button>
+             </div>
           )}
 
-          {activeTab === 'members' && (
-            <div className="space-y-3">
-              {groupMembers.map((member) => {
-                const isMe = member.device_id === actor.deviceId;
-                const joinedAt = formatWhen(member.joined_at);
+          {/* Section Présentation */}
+          <div className="rounded-[32px] border border-[#e9eaeb] bg-white p-6 shadow-[0_12px_24px_rgba(16,24,40,0.03)]">
+            <div className="flex border-b border-[#f2f4f7] -mx-6 px-6 pb-2 mb-4">
+              {[
+                { key: 'about', label: 'Présentation' },
+                { key: 'members', label: 'Membres' },
+              ].map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key as any)}
+                  className={`mr-4 pb-2 text-[10px] font-black uppercase tracking-[0.14em] transition ${
+                    (activeTab === tab.key || (activeTab === 'salon' && tab.key === 'about') || (activeTab === 'programme' && tab.key === 'about'))
+                    ? 'text-[#161c35] border-b-2 border-[#161c35]' 
+                    : 'text-[#98a2b3]'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
 
-                return (
-                  <div
-                    key={`${member.group_id}-${member.device_id}`}
-                    className="flex items-center justify-between rounded-2xl border border-[#eaecf0] bg-[#fcfcfd] px-4 py-4"
-                  >
-                    <div className="flex min-w-0 items-center gap-3">
-                      <div className="grid h-11 w-11 place-items-center rounded-xl bg-[#111827] text-xs font-bold text-white">
+            {activeTab === 'members' ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between text-[11px] font-bold text-[#667085]">
+                  <span>{groupMembers.length} Personnes</span>
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                </div>
+                <div className="max-h-[320px] overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+                  {groupMembers.map((member) => (
+                    <div key={member.device_id} className="flex items-center gap-3 p-2 rounded-xl border border-[#f9fafb] bg-[#fcfcfd]">
+                      <div className="h-8 w-8 shrink-0 rounded-lg bg-[#161c35] text-[10px] font-black text-white flex items-center justify-center">
                         {initials(member.display_name)}
                       </div>
-                      <div className="min-w-0">
-                        <div className="truncate text-sm font-bold text-[#101828]">
-                          {member.display_name}
-                        </div>
-                        <div className="text-xs text-[#667085]">
-                          {joinedAt || member.device_id.slice(0, 8)}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      {member.device_id === selectedGroup.created_by_device_id && (
-                        <span className="rounded-full bg-[#fff4e5] px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#b54708]">
-                          Créateur
-                        </span>
-                      )}
-
-                      {member.device_id !== selectedGroup.created_by_device_id &&
-                        selectedGroup.admin_ids?.includes(member.device_id) && (
-                          <span className="rounded-full bg-[#eff8ff] px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#175cd3]">
-                            Admin
-                          </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-xs font-bold text-[#101828]">{member.display_name}</div>
+                        {selectedGroup.admin_ids?.includes(member.device_id) && (
+                          <div className="text-[9px] font-black text-[#c89f2d] uppercase">Administrateur</div>
                         )}
-
-                      {isMe && (
-                        <span className="rounded-full bg-[#ecfdf3] px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#027a48]">
-                          Vous
-                        </span>
-                      )}
-
-                      {isAdmin && member.status === 'pending' && !isMe && (
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => onModerate(member.device_id, 'approve')}
-                            className="rounded-xl bg-[#ecfdf3] px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-[#027a48]"
-                          >
-                            Accepter
-                          </button>
-                          <button
-                            onClick={() => onModerate(member.device_id, 'reject')}
-                            className="rounded-xl bg-[#fef3f2] px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-[#d92d20]"
-                          >
-                            Refuser
-                          </button>
-                        </div>
+                      </div>
+                      {isAdmin && member.status === 'pending' && member.device_id !== actor.deviceId && (
+                        <button 
+                          onClick={() => onModerate(member.device_id, 'approve')}
+                          className="h-6 w-6 rounded-md bg-emerald-50 text-emerald-600 grid place-items-center hover:bg-emerald-100"
+                        >
+                          ✓
+                        </button>
                       )}
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {activeTab === 'about' && (
-            <div className="space-y-4">
-              <div className="rounded-2xl border border-[#eaecf0] bg-[#fcfcfd] p-5">
-                <p className="text-sm leading-7 text-[#667085]">
-                  {selectedGroup.description || 'Aucune présentation disponible pour ce groupe.'}
-                </p>
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-2xl border border-[#eaecf0] bg-[#fcfcfd] p-4">
-                  <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#98a2b3]">Créé par</div>
-                  <div className="mt-2 text-sm font-bold text-[#101828]">{selectedGroup.created_by_name || '—'}</div>
-                </div>
-
-                <div className="rounded-2xl border border-[#eaecf0] bg-[#fcfcfd] p-4">
-                  <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#98a2b3]">Type</div>
-                  <div className="mt-2 text-sm font-bold text-[#101828]">{renderTypeLabel(selectedGroup.group_type)}</div>
+                  ))}
                 </div>
               </div>
-
-              {isCreator && selectedGroup.is_paid && (
-                <div className="rounded-2xl border border-[#fedf89] bg-[#fffaeb] p-4">
-                  <div className="text-[11px] font-black uppercase tracking-[0.14em] text-[#b54708]">
-                    Clé d’accès formation
-                  </div>
-                  <div className="mt-3 flex items-center justify-between gap-3">
-                    <div className="text-lg font-black tracking-wider text-[#7a2e0e]">
-                      {selectedGroup.pass_code}
-                    </div>
-                    <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(selectedGroup.pass_code || '');
-                        setFeedback(`Clé d'accès copiée : ${selectedGroup.pass_code}`);
-                      }}
-                      className="rounded-xl bg-[#f79009] px-4 py-2 text-[11px] font-black uppercase tracking-[0.14em] text-white"
-                    >
-                      Copier
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {isCreator && (
-                <div className="border-t border-[#eaecf0] pt-6">
-                  <div className="mb-3 text-[11px] font-black uppercase tracking-[0.14em] text-rose-600">
-                    Zone de danger
-                  </div>
-                  <p className="mb-4 text-sm leading-6 text-[#667085]">
-                    La suppression du groupe est définitive et retire la salle, les membres et les échanges liés.
+            ) : (
+              <div className="space-y-4">
+                {isAdmin ? (
+                  <textarea
+                    value={detailDescription}
+                    onChange={(e) => setDetailDescription(e.target.value)}
+                    rows={6}
+                    className="w-full resize-none rounded-2xl border border-[#e6e8ec] bg-[#fcfcfd] p-4 text-sm font-medium text-[#475467] outline-none focus:border-[#161c35]"
+                    placeholder="Présente l'espace de formation..."
+                  />
+                ) : (
+                  <p className="text-sm leading-7 text-[#667085]">
+                     {selectedGroup.description || "Cet espace n'a pas encore de présentation officielle."}
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => setShowDeleteConfirm(true)}
-                    disabled={actionState[selectedGroup.id]}
-                    className="inline-flex items-center gap-2 rounded-2xl bg-[#fef3f2] px-5 py-3 text-sm font-bold text-[#d92d20] border border-[#fecdca]"
-                  >
-                    <Trash2 size={16} />
-                    Supprimer le groupe
-                  </button>
+                )}
+                
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                    <div className="text-[9px] font-black text-[#98a2b3] uppercase">Créé par</div>
+                    <div className="mt-1 text-xs font-bold text-[#161c35] truncate">{selectedGroup.created_by_name}</div>
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                    <div className="text-[9px] font-black text-[#98a2b3] uppercase">Membres</div>
+                    <div className="mt-1 text-xs font-bold text-[#161c35]">{selectedGroup.members_count} actifs</div>
+                  </div>
                 </div>
-              )}
+
+                {isAdmin && (
+                  <button
+                    onClick={onSaveGroupSettings}
+                    disabled={savingGroupState}
+                    className="w-full rounded-2xl bg-[#161c35] py-3 text-xs font-black uppercase tracking-[0.1em] text-white transition hover:-translate-y-[1px]"
+                  >
+                    {savingGroupState ? "Mise à jour..." : "Enregistrer les modifications"}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Pilotage Admin (Date & Provider) */}
+          {isAdmin && (
+            <div className="rounded-[32px] border border-[#e9eaeb] bg-white p-6 shadow-[0_12px_24px_rgba(16,24,40,0.03)]">
+               <div className="text-[10px] font-black uppercase tracking-[0.14em] text-[#c89f2d]">Pilotage</div>
+               <h3 className="mt-2 text-lg font-black text-[#101828]">Gestion des sessions</h3>
+               
+               <div className="mt-4 space-y-4">
+                  <label>
+                    <span className="block text-[10px] font-black uppercase text-[#98a2b3] mb-1">Date & Heure</span>
+                    <input 
+                      type="datetime-local"
+                      value={detailNextCallAt}
+                      onChange={(e) => setDetailNextCallAt(e.target.value)}
+                      className="w-full rounded-xl border border-[#e6e8ec] bg-[#fcfcfd] px-4 py-3 text-xs font-bold text-[#101828]"
+                    />
+                  </label>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    {(['google_meet', 'facetime', 'skype', 'other'] as CommunityCallProvider[]).map((prov) => (
+                      <button
+                        key={prov}
+                        type="button"
+                        onClick={() => setDetailCallProvider(prov)}
+                        className={`rounded-xl py-2.5 text-[9px] font-black uppercase tracking-wider transition ${
+                          detailCallProvider === prov
+                            ? 'bg-[#161c35] text-white shadow-md'
+                            : 'bg-slate-50 text-slate-400 border border-slate-100 hover:border-slate-300'
+                        }`}
+                      >
+                        {prov.replace('_', ' ')}
+                      </button>
+                    ))}
+                  </div>
+
+                  <input
+                    value={detailCallLink}
+                    onChange={(e) => setDetailCallLink(e.target.value)}
+                    placeholder="Lien d'appel direct (optionnel)"
+                    className="w-full rounded-xl border border-[#e6e8ec] bg-[#fcfcfd] px-4 py-3 text-xs font-bold text-[#101828]"
+                  />
+               </div>
             </div>
           )}
+
+          {/* Zone de danger / Actions secondaires */}
+          <div className="rounded-[32px] border border-[#e9eaeb] bg-white p-4 shadow-[0_12px_24px_rgba(16,24,40,0.03)]">
+             {selectedGroup.joined && (
+               <button
+                 onClick={() => onLeave(selectedGroup.id)}
+                 className="flex w-full items-center justify-between p-2 text-xs font-black uppercase tracking-wider text-[#667085] hover:text-rose-600 transition"
+               >
+                 Quitter cet espace
+                 <span>→</span>
+               </button>
+             )}
+             
+             {isCreator && (
+               <button
+                 onClick={() => setShowDeleteConfirm(true)}
+                 className="mt-2 flex w-full items-center justify-between p-2 text-xs font-black uppercase tracking-wider text-rose-400 hover:text-rose-600 transition"
+               >
+                 Supprimer l'espace
+                 <Trash2 size={14} />
+               </button>
+             )}
+          </div>
         </div>
       </div>
     </div>
@@ -1788,31 +1740,9 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
                 </h1>
 
                 <p className="mt-8 max-w-2xl text-lg font-medium leading-relaxed text-[#4b556f] lg:text-xl">
-                  Réunissez des croyants, organisez des appels en direct, animez des groupes d’étude
+                  Réunissez des croyants, organisez des appels en direct, animez des groupes d'étude
                   et proposez des formations chrétiennes gratuites ou payantes dans un environnement dédié.
                 </p>
-
-                <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:flex-wrap lg:justify-start">
-                  <button
-                    onClick={() => {
-                      if (ensureAuth()) setShowCreateForm(true);
-                    }}
-                    className="h-14 rounded-full bg-[#161c35] px-8 text-sm font-black text-white shadow-[0_166px_34px_rgba(22,28,53,0.16)] transition hover:-translate-y-[1px]"
-                  >
-                    Créer un groupe ou une formation
-                  </button>
-
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="Rechercher un groupe, une session ou une formation..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="h-14 w-full min-w-[260px] rounded-full border border-[#e8ebf1] bg-white px-12 text-sm font-medium text-[#101828] outline-none transition-all focus:border-[#c89f2d] focus:ring-4 focus:ring-[#c89f2d]/5"
-                    />
-                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-[#98a2b3]" size={18} />
-                  </div>
-                </div>
 
                 <div className="mt-10 grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3">
                   <div className="rounded-2xl border border-[#ece7db] bg-white/90 px-4 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.04)]">
