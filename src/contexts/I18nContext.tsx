@@ -151,6 +151,10 @@ const messages: Record<Locale, Record<string, string>> = {
     'community.groups.opened': 'Groupe ouvert.',
     'community.groups.nameTooShort': 'Le nom du groupe doit contenir au moins 3 caracteres.',
     'community.groups.selectPrompt': 'Ouvre un groupe pour afficher son espace detail, l appel et les publications.',
+    'community.groups.noCallPlanned': 'A venir',
+    'community.groups.defaultDescription': 'Un espace pour enseigner, prier, accompagner et grandir ensemble dans la foi.',
+    'community.groups.discover': 'Découvrir',
+    'community.groups.deleteGroup': 'Supprimer le groupe',
 
     'composer.noAccountPseudo': 'Sans compte : choisis un pseudo.',
     'composer.namePlaceholder': 'Ton nom ou pseudo...',
@@ -349,6 +353,10 @@ const messages: Record<Locale, Record<string, string>> = {
     'community.groups.opened': 'Group opened.',
     'community.groups.nameTooShort': 'Group name must contain at least 3 characters.',
     'community.groups.selectPrompt': 'Open a group to display its details, call and posts.',
+    'community.groups.noCallPlanned': 'Coming soon',
+    'community.groups.defaultDescription': 'A space to teach, pray, support and grow together in faith.',
+    'community.groups.discover': 'Discover',
+    'community.groups.deleteGroup': 'Delete group',
 
     'composer.noAccountPseudo': 'No account: choose a nickname.',
     'composer.namePlaceholder': 'Your name or nickname...',

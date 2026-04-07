@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowRight, BookOpen, Settings, Users, Video } from 'lucide-react';
+import { ArrowRight, BookOpen, Settings, Users, Video, Loader2 } from 'lucide-react';
 import { useCommunityIdentity } from '../lib/useCommunityIdentity';
+import { useAuth } from '../contexts/AuthContext';
 import { fetchGroups } from './communityApi';
 import AuthModal from './AuthModal';
 
@@ -14,17 +15,21 @@ export default function LaunchPage() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const router = useRouter();
   const { identity } = useCommunityIdentity();
+  const { user, loading } = useAuth();
 
-  const isRegistered = !!identity?.displayName;
+  const isRegistered = !!(user || identity?.displayName);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  // Redirection automatique pour les utilisateurs connectés ou déjà inscrits
   useEffect(() => {
-    if (mounted) {
+    if (mounted && !loading) {
       const hasSeenLaunch = sessionStorage.getItem('charishub_launch_seen') === 'true';
-      if (hasSeenLaunch && isRegistered) {
+      
+      // Si l'utilisateur a une session Supabase ACTIVE, on redirige systématiquement
+      if (user || (hasSeenLaunch && isRegistered)) {
         if (myGroupId) {
           router.replace(`/groups?group=${myGroupId}`);
         } else {
@@ -32,7 +37,7 @@ export default function LaunchPage() {
         }
       }
     }
-  }, [mounted, isRegistered, myGroupId, router]);
+  }, [mounted, loading, user, isRegistered, myGroupId, router]);
 
   useEffect(() => {
     if (mounted && identity?.deviceId) {
@@ -45,7 +50,24 @@ export default function LaunchPage() {
     }
   }, [mounted, identity?.deviceId]);
 
-  if (!mounted) return null;
+  // Écran de Splash pendant la restauration de la session
+  if (!mounted || loading) {
+    return (
+      <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-[#fffdf9]">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center gap-6"
+        >
+          <img src="/images/Logo.png" alt="CharisHub" className="h-20 w-auto animate-pulse" />
+          <div className="flex items-center gap-3 text-sm font-bold text-[#c89f2d]">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            <span>Restauration de votre session...</span>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   const navigateTo = (href: string) => {
     sessionStorage.setItem('charishub_launch_seen', 'true');

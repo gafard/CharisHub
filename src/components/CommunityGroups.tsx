@@ -236,113 +236,124 @@ function GroupCard({
   onDelete?: () => void;
   t: TranslateFn;
 }) {
-  const themes = [
-    {
-      soft: 'bg-[#eef4ff]',
-      accent: 'bg-[#dbeafe]',
-      text: 'text-[#1d4ed8]',
-      border: 'border-[#bfdbfe]',
-    },
-    {
-      soft: 'bg-[#eefbf3]',
-      accent: 'bg-[#dcfce7]',
-      text: 'text-[#15803d]',
-      border: 'border-[#bbf7d0]',
-    },
-    {
-      soft: 'bg-[#fff4ec]',
-      accent: 'bg-[#ffedd5]',
-      text: 'text-[#c2410c]',
-      border: 'border-[#fed7aa]',
-    },
-  ];
+  const coverMap: Record<string, string> = {
+    prayer: '/images/covers/prayer.png',
+    study: '/images/covers/study.png',
+    formation: '/images/covers/formation.png',
+    general: '/images/covers/community.png',
+    support: '/images/covers/community.png',
+  };
 
-  const theme = themes[index % themes.length];
+  const cover = coverMap[group.group_type] || '/images/covers/community.png';
+
+  const typeLabelMap: Record<string, string> = {
+    prayer: t('community.groups.type.prayer'),
+    study: t('community.groups.type.study'),
+    support: t('community.groups.type.support'),
+    formation: t('community.groups.type.formation'),
+    general: t('community.groups.type.general'),
+  };
+
+  const typeLabel = typeLabelMap[group.group_type] || t('community.groups.type.general');
+
+  const nextCall = group.next_call_at
+    ? new Date(group.next_call_at).toLocaleDateString('fr-FR', {
+        day: '2-digit',
+        month: 'short',
+      })
+    : t('community.groups.noCallPlanned');
 
   return (
     <div className="group relative h-full">
       <button
         type="button"
         onClick={onOpen}
-        className="relative flex h-full w-full flex-col overflow-hidden rounded-[32px] border border-[#e7e9ee] bg-white p-6 text-left shadow-[0_16px_40px_rgba(16,24,40,0.06)] transition-all hover:-translate-y-1 hover:shadow-[0_22px_50px_rgba(16,24,40,0.1)] active:scale-[0.99]"
+        className="flex h-full w-full flex-col overflow-hidden rounded-[34px] bg-white text-left shadow-[0_18px_40px_rgba(15,23,42,0.08)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_56px_rgba(15,23,42,0.12)] active:scale-[0.99]"
       >
-        <div className={`absolute inset-x-0 top-0 h-24 ${theme.soft}`} />
-        <div className="relative flex h-full flex-col">
-          <div className="flex items-start justify-between gap-3">
-            <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${theme.border} ${theme.accent} ${theme.text}`}>
-              <span className="h-2 w-2 rounded-full bg-current opacity-80" />
-              {group.group_type === 'prayer'
-                ? 'Prière'
-                : group.group_type === 'study'
-                  ? 'Étude biblique'
-                  : group.group_type === 'support'
-                    ? 'Accompagnement'
-                    : group.group_type === 'formation'
-                      ? 'Formation'
-                      : 'Communauté'}
-            </div>
+        {/* Cover */}
+        <div className="relative h-[210px] w-full overflow-hidden">
+          <img
+            src={cover}
+            alt={group.name}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
+          />
 
-            {group.is_paid ? (
-              <span className="rounded-full bg-[#fff7e8] px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#b54708]">
-                Premium · {group.price} FCFA
-              </span>
-            ) : (
-              <span className="rounded-full bg-[#ecfdf3] px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#027a48]">
-                Gratuit
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
+
+          <div className="absolute left-5 top-5 flex flex-wrap gap-2">
+            <span className="rounded-full bg-white/90 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#161c35] shadow-sm backdrop-blur-md">
+              {typeLabel}
+            </span>
+
+            {group.is_paid && (
+              <span className="rounded-full bg-[#161c35]/90 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-white shadow-sm backdrop-blur-md">
+                {group.price} FCFA
               </span>
             )}
           </div>
 
-          <div className="mt-6">
-            <h4 className="text-2xl font-black leading-tight tracking-tight text-[#101828]">
+          <div className="absolute right-5 top-5 grid h-10 w-10 place-items-center rounded-full bg-white/20 text-white backdrop-blur-md transition group-hover:bg-white/30">
+            <span className="text-lg">↗</span>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="relative flex flex-1 flex-col px-5 pb-6 pt-5">
+          {/* Avatar flottant */}
+          <div className="absolute -top-10 left-5 flex h-20 w-20 items-center justify-center rounded-full border-[6px] border-white bg-[#fcf8f1] text-xl font-black text-[#b78616] shadow-xl">
+            {initials(group.name)}
+          </div>
+
+          <div className="pl-24 min-h-[50px]">
+            <h3 className="line-clamp-1 text-2xl font-black tracking-tight text-[#161c35]">
               {group.name}
-            </h4>
-            <p className="mt-3 line-clamp-3 text-sm leading-7 text-[#667085]">
-              {group.description || 'Un espace pour organiser des appels, enseigner, prier et grandir ensemble dans la Parole.'}
+            </h3>
+            <p className="mt-0.5 text-xs font-bold text-[#b78616]/70 uppercase tracking-wide">
+              {group.created_by_name || 'CharisHub'}
             </p>
           </div>
 
-          <div className="mt-6 grid grid-cols-2 gap-3">
-            <div className="rounded-2xl border border-[#eaecf0] bg-[#fcfcfd] px-3 py-3">
-              <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#98a2b3]">
-                Membres
-              </div>
-              <div className="mt-1 text-sm font-black text-[#101828]">
+          <p className="mt-6 line-clamp-2 text-sm leading-relaxed text-[#4b556f]">
+            {group.description || t('community.groups.defaultDescription')}
+          </p>
+
+          <div className="mt-5 flex flex-wrap gap-2">
+            <span className="rounded-full bg-[#f8f9fb] px-3 py-1.5 text-[10px] font-bold text-[#4b556f] border border-[#f0f2f5]">
+              {group.is_paid ? 'Formation' : 'Accès libre'}
+            </span>
+            <span className="rounded-full bg-[#f8f9fb] px-3 py-1.5 text-[10px] font-bold text-[#4b556f] border border-[#f0f2f5]">
+              Live + Chat
+            </span>
+          </div>
+
+          {/* Stats Grid */}
+          <div className="mt-6 grid grid-cols-3 gap-2 border-t border-[#f0f2f5] pt-5">
+            <div className="text-center border-r border-[#f0f2f5]">
+              <div className="text-base font-black text-[#161c35]">
                 {group.members_count || 0}
               </div>
+              <div className="text-[9px] font-black uppercase tracking-tighter text-[#98a2b3]">Membres</div>
             </div>
 
-            <div className="rounded-2xl border border-[#eaecf0] bg-[#fcfcfd] px-3 py-3">
-              <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#98a2b3]">
-                Accès
+            <div className="text-center border-r border-[#f0f2f5]">
+              <div className="text-base font-black text-[#161c35] truncate px-1">
+                {nextCall}
               </div>
-              <div className="mt-1 text-sm font-black text-[#101828]">
-                {group.is_paid ? 'Formation' : 'Libre'}
+              <div className="text-[9px] font-black uppercase tracking-tighter text-[#98a2b3]">Prochain Live</div>
+            </div>
+
+            <div className="text-center">
+              <div className="text-base font-black text-[#161c35]">
+                {group.is_paid ? 'Premium' : 'Gratuit'}
               </div>
+              <div className="text-[9px] font-black uppercase tracking-tighter text-[#98a2b3]">Accès</div>
             </div>
           </div>
 
-          <div className="mt-auto pt-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {group.membershipStatus === 'pending' ? (
-                  <span className="rounded-full bg-[#fff7e8] px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#b54708]">
-                    Demande en attente
-                  </span>
-                ) : (
-                  <>
-                    <AvatarPile count={group.members_count || 0} label={group.name} />
-                    <span className="text-xs font-bold text-[#667085]">
-                      {group.members_count || 0} membres
-                    </span>
-                  </>
-                )}
-              </div>
-
-              <div className="inline-flex items-center gap-2 rounded-full bg-[#111827] px-4 py-2 text-[11px] font-black uppercase tracking-[0.14em] text-white shadow-[0_10px_24px_rgba(17,24,39,0.14)]">
-                Ouvrir
-                <span className="text-sm">↗</span>
-              </div>
+          {/* CTA */}
+          <div className="mt-auto pt-6 flex justify-end">
+            <div className="inline-flex items-center justify-center rounded-2xl bg-[#161c35] px-6 py-3 text-xs font-black uppercase tracking-widest text-white shadow-lg transition hover:bg-[#1f284e]">
+              {group.joined ? t('community.groups.open') : t('community.groups.discover')}
             </div>
           </div>
         </div>
@@ -357,7 +368,7 @@ function GroupCard({
             onDelete();
           }}
           className="absolute right-4 top-4 z-10 grid h-10 w-10 place-items-center rounded-2xl border border-white/60 bg-white/80 text-rose-600 shadow-lg backdrop-blur-md transition hover:bg-rose-500 hover:text-white"
-          title="Supprimer le groupe"
+          title={t('community.groups.deleteGroup')}
         >
           <Trash2 size={16} />
         </button>
