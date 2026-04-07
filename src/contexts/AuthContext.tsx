@@ -32,6 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -42,12 +43,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (error) {
+        // Si le profil n'existe pas encore, on le cree
+        if (error.code === 'PGRST116') {
+          await createProfile(userId);
+          return;
+        }
         console.error('Error fetching profile:', error);
         return;
       }
       setProfile(data);
     } catch (err) {
       console.error('Unexpected error fetching profile:', err);
+    }
+  };
+
+  const createProfile = async (userId: string, displayName?: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .insert({ id: userId, display_name: displayName || null });
+
+      if (error) {
+        console.error('Error creating profile:', error);
+        return;
+      }
+
+      // Re-fetch after creation
+      await fetchProfile(userId);
+    } catch (err) {
+      console.error('Unexpected error creating profile:', err);
     }
   };
 
@@ -97,6 +121,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
   };
 
+  // Connexion avec email + mot de passe
+  const signInWithEmail = async (email: string, password: string) => {
+    setError(null);
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.trim().toLowerCase(),
+      password,
+    });
+    if (error) {
+      setError(error.message);
+      throw error;
+    }
+  };
+
+  // Inscription avec email + mot de passe + nom d'affichage
+  const signUpWithEmail = async (email: string, password: string, displayName: string) => {
+    setError(null);
+    const { data, error } = await supabase.auth.signUp({
+      email: email.trim().toLowerCase(),
+      password,
+      options: {
+        data: {
+          display_name: displayName.trim(),
+        },
+      },
+    });
+    if (error) {
+      setError(error.message);
+      throw error;
+    }
+
+    // Si l'utilisateur est cree (pas besoin de verification email)
+    if (data.user) {
+      await createProfile(data.user.id, displayName.trim());
+    }
+  };
+
   const refreshProfile = async () => {
     if (user) await fetchProfile(user.id);
   };
@@ -108,7 +168,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         session,
         profile,
         loading,
+        error,
         signInWithGoogle,
+        signInWithEmail,
+        signUpWithEmail,
         signOut,
         refreshProfile,
       }}

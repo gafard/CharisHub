@@ -9,6 +9,8 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { ArrowLeft, ArrowUpRight, Lock, UserPlus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { getPlanCompletion, startOrActivatePlan, getActivePlan, getFirstUncompletedReading, isUserRegistered } from '../../lib/readingPlans';
+import { useAuth } from '../../contexts/AuthContext';
+import AuthModal from '../AuthModal';
 import { PLAN_GROUPS } from '../../lib/readingPlanVisuals';
 import {
     DEFAULT_PREVIEW_ENTRIES,
@@ -23,12 +25,13 @@ import {
 
 export default function ReadingPlansIndexClient() {
     const router = useRouter();
+    const { user } = useAuth();
     const reducedMotion = useReducedMotion();
     const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>('all');
     const [selectedPlanId, setSelectedPlanId] = useState<string | null>(PRIMARY_PLAN_ENTRY?.plan.id ?? null);
     const [activePlanId, setActivePlanId] = useState<string | null>(null);
     const [isCoarsePointer, setIsCoarsePointer] = useState(false);
-    const [showRegisterPrompt, setShowRegisterPrompt] = useState(false);
+    const [showAuthModal, setShowAuthModal] = useState(false);
     const [pendingPlanId, setPendingPlanId] = useState<string | null>(null);
     const pickerSwiperRef = useRef<SwiperInstance | null>(null);
     const pickerEntriesRef = useRef<PlanEntry[]>([]);
@@ -94,10 +97,10 @@ export default function ReadingPlansIndexClient() {
     }, [pickerCanLoop, reducedMotion, selectedIndex, selectedPlanId]);
 
     const handleStartPlan = useCallback((planId: string) => {
-        // Vérifier si l'utilisateur est inscrit
-        if (!isUserRegistered()) {
+        // Vérifier si l'utilisateur est connecté avec Supabase Auth
+        if (!user) {
             setPendingPlanId(planId);
-            setShowRegisterPrompt(true);
+            setShowAuthModal(true);
             return;
         }
 
@@ -108,12 +111,19 @@ export default function ReadingPlansIndexClient() {
         } else {
             router.push(`/bible/plans/${planId}`);
         }
-    }, [router]);
+    }, [router, user]);
 
-    const handleConfirmRegister = useCallback(() => {
-        setShowRegisterPrompt(false);
-        router.push('/settings');
-    }, [router]);
+    const handleAuthSuccess = useCallback(() => {
+        setShowAuthModal(false);
+        if (pendingPlanId) {
+            startOrActivatePlan(pendingPlanId);
+            const next = getFirstUncompletedReading(pendingPlanId);
+            if (next) {
+                router.push(`/bible?book=${next.bookId}&chapter=${next.chapter}&plan=${pendingPlanId}`);
+            }
+            setPendingPlanId(null);
+        }
+    }, [pendingPlanId, router]);
 
     const handleTrackCardSelect = useCallback((planId: string, index: number) => {
         setSelectedPlanId(planId);
@@ -345,46 +355,11 @@ export default function ReadingPlansIndexClient() {
             </div>
         </div>
 
-        {/* Modal d'inscription requise */}
-        {showRegisterPrompt && (
-            <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                <motion.div
-                    initial={{ scale: 0.95, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    className="w-full max-w-md overflow-hidden rounded-[32px] border border-white/10 bg-white shadow-2xl"
-                >
-                    <div className="p-8 text-center">
-                        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#c89f2d]/10">
-                            <Lock size={28} className="text-[#c89f2d]" />
-                        </div>
-                        <h3 className="mt-5 font-display text-2xl font-bold text-[#161c35]">
-                            Inscription requise
-                        </h3>
-                        <p className="mt-3 text-[15px] leading-relaxed text-[#161c35]/60">
-                            Les plans de lecture sont reserves aux utilisateurs inscrits.
-                            Definissez votre nom dans les parametres pour acceder a tous les plans.
-                        </p>
-                        <div className="mt-6 space-y-3">
-                            <button
-                                type="button"
-                                onClick={handleConfirmRegister}
-                                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#161c35] px-6 py-4 text-[14px] font-bold uppercase tracking-widest text-white shadow-lg hover:bg-[#161c35]/90 transition-colors"
-                            >
-                                <UserPlus size={18} />
-                                Definir mon nom
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setShowRegisterPrompt(false)}
-                                className="inline-flex w-full items-center justify-center rounded-full px-6 py-3 text-[13px] font-semibold text-[#161c35]/50 hover:text-[#161c35]/70 transition-colors"
-                            >
-                                Plus tard
-                            </button>
-                        </div>
-                    </div>
-                </motion.div>
-            </div>
-        )}
-        </>
-    );
-}
+        {/* Modal d'authentification requise */}
+        <AuthModal
+            isOpen={showAuthModal}
+            onClose={() => setShowAuthModal(false)}
+            initialMode="register"
+        />
+    </>
+);
