@@ -159,13 +159,16 @@ export default function GlobalCallManager() {
 
                             console.log('[GlobalCallManager] 📞 EVENT RECEIVED:', raw);
                             console.log('[GlobalCallManager] 🔔 RINGER TRIGGERED for call:', callId);
-                            setIncomingCall({
-                                callId,
-                                groupId: group.id,
-                                startedBy,
-                                startedByUserName: String(raw.startedByUserName || 'Un membre'),
-                                groupName: String(raw.groupName || group.name || 'Groupe'),
-                                startedAt: String(raw.startedAt || new Date().toISOString()),
+                            setIncomingCall((prev) => {
+                                if (prev?.callId === callId) return prev;
+                                return {
+                                    callId,
+                                    groupId: group.id,
+                                    startedBy,
+                                    startedByUserName: String(raw.startedByUserName || 'Un membre'),
+                                    groupName: String(raw.groupName || group.name || 'Groupe'),
+                                    startedAt: String(raw.startedAt || new Date().toISOString()),
+                                };
                             });
                             startRinging();
                             void sendNotification({
@@ -226,16 +229,18 @@ export default function GlobalCallManager() {
             }}
             onJoin={async (call) => {
                 stopRinging();
-                if (deviceId) {
-                    await respondToGroupCallInvitation(call.callId, deviceId, 'accept');
+                const effectiveId = identity?.userId || deviceId;
+                if (effectiveId) {
+                    await respondToGroupCallInvitation(call.callId, effectiveId, 'accept');
                 }
                 router.push(`/groups?group=${encodeURIComponent(call.groupId)}&call=${encodeURIComponent(call.callId)}&autoJoin=true`);
                 setIncomingCall(null);
             }}
             onDismiss={async (call) => {
                 stopRinging();
-                if (deviceId) {
-                    await respondToGroupCallInvitation(call.callId, deviceId, 'decline');
+                const effectiveId = identity?.userId || deviceId;
+                if (effectiveId) {
+                    await respondToGroupCallInvitation(call.callId, effectiveId, 'decline');
                 }
                 setIncomingCall(null);
             }}

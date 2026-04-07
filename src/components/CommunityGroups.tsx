@@ -1011,6 +1011,12 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
 
   const joinedGroups = useMemo(() => filteredGroups.filter((g) => !!g.joined), [filteredGroups]);
   const otherGroups = useMemo(() => filteredGroups.filter((g) => !g.joined), [filteredGroups]);
+
+  const visibleGroups = useMemo(() => {
+    if (listMode === 'joined') return joinedGroups;
+    if (listMode === 'discover') return otherGroups;
+    return filteredGroups;
+  }, [listMode, joinedGroups, otherGroups, filteredGroups]);
   const filteredJoinedCount = useMemo(
     () => filteredGroups.reduce((count, group) => (group.joined ? count + 1 : count), 0),
     [filteredGroups]

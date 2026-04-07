@@ -1,36 +1,27 @@
-// IncomingGroupCallModal.tsx
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 export type IncomingCallPayload = {
   callId: string;
   groupId: string;
   groupName?: string;
-  fromName?: string; // ex: "Alexi Turner" / "Pasteur ..."
-  startedAt?: string; // ISO
+  fromName?: string;
+  startedAt?: string;
 };
 
 type Props = {
   open: boolean;
   call?: IncomingCallPayload | null;
-
-  // Action: l'utilisateur accepte l'appel (tu navigues vers la room WebRTC)
   onJoin: (call: IncomingCallPayload) => Promise<void> | void;
-
-  // Action: l'utilisateur refuse / ignore
   onDismiss: (call: IncomingCallPayload) => Promise<void> | void;
-
-  // Optionnel: auto-fermeture si personne ne répond
-  timeoutMs?: number; // default 30000 (30s)
-
-  // Optionnel: activer une sonnerie (fichier local /public/ringtone.mp3)
-  ringtoneUrl?: string; // ex: "/sounds/ringtone.mp3"
-  enableVibrate?: boolean; // default true
+  timeoutMs?: number;
+  ringtoneUrl?: string;
+  enableVibrate?: boolean;
 };
 
 function formatElapsed(startedAt?: string) {
-  if (!startedAt) return "";
+  if (!startedAt) return '';
   const start = new Date(startedAt).getTime();
-  if (Number.isNaN(start)) return "";
+  if (Number.isNaN(start)) return '';
   const now = Date.now();
   const s = Math.max(0, Math.floor((now - start) / 1000));
   if (s < 60) return `${s}s`;
@@ -44,71 +35,60 @@ export default function IncomingGroupCallModal({
   call,
   onJoin,
   onDismiss,
-  timeoutMs = 30_000,
+  timeoutMs = 30000,
   ringtoneUrl,
   enableVibrate = true,
 }: Props) {
-  const [busy, setBusy] = useState<"join" | "dismiss" | null>(null);
-  const [elapsed, setElapsed] = useState<string>("");
+  const [busy, setBusy] = useState<'join' | 'dismiss' | null>(null);
+  const [elapsed, setElapsed] = useState('');
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const vibratedRef = useRef(false);
   const timeoutRef = useRef<number | null>(null);
+  const vibratedRef = useRef(false);
 
   const safeCall = useMemo(() => call ?? null, [call]);
 
-  // Timer "elapsed"
   useEffect(() => {
     if (!open || !safeCall?.startedAt) {
-      setElapsed("");
+      setElapsed('');
       return;
     }
+
     const tick = () => setElapsed(formatElapsed(safeCall.startedAt));
     tick();
     const id = window.setInterval(tick, 1000);
     return () => window.clearInterval(id);
   }, [open, safeCall?.startedAt]);
 
-  // Sonnerie + vibration + auto-timeout
   useEffect(() => {
     if (!open || !safeCall) return;
 
-    // Auto-timeout
     if (timeoutMs > 0) {
       if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
       timeoutRef.current = window.setTimeout(() => {
-        // Auto-dismiss si l'appel "sonne" trop longtemps
-        void handleDismiss("timeout");
+        void handleDismiss();
       }, timeoutMs);
     }
 
-    // Vibrate (une fois)
     if (enableVibrate && !vibratedRef.current) {
       try {
         if (navigator.vibrate) {
-          navigator.vibrate([200, 120, 200, 120, 300]);
+          navigator.vibrate([220, 140, 220, 140, 320]);
         }
       } catch {
-        // ignore
+        //
       }
       vibratedRef.current = true;
     }
 
-    // Sonnerie (optionnelle)
     if (ringtoneUrl) {
       const a = new Audio(ringtoneUrl);
       a.loop = true;
       audioRef.current = a;
-
-      // Sur le web, autoplay peut être bloqué.
-      // On essaie quand même; si bloqué, l'utilisateur entendra après interaction.
-      a.play().catch(() => {
-        // ignore
-      });
+      a.play().catch(() => {});
     }
 
     return () => {
-      // cleanup
       if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
 
@@ -117,400 +97,137 @@ export default function IncomingGroupCallModal({
         audioRef.current.currentTime = 0;
         audioRef.current = null;
       }
+
       vibratedRef.current = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, safeCall?.callId]);
-
-  // Stop sonnerie quand on ferme
-  useEffect(() => {
-    if (!open && audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-      audioRef.current = null;
-    }
-  }, [open]);
+  }, [open, safeCall, timeoutMs, ringtoneUrl, enableVibrate]);
 
   async function handleJoin() {
     if (!safeCall || busy) return;
-    setBusy("join");
+    setBusy('join');
+
     try {
-      // stop ringtone before joining
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
         audioRef.current = null;
       }
+
       await onJoin(safeCall);
     } finally {
       setBusy(null);
     }
   }
 
-  async function handleDismiss(reason: "user" | "timeout" = "user") {
+  async function handleDismiss() {
     if (!safeCall || busy) return;
-    setBusy("dismiss");
+    setBusy('dismiss');
+
     try {
-      // stop ringtone
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
         audioRef.current = null;
       }
-      await onDismiss(safeCall);
 
-      // (optionnel) tu peux log reason si tu veux
-      void reason;
+      await onDismiss(safeCall);
     } finally {
       setBusy(null);
     }
   }
 
-  // Ne rien rendre si fermé
   if (!open || !safeCall) return null;
 
-  const groupTitle = safeCall.groupName ? safeCall.groupName : "Groupe";
-  const from = safeCall.fromName ? safeCall.fromName : "Un membre";
-  const sub = elapsed ? `Appel entrant • depuis ${elapsed}` : "Appel entrant";
-  const callerInitial = (from.trim().charAt(0) || "M").toUpperCase();
+  const groupTitle = safeCall.groupName || 'Session de groupe';
+  const from = safeCall.fromName || 'Un membre';
+  const callerInitial = (from.trim().charAt(0) || 'M').toUpperCase();
 
   return (
-    <div style={styles.backdrop} role="dialog" aria-modal="true" aria-label="Appel entrant">
-      <div style={styles.modal}>
-        <div style={styles.banner}>
-          <div style={styles.badge}>📞</div>
-          <div style={styles.bannerText}>
-            <div style={styles.bannerTitle}>Appel de groupe en cours</div>
-            <div style={styles.bannerSubtitle}>
-              {groupTitle} • {sub}
-            </div>
-          </div>
-        </div>
+    <div className="fixed inset-0 z-[9999] bg-[rgba(3,6,18,0.82)] backdrop-blur-xl">
+      <div className="flex min-h-screen items-center justify-center p-4 sm:p-6">
+        <div className="relative w-full max-w-[460px] overflow-hidden rounded-[36px] border border-white/10 bg-[linear-gradient(180deg,rgba(19,25,44,0.96),rgba(10,14,28,0.98))] text-white shadow-[0_40px_120px_rgba(0,0,0,0.45)]">
+          <div className="absolute inset-x-0 top-0 h-40 bg-[radial-gradient(circle_at_top,rgba(69,122,255,0.30),transparent_62%)]" />
+          <div className="absolute -top-10 left-1/2 h-44 w-44 -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(68,211,168,0.20),transparent_70%)] blur-2xl" />
 
-        <div style={styles.body}>
-          <div style={styles.centerStage}>
-            <div style={styles.stageBackdropImage} />
-            <div style={styles.orbAuraA} />
-            <div style={styles.orbAuraB} />
-            <div style={styles.pulseRingOuter} />
-            <div style={styles.pulseRingInner} />
-            <div style={styles.avatarCore}>{callerInitial}</div>
-            <div style={styles.liveChip}>
-              <span style={styles.liveDot} />
-              Appel en direct
-            </div>
-            <div style={styles.centerTitle}>{groupTitle}</div>
-            <div style={styles.centerSubtitle}>
-              <span style={styles.from}>{from}</span> vous invite maintenant
-            </div>
-          </div>
+          <div className="relative px-6 pb-6 pt-7 sm:px-8 sm:pb-8 sm:pt-8">
+            {/* Top status */}
+            <div className="flex items-center justify-between gap-3">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-white/80">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_0_6px_rgba(52,211,153,0.14)]" />
+                Appel entrant
+              </div>
 
-          <div style={styles.actionPanel}>
-            <div style={styles.callFrom}>
-              Invitation de <span style={styles.from}>{from}</span>
-            </div>
-            <div style={styles.hint}>Rejoindre l’appel maintenant ?</div>
-
-            <div style={styles.actions}>
-              <button
-                type="button"
-                onClick={() => void handleDismiss("user")}
-                disabled={busy !== null}
-                style={{
-                  ...styles.btn,
-                  ...styles.btnSecondary,
-                  opacity: busy ? 0.7 : 1,
-                  cursor: busy ? "not-allowed" : "pointer",
-                }}
-              >
-                {busy === "dismiss" ? "..." : "Ignorer"}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => void handleJoin()}
-                disabled={busy !== null}
-                style={{
-                  ...styles.btn,
-                  ...styles.btnPrimary,
-                  opacity: busy ? 0.7 : 1,
-                  cursor: busy ? "not-allowed" : "pointer",
-                }}
-              >
-                {busy === "join" ? "..." : "Rejoindre"}
-              </button>
+              {elapsed ? (
+                <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-white/60">
+                  Depuis {elapsed}
+                </div>
+              ) : null}
             </div>
 
-            <div style={styles.footerNote}>
-              Astuce : si tu veux une vraie &quot;sonnerie système&quot; même écran éteint,
-              il faudra ajouter les notifications push plus tard (optionnel).
+            {/* Center */}
+            <div className="mt-8 text-center">
+              <div className="relative mx-auto flex h-[108px] w-[108px] items-center justify-center rounded-full border border-white/20 bg-[linear-gradient(145deg,#447bff,#35d6aa)] text-[42px] font-black text-white shadow-[0_24px_60px_rgba(52,120,255,0.35)]">
+                <div className="absolute inset-[-18px] rounded-full border border-[#7eb3ff]/30 animate-[ping_2.4s_ease-out_infinite]" />
+                <div className="absolute inset-[-34px] rounded-full border border-[#7de8cd]/18 animate-[ping_2.8s_ease-out_infinite]" />
+                {callerInitial}
+              </div>
+
+              <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-white/75">
+                <span className="h-2 w-2 rounded-full bg-rose-400" />
+                Session en cours
+              </div>
+
+              <h2 className="mt-5 text-3xl font-black tracking-tight text-white">
+                {groupTitle}
+              </h2>
+
+              <p className="mt-3 text-sm leading-7 text-white/72">
+                <span className="font-bold text-white">{from}</span> vous invite à rejoindre
+                l’appel maintenant.
+              </p>
+            </div>
+
+            {/* Content card */}
+            <div className="mt-8 rounded-[28px] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-md">
+              <div className="grid gap-3">
+                <div className="rounded-2xl border border-white/8 bg-black/10 px-4 py-3">
+                  <div className="text-[10px] font-black uppercase tracking-[0.14em] text-white/40">
+                    Groupe
+                  </div>
+                  <div className="mt-1 text-sm font-bold text-white/90">{groupTitle}</div>
+                </div>
+
+                <div className="rounded-2xl border border-white/8 bg-black/10 px-4 py-3">
+                  <div className="text-[10px] font-black uppercase tracking-[0.14em] text-white/40">
+                    Invitation de
+                  </div>
+                  <div className="mt-1 text-sm font-bold text-white/90">{from}</div>
+                </div>
+              </div>
+
+              <div className="mt-5 grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => void handleDismiss()}
+                  disabled={busy !== null}
+                  className="rounded-2xl border border-white/12 bg-white/8 px-4 py-3.5 text-sm font-bold text-white/92 transition hover:bg-white/12 disabled:opacity-60"
+                >
+                  {busy === 'dismiss' ? '...' : 'Ignorer'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => void handleJoin()}
+                  disabled={busy !== null}
+                  className="rounded-2xl border border-emerald-300/25 bg-[linear-gradient(135deg,rgba(67,231,159,0.24),rgba(50,180,255,0.24))] px-4 py-3.5 text-sm font-bold text-white shadow-[0_18px_35px_rgba(67,231,159,0.12)] transition hover:translate-y-[-1px] disabled:opacity-60"
+                >
+                  {busy === 'join' ? 'Connexion...' : 'Rejoindre'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
-      <style jsx>{`
-        @keyframes iccIncomingPulse {
-          0% {
-            transform: scale(0.9);
-            opacity: 0.55;
-          }
-          70% {
-            transform: scale(1.28);
-            opacity: 0.1;
-          }
-          100% {
-            transform: scale(1.35);
-            opacity: 0;
-          }
-        }
-
-        @keyframes iccIncomingBreath {
-          0%,
-          100% {
-            transform: translateY(0px);
-          }
-          50% {
-            transform: translateY(-4px);
-          }
-        }
-      `}</style>
     </div>
   );
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  backdrop: {
-    position: "fixed",
-    inset: 0,
-    background: "rgba(3,6,18,0.86)",
-    backdropFilter: "blur(10px)",
-    display: "flex",
-    alignItems: "stretch",
-    justifyContent: "stretch",
-    zIndex: 9999,
-  },
-  modal: {
-    width: "100vw",
-    minHeight: "100vh",
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "space-between",
-    background:
-      "radial-gradient(circle at 85% 0%, rgba(41,103,255,0.24), transparent 38%), radial-gradient(circle at 10% 100%, rgba(23,151,191,0.16), transparent 40%), rgba(9,12,24,0.88)",
-    color: "white",
-    overflow: "hidden",
-  },
-  banner: {
-    width: "100%",
-    minHeight: 112,
-    padding: "20px 18px",
-    display: "flex",
-    alignItems: "center",
-    gap: 14,
-    borderBottom: "1px solid rgba(255,255,255,0.10)",
-    background: "linear-gradient(90deg, rgba(44,91,255,0.28), rgba(20,28,52,0.28))",
-  },
-  bannerText: {
-    flex: 1,
-    minWidth: 0,
-  },
-  bannerTitle: {
-    fontSize: 18,
-    fontWeight: 800,
-    lineHeight: 1.2,
-    letterSpacing: "0.01em",
-  },
-  bannerSubtitle: {
-    marginTop: 6,
-    fontSize: 13,
-    opacity: 0.86,
-    lineHeight: 1.35,
-  },
-  badge: {
-    width: 56,
-    height: 56,
-    borderRadius: 18,
-    display: "grid",
-    placeItems: "center",
-    background: "rgba(255,255,255,0.12)",
-    border: "1px solid rgba(255,255,255,0.2)",
-    fontSize: 24,
-  },
-  body: {
-    flex: 1,
-    padding: "26px 18px 18px",
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "space-between",
-    maxWidth: 680,
-    width: "100%",
-    margin: "0 auto",
-    boxSizing: "border-box",
-    gap: 12,
-  },
-  centerStage: {
-    flex: 1,
-    position: "relative",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    textAlign: "center",
-    paddingTop: 10,
-    gap: 10,
-    overflow: "hidden",
-  },
-  stageBackdropImage: {
-    position: "absolute",
-    inset: "8% 6% auto 6%",
-    height: "58%",
-    borderRadius: 28,
-    backgroundImage:
-      "radial-gradient(circle at 20% 20%, rgba(201,162,39,0.32), transparent 44%), linear-gradient(180deg, rgba(7,11,27,0.08), rgba(7,11,27,0.58))",
-    backgroundSize: "auto",
-    backgroundPosition: "center",
-    opacity: 0.26,
-    filter: "blur(1px)",
-    border: "1px solid rgba(255,255,255,0.08)",
-    boxShadow: "0 22px 60px rgba(0,0,0,0.35)",
-  },
-  orbAuraA: {
-    position: "absolute",
-    width: 340,
-    height: 340,
-    borderRadius: "50%",
-    background: "radial-gradient(circle, rgba(46,115,255,0.28), rgba(46,115,255,0))",
-    filter: "blur(8px)",
-    transform: "translateY(-10px)",
-  },
-  orbAuraB: {
-    position: "absolute",
-    width: 260,
-    height: 260,
-    borderRadius: "50%",
-    background: "radial-gradient(circle, rgba(49,225,179,0.20), rgba(49,225,179,0))",
-    filter: "blur(6px)",
-    transform: "translateY(-6px)",
-  },
-  pulseRingOuter: {
-    position: "absolute",
-    width: 190,
-    height: 190,
-    borderRadius: "50%",
-    border: "2px solid rgba(126,179,255,0.48)",
-    animation: "iccIncomingPulse 2.6s ease-out infinite",
-  },
-  pulseRingInner: {
-    position: "absolute",
-    width: 148,
-    height: 148,
-    borderRadius: "50%",
-    border: "1px solid rgba(121,232,203,0.5)",
-    animation: "iccIncomingPulse 2.6s ease-out 0.35s infinite",
-  },
-  avatarCore: {
-    position: "relative",
-    zIndex: 2,
-    width: 112,
-    height: 112,
-    borderRadius: "50%",
-    display: "grid",
-    placeItems: "center",
-    fontSize: 44,
-    fontWeight: 900,
-    letterSpacing: "0.02em",
-    color: "#eff8ff",
-    background: "linear-gradient(145deg, rgba(70,131,255,0.95), rgba(45,214,172,0.92))",
-    border: "1px solid rgba(255,255,255,0.42)",
-    boxShadow: "0 18px 60px rgba(39,123,255,0.42)",
-    animation: "iccIncomingBreath 3.2s ease-in-out infinite",
-  },
-  liveChip: {
-    marginTop: 10,
-    display: "inline-flex",
-    alignItems: "center",
-    gap: 8,
-    borderRadius: 999,
-    padding: "7px 12px",
-    border: "1px solid rgba(255,255,255,0.24)",
-    background: "rgba(12,18,42,0.46)",
-    fontSize: 12,
-    fontWeight: 800,
-    letterSpacing: "0.08em",
-    textTransform: "uppercase",
-    color: "rgba(230,245,255,0.95)",
-  },
-  liveDot: {
-    width: 8,
-    height: 8,
-    borderRadius: "50%",
-    background: "#39f0b1",
-    boxShadow: "0 0 0 6px rgba(57,240,177,0.18)",
-  },
-  centerTitle: {
-    marginTop: 10,
-    fontSize: 28,
-    lineHeight: 1.2,
-    fontWeight: 900,
-    letterSpacing: "-0.02em",
-    color: "#f8fbff",
-    textShadow: "0 10px 40px rgba(26,92,255,0.32)",
-  },
-  centerSubtitle: {
-    maxWidth: 520,
-    fontSize: 15,
-    lineHeight: 1.45,
-    color: "rgba(230,239,255,0.82)",
-  },
-  actionPanel: {
-    border: "1px solid rgba(255,255,255,0.14)",
-    borderRadius: 22,
-    padding: "14px 14px 12px",
-    background: "linear-gradient(180deg, rgba(16,25,58,0.72), rgba(11,18,38,0.72))",
-    backdropFilter: "blur(12px)",
-    boxShadow: "0 18px 40px rgba(0,0,0,0.28)",
-  },
-  callFrom: {
-    fontSize: 15,
-    opacity: 0.92,
-  },
-  from: {
-    fontWeight: 800,
-    opacity: 1,
-  },
-  hint: {
-    fontSize: 22,
-    fontWeight: 800,
-    lineHeight: 1.25,
-    letterSpacing: "-0.01em",
-  },
-  actions: {
-    display: "grid",
-    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-    gap: 12,
-    marginTop: 8,
-  },
-  btn: {
-    padding: "14px 14px",
-    borderRadius: 16,
-    border: "1px solid rgba(255,255,255,0.12)",
-    fontSize: 15,
-    fontWeight: 800,
-    letterSpacing: "0.01em",
-  },
-  btnSecondary: {
-    background: "rgba(255,255,255,0.12)",
-    color: "white",
-  },
-  btnPrimary: {
-    background: "rgba(67, 231, 159, 0.24)",
-    border: "1px solid rgba(67, 231, 159, 0.45)",
-    color: "white",
-  },
-  footerNote: {
-    marginTop: 8,
-    fontSize: 12,
-    opacity: 0.65,
-    lineHeight: 1.35,
-  },
-};
