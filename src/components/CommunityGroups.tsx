@@ -1220,6 +1220,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
   );
 
   const onStartGroupCall = useCallback(async () => {
+    if (!ensureAuth()) return;
     if (!selectedGroup || !actor.deviceId) return;
 
     const busyKey = `call-${selectedGroup.id}`;
@@ -1848,7 +1849,9 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
                 <div className="mt-10 flex flex-wrap items-center justify-center gap-4 lg:justify-start">
 
                   <button
-                    onClick={() => setShowCreateForm(true)}
+                    onClick={() => {
+                      if (ensureAuth()) setShowCreateForm(true);
+                    }}
                     className="h-14 rounded-full bg-[#161c35] px-8 text-sm font-black text-white transition-transform hover:scale-105 active:scale-95"
                   >
                     Créer un groupe

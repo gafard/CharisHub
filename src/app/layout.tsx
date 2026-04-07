@@ -7,6 +7,7 @@ import { AuthProvider } from '../contexts/AuthContext';
 import { CloudSyncProvider } from '../contexts/CloudSyncContext';
 import NotificationManager from '../components/NotificationManager';
 import GlobalCallManager from '../components/GlobalCallManager';
+import PWAInstallPrompt from '../components/PWAInstallPrompt';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -59,6 +60,7 @@ export default function RootLayout({
                 {children}
                 <NotificationManager />
                 <GlobalCallManager />
+                <PWAInstallPrompt />
               </CloudSyncProvider>
             </SettingsProvider>
           </I18nProvider>
