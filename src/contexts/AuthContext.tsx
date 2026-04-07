@@ -111,7 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Migrer les donnees localStorage vers le compte Supabase
+  // Migrer les donnees localStorage vers le compte Supabase via RPC sécurisée
   const migrateLocalDataToAccount = async (userId: string) => {
     try {
       const raw = typeof window !== 'undefined' ? localStorage.getItem('formation_biblique_identity_v1') : null;
@@ -123,10 +123,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Si les donnees ont deja ete migrees, on skip
       if (identity._migratedToAccount) return;
 
-      console.log('[Auth] Migration des donnees locales vers le compte:', userId);
-      await claimLegacyData(deviceId, userId);
+      console.log('[Auth] Migration (RPC) des donnees locales vers le compte:', userId);
+      
+      // Appel de la nouvelle fonction SQL sécurisée
+      const { error } = await supabase.rpc('link_device_to_user', { p_device_id: deviceId });
+      
+      if (error) {
+        console.error('[Auth] Erreur RPC link_device_to_user:', error.message);
+        // Fallback optionnel vers l'ancienne méthode si la RPC n'est pas encore déployée
+        await claimLegacyData(deviceId, userId);
+      }
 
-      // Marquer comme migre
+      // Marquer comme migre localement
       identity._migratedToAccount = true;
       identity.userId = userId;
       localStorage.setItem('formation_biblique_identity_v1', JSON.stringify(identity));

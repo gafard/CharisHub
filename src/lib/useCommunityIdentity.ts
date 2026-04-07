@@ -37,9 +37,13 @@ export function useCommunityIdentity() {
     }
   }, []);
 
+  // Flags d'authentification
+  const isAuthenticated = !!(user && profile);
+  const isGuest = !isAuthenticated;
+
   // L'identité finale est soit celle du compte, soit la locale
   const identity = useMemo((): CommunityIdentity | null => {
-    if (user && profile) {
+    if (isAuthenticated && user && profile) {
       return {
         deviceId: localIdentity?.deviceId || 'unknown',
         displayName: profile.display_name || user.email?.split('@')[0] || 'Utilisateur',
@@ -48,11 +52,11 @@ export function useCommunityIdentity() {
       };
     }
     return localIdentity;
-  }, [user, profile, localIdentity]);
+  }, [user, profile, localIdentity, isAuthenticated]);
 
   const updateName = (displayName: string) => {
-    // Si connecté, on pourrait mettre à jour le profil Supabase ici
-    // Pour l'instant, on met à jour le local
+    // Note: On ne met plus à jour le nom local si on veut forcer l'auth
+    // Le nom devrait venir du profil Supabase
     setLocalIdentity((prev) => {
       const next = { ...(prev ?? { deviceId: makeDeviceId(), displayName: '' }), displayName };
       try { localStorage.setItem(KEY, JSON.stringify(next)); } catch {}
@@ -60,5 +64,10 @@ export function useCommunityIdentity() {
     });
   };
 
-  return useMemo(() => ({ identity, updateName }), [identity]);
+  return useMemo(() => ({ 
+    identity, 
+    isAuthenticated, 
+    isGuest,
+    updateName 
+  }), [identity, isAuthenticated, isGuest]);
 }
