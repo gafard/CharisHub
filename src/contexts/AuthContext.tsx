@@ -81,32 +81,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const initAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      setUser(session?.user ?? null);
+      try {
+        if (!supabase) {
+          setLoading(false);
+          return;
+        }
 
-      if (session?.user) {
-        await fetchProfile(session.user.id);
-        // Migrer les donnees locales vers le compte
-        await migrateLocalDataToAccount(session.user.id);
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+        setUser(session?.user ?? null);
+
+        if (session?.user) {
+          await fetchProfile(session.user.id);
+          // Migrer les donnees locales vers le compte
+          await migrateLocalDataToAccount(session.user.id);
+        }
+      } catch (err) {
+        logger.error('[Auth] Error during initAuth:', err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     initAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event: AuthChangeEvent, session: Session | null) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+      try {
+        setSession(session);
+        setUser(session?.user ?? null);
 
-      if (session?.user) {
-        await fetchProfile(session.user.id);
-        // Migrer les donnees locales vers le compte
-        await migrateLocalDataToAccount(session.user.id);
-      } else {
-        setProfile(null);
+        if (session?.user) {
+          await fetchProfile(session.user.id);
+          // Migrer les donnees locales vers le compte
+          await migrateLocalDataToAccount(session.user.id);
+        } else {
+          setProfile(null);
+        }
+      } catch (err) {
+        logger.error('[Auth] Error during onAuthStateChange:', err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => {

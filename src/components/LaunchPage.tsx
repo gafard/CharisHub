@@ -11,16 +11,23 @@ import AuthModal from './AuthModal';
 
 export default function LaunchPage() {
   const [mounted, setMounted] = useState(false);
+  const [securityTimeout, setSecurityTimeout] = useState(false);
   const [myGroupId, setMyGroupId] = useState<string | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const router = useRouter();
   const { identity } = useCommunityIdentity();
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
+  const loading = authLoading && !securityTimeout;
   const isRegistered = !!(user || identity?.displayName);
 
   useEffect(() => {
     setMounted(true);
+    // Secu : si apres 6s on est toujours en "restauration", on debloque
+    const timer = setTimeout(() => {
+      setSecurityTimeout(true);
+    }, 6000);
+    return () => clearTimeout(timer);
   }, []);
 
   // Redirection automatique pour les utilisateurs connectés ou déjà inscrits

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, type ReactNode } from 'react';
-import { BookOpen, Home, Settings, Users, LogIn, User as UserIcon } from 'lucide-react';
+import { BookOpen, Home, Settings, Users, LogIn, User as UserIcon, TrendingUp } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthModal from './AuthModal';
 
@@ -13,6 +13,12 @@ const NAV_ITEMS = [
     label: 'Parole',
     icon: BookOpen,
     match: (pathname: string) => pathname.startsWith('/bible'),
+  },
+  {
+    href: '/dashboard',
+    label: 'Parcours',
+    icon: TrendingUp,
+    match: (pathname: string) => pathname.startsWith('/dashboard'),
   },
   {
     href: '/groups',
@@ -102,7 +108,7 @@ export default function StudyAppShell({ children }: { children: ReactNode }) {
       <main className="relative mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-12">{children}</main>
 
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[#e8ebf1] bg-white/90 px-3 py-3 pb-safe backdrop-blur-xl md:hidden">
-        <div className="mx-auto grid max-w-xl grid-cols-3 gap-2">
+        <div className="mx-auto grid max-w-xl grid-cols-4 gap-1">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const active = item.match(pathname);
