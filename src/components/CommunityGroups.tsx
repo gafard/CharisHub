@@ -1160,6 +1160,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
         await triggerGroupCallPush({
           groupId: selectedGroup.id,
           callerDeviceId: actor.deviceId,
+          callerUserId: actor.userId || null,
           callerDisplayName: actor.displayName,
           callType: 'audio',
           groupName: selectedGroup.name,

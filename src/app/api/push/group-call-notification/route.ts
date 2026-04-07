@@ -7,6 +7,7 @@ export const runtime = 'nodejs';
 type GroupCallNotificationBody = {
   groupId: string;
   callerDeviceId: string;
+  callerUserId?: string | null;
   callerDisplayName: string;
   callType: 'audio' | 'video';
   groupName?: string;
@@ -37,11 +38,11 @@ export async function POST(req: Request) {
     body = (await req.json()) as GroupCallNotificationBody;
     console.log('Données reçues:', body);
   } catch {
-    console.error('Données JSON invalides');
+    console.error('Données JSON JSON invalides');
     return NextResponse.json({ ok: false, error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  const { groupId, callerDeviceId, callerDisplayName, callType, groupName, callId } = body;
+  const { groupId, callerDeviceId, callerUserId, callerDisplayName, callType, groupName, callId } = body;
 
   if (!groupId || !callerDeviceId || !callerDisplayName) {
     console.error('Champs requis manquants:', { groupId, callerDeviceId, callerDisplayName });
@@ -56,14 +57,14 @@ export async function POST(req: Request) {
     console.log('Récupération des membres du groupe...');
     let { data: groupMembers, error: membersError } = await supabaseServer
       .from('charishub_group_members')
-      .select('device_id, status')
+      .select('device_id, user_id, status')
       .eq('group_id', groupId);
 
     if (membersError && String(membersError.message).includes('status')) {
       console.log('Colonne status manquante, repli sur une sélection sans status');
       const fallback = await supabaseServer
         .from('charishub_group_members')
-        .select('device_id')
+        .select('device_id, user_id')
         .eq('group_id', groupId);
       groupMembers = (fallback.data ?? []) as any[];
       membersError = fallback.error;
@@ -83,24 +84,33 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true, message: 'No members to notify' });
     }
 
-    // Filtrer l'appelant (qui peut être device_id ou guest_id)
+    // Filtrer l'appelant par deviceId ET par userId
     const targetDeviceIds = approvedMembers
       .map((member: any) => member.device_id)
       .filter((id: string | null | undefined) => id && id !== callerDeviceId);
 
-    console.log('IDs cibles pour notification:', targetDeviceIds);
+    const targetUserIds = approvedMembers
+      .map((member: any) => member.user_id)
+      .filter((id: string | null | undefined) => id && id !== callerUserId);
 
-    if (targetDeviceIds.length === 0) {
+    console.log('Cibles filtrées :', { deviceCount: targetDeviceIds.length, userCount: targetUserIds.length });
+
+    if (targetDeviceIds.length === 0 && targetUserIds.length === 0) {
       console.log('Aucun autre membre à notifier');
       return NextResponse.json({ ok: true, message: 'No other members to notify' });
     }
 
-    // Récupérer les abonnements push pour ces devices
+    // Récupérer les abonnements push pour ces devices OU ces users
     console.log('Récupération des abonnements push...');
-    const { data: subscriptions, error: subsError } = await supabaseServer
+    let query = supabaseServer
       .from('push_subscriptions')
-      .select('endpoint,p256dh,auth,subscription_json,device_id')
-      .in('device_id', targetDeviceIds);
+      .select('endpoint,p256dh,auth,subscription_json,device_id,user_id');
+
+    const conditions: string[] = [];
+    if (targetDeviceIds.length > 0) conditions.push(`device_id.in.(${targetDeviceIds.map(id => `"${id}"`).join(',')})`);
+    if (targetUserIds.length > 0) conditions.push(`user_id.in.(${targetUserIds.map(id => `"${id}"`).join(',')})`);
+
+    const { data: subscriptions, error: subsError } = await query.or(conditions.join(','));
 
     if (subsError) {
       console.error('Erreur lors de la récupération des abonnements push:', subsError);

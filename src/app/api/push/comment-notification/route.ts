@@ -7,8 +7,10 @@ export const runtime = 'nodejs';
 type CommentNotificationBody = {
     postId: string;
     postAuthorDeviceId: string;
+    postAuthorUserId?: string | null;
     commenterName: string;
     commenterDeviceId: string;
+    commenterUserId?: string | null;
     commentPreview: string;
 };
 
@@ -28,14 +30,17 @@ export async function POST(req: Request) {
         return NextResponse.json({ ok: false, error: 'Invalid JSON body' }, { status: 400 });
     }
 
-    const { postId, postAuthorDeviceId, commenterName, commenterDeviceId, commentPreview } = body;
+    const { postId, postAuthorDeviceId, postAuthorUserId, commenterName, commenterDeviceId, commenterUserId, commentPreview } = body;
 
     if (!postId || !postAuthorDeviceId || !commenterName) {
         return NextResponse.json({ ok: false, error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Don't notify if the commenter IS the post author
-    if (postAuthorDeviceId === commenterDeviceId) {
+    // Ne pas notifier si le commentateur EST l'auteur du post (par device ou par UID)
+    const isSelfComment = (postAuthorDeviceId === commenterDeviceId) || 
+                          (postAuthorUserId && commenterUserId && postAuthorUserId === commenterUserId);
+                          
+    if (isSelfComment) {
         return NextResponse.json({ ok: true, sent: 0, reason: 'self-comment' });
     }
 

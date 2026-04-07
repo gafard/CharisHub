@@ -48,7 +48,7 @@ export default function NotificationManager() {
             if (status === 'granted' && !pushSyncDone.current) {
                 pushSyncDone.current = true;
                 console.log('[NotificationManager] Auto-syncing push subscription...');
-                const result = await syncPushSubscription(true);
+                const result = await syncPushSubscription(true, identity?.userId);
                 if (result.ok) {
                     console.log('[NotificationManager] Push subscription synced ✅');
                 } else {

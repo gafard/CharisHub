@@ -1025,6 +1025,7 @@ async function triggerCommunityPostPush(post: CommunityPost, actorDeviceId: stri
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         actorDeviceId,
+        actorUserId: (post as any).author_user_id || null,
         title,
         body,
         url: postUrl,
@@ -1039,6 +1040,7 @@ async function triggerCommunityPostPush(post: CommunityPost, actorDeviceId: stri
 export async function triggerGroupCallPush(payload: {
   groupId: string;
   callerDeviceId: string;
+  callerUserId?: string | null;
   callerDisplayName: string;
   callType: 'audio' | 'video';
   groupName?: string;
@@ -1063,6 +1065,7 @@ export async function triggerGroupCallPush(payload: {
                         callId: payload.callId || undefined,
                         groupId: payload.groupId,
                         startedBy: payload.callerDeviceId,
+                        startedByUserId: payload.callerUserId || null,
                         startedByUserName: payload.callerDisplayName,
                         groupName: payload.groupName,
                         callType: payload.callType,
@@ -1180,29 +1183,37 @@ async function triggerCommentPush(payload: {
   postId: string;
   commenterName: string;
   commenterDeviceId: string;
+  commenterUserId?: string | null;
   commentContent: string;
 }) {
   if (!isBrowser()) return;
   try {
     // Look up the post author's device ID
     let postAuthorDeviceId = '';
+    let postAuthorUserId: string | null = null;
     if (supabase) {
       const { data } = await supabase
         .from('charishub_posts')
-        .select('author_device_id,guest_id')
+        .select('author_device_id,guest_id,author_user_id')
         .eq('id', payload.postId)
         .maybeSingle();
       postAuthorDeviceId = data?.author_device_id || data?.guest_id || '';
+      postAuthorUserId = data?.author_user_id || null;
     } else {
       // Local fallback
       const posts = readLocal<any[]>(LS_POSTS_KEY, []);
       const post = posts.find((p: any) => p.id === payload.postId);
       postAuthorDeviceId = post?.author_device_id || '';
+      postAuthorUserId = post?.author_user_id || null;
     }
 
-    if (!postAuthorDeviceId) return;
-    // Don't notify self
-    if (postAuthorDeviceId === payload.commenterDeviceId) return;
+    if (!postAuthorDeviceId && !postAuthorUserId) return;
+    
+    // Don't notify self (check device or user)
+    const isSelf = (postAuthorDeviceId === payload.commenterDeviceId) || 
+                   (postAuthorUserId && payload.commenterUserId && postAuthorUserId === payload.commenterUserId);
+                   
+    if (isSelf) return;
 
     await fetch('/api/push/comment-notification', {
       method: 'POST',
@@ -1210,8 +1221,10 @@ async function triggerCommentPush(payload: {
       body: JSON.stringify({
         postId: payload.postId,
         postAuthorDeviceId,
+        postAuthorUserId,
         commenterName: payload.commenterName,
         commenterDeviceId: payload.commenterDeviceId,
+        commenterUserId: payload.commenterUserId || null,
         commentPreview: payload.commentContent,
       }),
     });
@@ -1627,6 +1640,7 @@ export async function addComment(payload: {
       postId: payload.post_id,
       commenterName: payload.author_name,
       commenterDeviceId: payload.author_device_id,
+      commenterUserId: payload.user_id,
       commentContent: payload.content,
     });
     

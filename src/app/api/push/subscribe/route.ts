@@ -13,6 +13,7 @@ type SubscribeBody = {
     };
   };
   deviceId?: string;
+  userId?: string | null;
   locale?: string;
 };
 
@@ -39,6 +40,7 @@ export async function POST(req: Request) {
   const p256dh = (body.subscription?.keys?.p256dh || '').trim();
   const auth = (body.subscription?.keys?.auth || '').trim();
   const deviceId = clip((body.deviceId || '').trim(), 120);
+  const userId = body.userId; // UUID
   const locale = clip((body.locale || '').trim(), 16);
 
   if (!endpoint || !p256dh || !auth) {
@@ -50,6 +52,7 @@ export async function POST(req: Request) {
 
   const payload = {
     device_id: deviceId || null,
+    user_id: userId || null, // NOUVEAU
     endpoint,
     p256dh,
     auth,

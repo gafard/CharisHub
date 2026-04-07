@@ -101,6 +101,7 @@ export async function sendNotification(payload: NotifyPayload) {
 
 export async function syncPushSubscription(
   enabled: boolean,
+  userId?: string | null,
   remindersEnabled?: boolean,
   reminderTime?: string
 ): Promise<SubscriptionResponse> {
@@ -124,6 +125,7 @@ export async function syncPushSubscription(
           body: JSON.stringify({
             endpoint: json.endpoint,
             deviceId,
+            userId,
           }),
         });
         await existing.unsubscribe();
@@ -158,6 +160,7 @@ export async function syncPushSubscription(
       body: JSON.stringify({
         subscription: subscription.toJSON(),
         deviceId,
+        userId: userId || null,
         locale: navigator.language || 'fr',
         readingRemindersEnabled: remindersEnabled || false,
         readingReminderTime: reminderTime || '19:00',

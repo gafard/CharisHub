@@ -6,6 +6,7 @@ export const runtime = 'nodejs';
 
 type BroadcastBody = {
   actorDeviceId?: string;
+  actorUserId?: string | null;
   title?: string;
   body?: string;
   url?: string;
@@ -41,6 +42,7 @@ export async function POST(req: Request) {
   }
 
   const actorDeviceId = (body.actorDeviceId || '').trim();
+  const actorUserId = body.actorUserId;
   const title = normalizeText(body.title || 'Nouvelle publication');
   const content = normalizeText(body.body || 'Un nouveau message est disponible dans les groupes.');
   const url = (body.url || '/groups').trim();
@@ -48,11 +50,18 @@ export async function POST(req: Request) {
 
   const listQuery = supabaseServer
     .from('push_subscriptions')
-    .select('endpoint,p256dh,auth,device_id')
+    .select('endpoint,p256dh,auth,device_id,user_id')
     .limit(1000);
-  const { data, error } = actorDeviceId
-    ? await listQuery.neq('device_id', actorDeviceId)
-    : await listQuery;
+  
+  let query = listQuery;
+  if (actorDeviceId) {
+    query = query.neq('device_id', actorDeviceId);
+  }
+  if (actorUserId) {
+    query = query.neq('user_id', actorUserId);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });

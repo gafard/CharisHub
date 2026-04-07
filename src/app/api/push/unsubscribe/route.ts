@@ -7,6 +7,7 @@ export const runtime = 'nodejs';
 type UnsubscribeBody = {
   endpoint?: string;
   deviceId?: string;
+  userId?: string | null;
 };
 
 function clip(value: string, size = 120) {
@@ -30,18 +31,21 @@ export async function POST(req: Request) {
 
   const endpoint = (body.endpoint || '').trim();
   const deviceId = clip((body.deviceId || '').trim(), 120);
+  const userId = body.userId;
 
-  if (!endpoint && !deviceId) {
+  if (!endpoint && !deviceId && !userId) {
     return NextResponse.json(
       { ok: false, error: 'Missing endpoint or deviceId' },
       { status: 400 }
     );
   }
 
-  const query = supabaseServer.from('push_subscriptions').delete();
-  const { error } = endpoint 
-    ? await query.eq('endpoint', endpoint) 
-    : await query.eq('device_id', deviceId);
+  let finalQuery = supabaseServer.from('push_subscriptions').delete();
+  if (endpoint) finalQuery = finalQuery.eq('endpoint', endpoint);
+  else if (userId) finalQuery = finalQuery.eq('user_id', userId);
+  else finalQuery = finalQuery.eq('device_id', deviceId);
+  
+  const { error } = await finalQuery;
     
   if (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
