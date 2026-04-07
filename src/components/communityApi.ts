@@ -2,6 +2,26 @@ import logger from '@/lib/logger';
 import { supabase } from '../lib/supabase';
 import { renderVerseStoryPng } from '../lib/storyImage';
 
+/**
+ * Wrapper fetch qui injecte le token Bearer Supabase pour les appels API internes.
+ */
+async function authFetch(url: string, init?: RequestInit): Promise<Response> {
+  const headers = new Headers(init?.headers);
+  if (supabase) {
+    try {
+      const { data } = await supabase.auth.getSession();
+      const token = data?.session?.access_token;
+      if (token) {
+        headers.set('Authorization', `Bearer ${token}`);
+      }
+    } catch {
+      // Silently continue without auth token
+    }
+  }
+  return fetch(url, { ...init, headers });
+}
+
+
 export type CommunityPost = {
   id: string;
   created_at: string;
@@ -176,7 +196,7 @@ export async function canPublishAnnouncement(): Promise<boolean> {
       headers['x-admin-actor'] = 'community_composer';
     }
 
-    const response = await fetch('/api/admin/role', {
+    const response = await authFetch('/api/admin/role', {
       method: 'GET',
       headers,
       cache: 'no-store',
@@ -1021,7 +1041,7 @@ async function triggerCommunityPostPush(post: CommunityPost, actorDeviceId: stri
       ? `/groups?group=${encodeURIComponent(post.group_id)}`
       : '/groups';
     const tag = post.id ? `post-${post.id}` : 'community-post';
-    await fetch('/api/push/community-post', {
+    await authFetch('/api/push/community-post', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
@@ -1090,7 +1110,7 @@ export async function triggerGroupCallPush(payload: {
       );
     }
 
-    await fetch('/api/push/group-call-notification', {
+    await authFetch('/api/push/group-call-notification', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(payload),
@@ -1107,7 +1127,7 @@ export async function startGroupCallSession(payload: {
 }): Promise<GroupCallSession | null> {
   if (!isBrowser()) return null;
 
-  const response = await fetch('/api/group-call/start', {
+  const response = await authFetch('/api/group-call/start', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(payload),
@@ -1143,7 +1163,7 @@ export async function startGroupCallSession(payload: {
 export async function activateGroupCallSession(callId: string, deviceId: string) {
   if (!isBrowser() || !callId || !deviceId) return false;
 
-  const response = await fetch('/api/group-call/activate', {
+  const response = await authFetch('/api/group-call/activate', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ callId, deviceId }),
@@ -1155,7 +1175,7 @@ export async function activateGroupCallSession(callId: string, deviceId: string)
 export async function endGroupCallSession(callId: string, deviceId: string) {
   if (!isBrowser() || !callId || !deviceId) return false;
 
-  const response = await fetch('/api/group-call/end', {
+  const response = await authFetch('/api/group-call/end', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ callId, deviceId }),
@@ -1171,7 +1191,7 @@ export async function respondToGroupCallInvitation(
 ) {
   if (!isBrowser() || !callId || !userId) return false;
 
-  const response = await fetch('/api/group-call/respond', {
+  const response = await authFetch('/api/group-call/respond', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ callId, userId, action }),
@@ -1216,7 +1236,7 @@ async function triggerCommentPush(payload: {
                    
     if (isSelf) return;
 
-    await fetch('/api/push/comment-notification', {
+    await authFetch('/api/push/comment-notification', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
@@ -2208,7 +2228,7 @@ export async function upsertGroupCallPresence(payload: {
   if (!payload.groupId || !payload.deviceId) return false;
   if (isBrowser()) {
     try {
-      const response = await fetch('/api/group-call/presence', {
+      const response = await authFetch('/api/group-call/presence', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ action: 'upsert', ...payload }),
@@ -2289,7 +2309,7 @@ export async function clearGroupCallPresence(groupId: string, deviceId: string) 
   if (!groupId || !deviceId || typeof groupId !== 'string' || typeof deviceId !== 'string') return false;
   if (isBrowser()) {
     try {
-      const response = await fetch('/api/group-call/presence', {
+      const response = await authFetch('/api/group-call/presence', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ action: 'clear', groupId, deviceId }),

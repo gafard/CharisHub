@@ -2,6 +2,7 @@ import logger from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabaseServer';
 import { hasWebPushConfig, sendWebPush } from '@/lib/webPush';
+import { verifyAuthSoft } from '@/lib/apiAuth';
 
 export const runtime = 'nodejs';
 
@@ -23,6 +24,8 @@ export async function POST(req: Request) {
     if (!hasWebPushConfig()) {
         return NextResponse.json({ ok: false, error: 'VAPID config missing' }, { status: 503 });
     }
+
+    await verifyAuthSoft(req);
 
     let body: CommentNotificationBody;
     try {

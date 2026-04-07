@@ -1,6 +1,7 @@
 // src/app/api/push/unsubscribe/route.ts
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabaseServer';
+import { verifyAuthSoft } from '@/lib/apiAuth';
 
 export const runtime = 'nodejs';
 
@@ -21,6 +22,8 @@ export async function POST(req: Request) {
       { status: 503 }
     );
   }
+
+  await verifyAuthSoft(req);
 
   let body: UnsubscribeBody;
   try {

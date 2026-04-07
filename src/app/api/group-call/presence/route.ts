@@ -1,6 +1,7 @@
 import logger from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabaseServer';
+import { verifyAuthSoft } from '@/lib/apiAuth';
 
 export const runtime = 'nodejs';
 
@@ -22,6 +23,8 @@ export async function POST(req: Request) {
   if (!supabaseServer) {
     return NextResponse.json({ ok: false, error: 'Supabase server client is not configured' }, { status: 503 });
   }
+
+  await verifyAuthSoft(req);
 
   let body: UpsertPresenceBody;
   try {
