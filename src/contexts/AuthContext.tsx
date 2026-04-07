@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { claimLegacyData } from '@/lib/cloudSync';
 import { Session, User, AuthChangeEvent } from '@supabase/supabase-js';
 
 export type Profile = {
@@ -80,9 +81,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data: { session } } = await supabase.auth.getSession();
       setSession(session);
       setUser(session?.user ?? null);
-      
+
       if (session?.user) {
         await fetchProfile(session.user.id);
+        // Migrer les donnees locales vers le compte
+        await migrateLocalDataToAccount(session.user.id);
       }
       setLoading(false);
     };
@@ -92,9 +95,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event: AuthChangeEvent, session: Session | null) => {
       setSession(session);
       setUser(session?.user ?? null);
-      
+
       if (session?.user) {
         await fetchProfile(session.user.id);
+        // Migrer les donnees locales vers le compte
+        await migrateLocalDataToAccount(session.user.id);
       } else {
         setProfile(null);
       }
@@ -105,6 +110,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       subscription.unsubscribe();
     };
   }, []);
+
+  // Migrer les donnees localStorage vers le compte Supabase
+  const migrateLocalDataToAccount = async (userId: string) => {
+    try {
+      const raw = typeof window !== 'undefined' ? localStorage.getItem('formation_biblique_identity_v1') : null;
+      if (!raw) return;
+      const identity = JSON.parse(raw);
+      const deviceId = identity?.deviceId;
+      if (!deviceId) return;
+
+      // Si les donnees ont deja ete migrees, on skip
+      if (identity._migratedToAccount) return;
+
+      console.log('[Auth] Migration des donnees locales vers le compte:', userId);
+      await claimLegacyData(deviceId, userId);
+
+      // Marquer comme migre
+      identity._migratedToAccount = true;
+      identity.userId = userId;
+      localStorage.setItem('formation_biblique_identity_v1', JSON.stringify(identity));
+    } catch (err) {
+      console.error('[Auth] Erreur migration donnees locales:', err);
+    }
+  };
 
   const signInWithGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({

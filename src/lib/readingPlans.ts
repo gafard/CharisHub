@@ -21,16 +21,24 @@ const ACTIVE_PLAN_KEY = 'formation_biblique_active_reading_plan_v1';
 const IDENTITY_KEY = 'formation_biblique_identity_v1';
 
 /**
- * Vérifie si l'utilisateur est "inscrit" (a défini un nom d'affichage).
- * Un utilisateur "invité" sans nom ne peut pas activer de plan.
+ * Vérifie si l'utilisateur est "inscrit" (connecté via Supabase Auth).
+ * Un utilisateur "invité" sans compte Supabase ne peut pas activer de plan.
+ * 
+ * @param userId - Optionnel: l'userId Supabase actuel (depuis useAuth)
  */
-export function isUserRegistered(): boolean {
+export function isUserRegistered(userId?: string | null): boolean {
+    // Si on passe un userId explicite, on l'utilise
+    if (userId) return true;
+
+    // Sinon on vérifie le localStorage (cas où AuthContext n'est pas disponible)
     if (typeof window === 'undefined') return false;
     try {
         const raw = localStorage.getItem(IDENTITY_KEY);
         if (!raw) return false;
         const identity = JSON.parse(raw);
-        return !!(identity?.displayName && identity.displayName.trim().length > 0);
+        // L'utilisateur est inscrit s'il a un userId (Supabase) OU un displayName
+        // Pour la transition, on accepte les deux, mais on privilégie userId
+        return !!(identity?.userId || (identity?.displayName && identity.displayName.trim().length > 0));
     } catch {
         return false;
     }
@@ -39,11 +47,11 @@ export function isUserRegistered(): boolean {
 /**
  * Vérifie et retourne l'erreur si l'utilisateur n'est pas inscrit.
  */
-export function checkUserRegistered(): { allowed: true } | { allowed: false; reason: string } {
-    if (isUserRegistered()) return { allowed: true };
+export function checkUserRegistered(userId?: string | null): { allowed: true } | { allowed: false; reason: string } {
+    if (isUserRegistered(userId)) return { allowed: true };
     return {
         allowed: false,
-        reason: 'Les plans de lecture nécessitent un compte. Veuillez définir votre nom dans les paramètres.',
+        reason: 'Les plans de lecture nécessitent un compte. Connectez-vous ou créez un compte.',
     };
 }
 
@@ -318,11 +326,11 @@ export function startPlan(planId: string): PlanProgress {
     return progress;
 }
 
-export function startOrActivatePlan(planId: string): ActiveReadingPlan | null {
+export function startOrActivatePlan(planId: string, userId?: string | null): ActiveReadingPlan | null {
     // Vérifier que l'utilisateur est inscrit
-    const check = checkUserRegistered();
+    const check = checkUserRegistered(userId);
     if (!check.allowed) {
-        console.warn('[ReadingPlans] Plan activation refusé — utilisateur non inscrit:', check.reason);
+        console.warn('[ReadingPlans] Plan activation refuse — utilisateur non inscrit:', check.reason);
         return null;
     }
 

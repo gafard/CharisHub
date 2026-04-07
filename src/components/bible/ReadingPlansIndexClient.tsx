@@ -104,7 +104,7 @@ export default function ReadingPlansIndexClient() {
             return;
         }
 
-        startOrActivatePlan(planId);
+        startOrActivatePlan(planId, user.id);
         const next = getFirstUncompletedReading(planId);
         if (next) {
             router.push(`/bible?book=${next.bookId}&chapter=${next.chapter}&plan=${planId}`);
@@ -116,14 +116,16 @@ export default function ReadingPlansIndexClient() {
     const handleAuthSuccess = useCallback(() => {
         setShowAuthModal(false);
         if (pendingPlanId) {
-            startOrActivatePlan(pendingPlanId);
+            // L'utilisateur vient de se connecter, on passe son userId
+            const userId = user?.id;
+            startOrActivatePlan(pendingPlanId, userId);
             const next = getFirstUncompletedReading(pendingPlanId);
             if (next) {
                 router.push(`/bible?book=${next.bookId}&chapter=${next.chapter}&plan=${pendingPlanId}`);
             }
             setPendingPlanId(null);
         }
-    }, [pendingPlanId, router]);
+    }, [pendingPlanId, router, user]);
 
     const handleTrackCardSelect = useCallback((planId: string, index: number) => {
         setSelectedPlanId(planId);
@@ -360,6 +362,8 @@ export default function ReadingPlansIndexClient() {
             isOpen={showAuthModal}
             onClose={() => setShowAuthModal(false)}
             initialMode="register"
+            onSuccess={handleAuthSuccess}
         />
     </>
 );
+}
