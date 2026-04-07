@@ -57,7 +57,7 @@ const DEMO_VERSE_STRONG_MAP: Record<string, Record<string, Record<string, Strong
 };
 
 /**
- * Récupère les tokens Strong pour un verset spécifique
+ * Récupère les tokens Strong pour un verset spécifique via l'API dynamique
  */
 export async function getStrongTokens(params: {
   bookId: string; // ex: "jhn"
@@ -65,26 +65,22 @@ export async function getStrongTokens(params: {
   verse: number; // 1-indexé
 }): Promise<StrongToken[]> {
   try {
-    // Cherche dans les données de démonstration
-    const bookMap = DEMO_VERSE_STRONG_MAP[params.bookId];
-    if (!bookMap) {
-      console.log(`Aucune donnée Strong trouvée pour le livre: ${params.bookId}`);
-      return [];
-    }
+    const url = `/api/bible/interlinear?bookId=${params.bookId}&chapter=${params.chapter}&verse=${params.verse}`;
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    
+    const data = await res.json();
+    if (!data.words) return [];
 
-    const chapterMap = bookMap[params.chapter.toString()];
-    if (!chapterMap) {
-      console.log(`Aucune donnée Strong trouvée pour ${params.bookId} ${params.chapter}`);
-      return [];
-    }
-
-    const tokens = chapterMap[params.verse.toString()];
-    if (!tokens) {
-      console.log(`Aucune donnée Strong trouvée pour ${params.bookId} ${params.chapter}:${params.verse}`);
-      return [];
-    }
-
-    return tokens;
+    return data.words
+      .filter((w: any) => w.strongNumber)
+      .map((w: any) => ({
+        w: w.translation,
+        lang: w.strongNumber.startsWith('H') ? 'hebrew' : 'greek',
+        strong: w.strongNumber,
+        originalForm: w.original,
+        phonetic: w.phonetic
+      }));
   } catch (error) {
     console.error('Erreur lors de la récupération des tokens Strong:', error);
     return [];
@@ -106,22 +102,10 @@ export function parseStrong(code: string): { lang: 'hebrew' | 'greek'; id: strin
 
 /**
  * Fonction utilitaire pour obtenir les tokens Strong pour un chapitre entier
+ * (Note: pour optimiser, on pourrait créer une route API par chapitre)
  */
 export async function getStrongTokensForChapter(bookId: string, chapter: number): Promise<Record<string, StrongToken[]>> {
-  try {
-    const bookMap = DEMO_VERSE_STRONG_MAP[bookId];
-    if (!bookMap) {
-      return {};
-    }
-
-    const chapterMap = bookMap[chapter.toString()];
-    if (!chapterMap) {
-      return {};
-    }
-
-    return chapterMap;
-  } catch (error) {
-    console.error('Erreur lors de la récupération des tokens Strong du chapitre:', error);
-    return {};
-  }
+  // Pour l'instant, on laisse vide ou on pourrait boucler (non recommandé pour la perf)
+  // Une amélioration future serait d'ajouter un endpoint /api/bible/interlinear/chapter
+  return {};
 }

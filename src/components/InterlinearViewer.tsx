@@ -46,53 +46,25 @@ const InterlinearViewer = ({
     // Pour l'instant, on simule avec des données factices
     const loadData = async () => {
       try {
-        // Simuler un délai de chargement
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        // Données factices pour la démonstration
-        const mockData: InterlinearVerse = {
-          verse: verse,
-          text: "Car Dieu a tant aimé le monde qu'il a donné son Fils unique, afin que tout homme qui croit en lui ne périsse point, mais qu'il ait la vie éternelle.",
-          words: [
-            {
-              original: "ὅτι",
-              transliteration: "hoti",
-              strongNumber: "G3754",
-              translation: "car",
-              morphology: "conj"
-            },
-            {
-              original: "οὕτως",
-              transliteration: "houtōs",
-              strongNumber: "G3779",
-              translation: "ainsi",
-              morphology: "adv"
-            },
-            {
-              original: "ἠγάπησεν",
-              transliteration: "ēgapēsen",
-              strongNumber: "G25",
-              translation: "a aimé",
-              morphology: "verb 3rd aor ind act"
-            },
-            {
-              original: "ὁ",
-              transliteration: "ho",
-              strongNumber: "G3588",
-              translation: "le",
-              morphology: "art nom masc sg"
-            },
-            {
-              original: "κόσμος",
-              transliteration: "kosmos",
-              strongNumber: "G2889",
-              translation: "monde",
-              morphology: "noun nom masc sg"
-            }
-          ]
+        const url = `/api/bible/interlinear?bookId=${bookId}&chapter=${chapter}&verse=${verse}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Failed to load interlinear data');
+        const data = await res.json();
+        
+        // Formatter les données pour le composant
+        const formatted: InterlinearVerse = {
+          verse: data.verse,
+          text: data.text,
+          words: data.words.filter((w: any) => w.strongNumber).map((w: any) => ({
+            original: w.original,
+            transliteration: w.transliteration,
+            strongNumber: w.strongNumber,
+            translation: w.translation,
+            morphology: w.morphology
+          }))
         };
 
-        setInterlinearData(mockData);
+        setInterlinearData(formatted);
       } catch (err) {
         setError("Impossible de charger les données interlinéaires pour ce verset.");
         console.error(err);

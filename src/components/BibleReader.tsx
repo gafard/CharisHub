@@ -2185,7 +2185,7 @@ export default function BibleReader({
     setStrongLoadingFor(cacheKey);
     try {
       let tokens: StrongToken[] = [];
-      const mapping = BibleVersesStrongMap.findStrongMappingsByText(
+      const mapping = await BibleVersesStrongMap.findStrongMappingsByText(
         book.id,
         chapter,
         verse.number,

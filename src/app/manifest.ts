@@ -14,14 +14,48 @@ export default function manifest(): MetadataRoute.Manifest {
     categories: ['education', 'productivity', 'lifestyle'],
     icons: [
       {
-        src: '/icon',
+        src: '/icon.png',
+        sizes: '192x192',
+        type: 'image/png',
+        purpose: 'maskable',
+      },
+      {
+        src: '/icon.png',
         sizes: '512x512',
         type: 'image/png',
       },
       {
-        src: '/apple-icon',
+        src: '/apple-icon.png',
         sizes: '180x180',
         type: 'image/png',
+      },
+    ],
+    screenshots: [
+      {
+        src: '/assets/charishub_tribe_hero.png',
+        sizes: '1024x1024',
+        type: 'image/png',
+        form_factor: 'wide',
+        label: 'Formation des Huios - Communauté',
+      },
+      {
+        src: '/images/Logo.png',
+        sizes: '1336x1536',
+        type: 'image/png',
+        form_factor: 'narrow',
+        label: 'CharisHub - Identité & Grâce',
+      },
+    ],
+    shortcuts: [
+      {
+        name: 'Ouvrir la Bible',
+        url: '/bible',
+        icons: [{ src: '/icon.png', sizes: '192x192' }],
+      },
+      {
+        name: 'Communauté',
+        url: '/groups',
+        icons: [{ src: '/icon.png', sizes: '192x192' }],
       },
     ],
   };

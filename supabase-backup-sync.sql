@@ -406,3 +406,50 @@ CREATE TRIGGER trg_prayer_journal_updated
 -- ============================================================
 -- FIN DU SCHÉMA BACKUP & SYNC
 -- ============================================================
+
+-- ============================================================
+-- 12. user_reading_reflections — Réflexions de lecture
+-- ============================================================
+CREATE TABLE IF NOT EXISTS user_reading_reflections (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  device_id TEXT NOT NULL,
+  user_id TEXT,
+  plan_id TEXT NOT NULL,
+  day_index INT NOT NULL,
+  reading_id TEXT NOT NULL,
+  book_id TEXT NOT NULL,
+  book_name TEXT NOT NULL,
+  chapter INT NOT NULL,
+  answers JSONB NOT NULL DEFAULT '{}',
+  daily_prompts JSONB NOT NULL DEFAULT '{}',
+  prayer_completed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(device_id, plan_id, day_index, reading_id, chapter)
+);
+
+COMMENT ON TABLE user_reading_reflections IS 'Réflexions de lecture par chapitre et plan';
+
+CREATE INDEX IF NOT EXISTS idx_reflections_device ON user_reading_reflections(device_id);
+CREATE INDEX IF NOT EXISTS idx_reflections_plan ON user_reading_reflections(plan_id);
+CREATE INDEX IF NOT EXISTS idx_reflections_updated ON user_reading_reflections(updated_at DESC);
+
+ALTER TABLE user_reading_reflections ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can read own reflections" ON user_reading_reflections
+  FOR SELECT USING (device_id = current_setting('request.jwt.claims', true)::json->>'device_id');
+CREATE POLICY "Users can insert own reflections" ON user_reading_reflections
+  FOR INSERT WITH CHECK (device_id = current_setting('request.jwt.claims', true)::json->>'device_id');
+CREATE POLICY "Users can update own reflections" ON user_reading_reflections
+  FOR UPDATE USING (device_id = current_setting('request.jwt.claims', true)::json->>'device_id');
+CREATE POLICY "Users can delete own reflections" ON user_reading_reflections
+  FOR DELETE USING (device_id = current_setting('request.jwt.claims', true)::json->>'device_id');
+
+-- Trigger updated_at
+CREATE TRIGGER trg_reflections_updated
+  BEFORE UPDATE ON user_reading_reflections
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================================
+-- FIN
+-- ============================================================

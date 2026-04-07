@@ -183,12 +183,32 @@ export function CloudSyncProvider({ children }: { children: ReactNode }) {
       // TODO: Extraire la progression détaillée si disponible
     }
 
+    // Reflections (from localStorage)
+    const reflectionsRaw = safeParse<any[]>(localStorage.getItem('formation_biblique_reading_plan_reflections_v2'), []);
+    const reflections: cloudSync.CloudReflection[] = Array.isArray(reflectionsRaw)
+      ? reflectionsRaw.map((r: any, idx: number) => ({
+          id: `ref_${idx}_${r.readingId || ''}_${r.chapter || ''}`,
+          plan_id: r.planId || '',
+          day_index: r.dayIndex || 0,
+          reading_id: r.readingId || '',
+          book_id: r.bookId || '',
+          book_name: r.bookName || '',
+          chapter: r.chapter || 1,
+          answers: r.answers || {},
+          daily_prompts: r.dailyPrompts || {},
+          prayer_completed_at: r.prayerCompletedAt || null,
+          created_at: r.createdAt || new Date().toISOString(),
+          updated_at: r.updatedAt || new Date().toISOString(),
+        }))
+      : [];
+
     return {
       highlights,
       notes: [...notes, ...verseNotes],
       bookmarks,
       pepites,
       readingProgress,
+      reflections,
       streak,
       prayerSessions,
       prayerJournal,

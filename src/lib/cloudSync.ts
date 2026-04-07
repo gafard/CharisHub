@@ -83,6 +83,21 @@ export interface CloudReadingProgress {
   completed_at: string | null;
 }
 
+export interface CloudReflection {
+  id: string;
+  plan_id: string;
+  day_index: number;
+  reading_id: string;
+  book_id: string;
+  book_name: string;
+  chapter: number;
+  answers: Record<string, string>;
+  daily_prompts: Record<string, string>;
+  prayer_completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface CloudStreak {
   current_streak: number;
   best_streak: number;
@@ -119,6 +134,7 @@ export interface FullUserData {
   bookmarks: CloudBookmark[];
   pepites: CloudPepite[];
   readingProgress: CloudReadingProgress[];
+  reflections: CloudReflection[];
   streak: CloudStreak | null;
   prayerSessions: CloudPrayerSession[];
   prayerJournal: CloudPrayerJournal[];
@@ -179,6 +195,7 @@ export async function fetchAllCloudData(): Promise<FullUserData | null> {
       bookmarksResult,
       pepitesResult,
       readingProgressResult,
+      reflectionsResult,
       streakResult,
       prayerSessionsResult,
       prayerJournalResult,
@@ -188,42 +205,48 @@ export async function fetchAllCloudData(): Promise<FullUserData | null> {
         .select('*')
         .or(`user_id.eq.${authId},device_id.eq.${deviceId}`)
         .order('updated_at', { ascending: false }),
-      
+
       supabase
         .from('user_bible_notes')
         .select('*')
         .or(`user_id.eq.${authId},device_id.eq.${deviceId}`)
         .order('updated_at', { ascending: false }),
-      
+
       supabase
         .from('user_bible_bookmarks')
         .select('*')
         .or(`user_id.eq.${authId},device_id.eq.${deviceId}`)
         .order('created_at', { ascending: false }),
-      
+
       supabase
         .from('user_pepites')
         .select('*')
         .or(`user_id.eq.${authId},device_id.eq.${deviceId}`)
         .order('created_at', { ascending: false }),
-      
+
       supabase
         .from('user_reading_progress')
         .select('*')
         .or(`user_id.eq.${authId},device_id.eq.${deviceId}`),
-      
+
+      supabase
+        .from('user_reading_reflections')
+        .select('*')
+        .or(`user_id.eq.${authId},device_id.eq.${deviceId}`)
+        .order('updated_at', { ascending: false }),
+
       supabase
         .from('user_reading_streak')
         .select('*')
         .or(`user_id.eq.${authId},device_id.eq.${deviceId}`)
         .single(),
-      
+
       supabase
         .from('user_prayer_sessions')
         .select('*')
         .or(`user_id.eq.${authId},device_id.eq.${deviceId}`)
         .order('session_date', { ascending: false }),
-      
+
       supabase
         .from('user_prayer_journal')
         .select('*')
@@ -236,7 +259,8 @@ export async function fetchAllCloudData(): Promise<FullUserData | null> {
     if (bookmarksResult.error) throw bookmarksResult.error;
     if (pepitesResult.error) throw pepitesResult.error;
     if (readingProgressResult.error) throw readingProgressResult.error;
-    if (pepitesResult.error) throw pepitesResult.error;
+    if (reflectionsResult.error) throw reflectionsResult.error;
+    if (streakResult.error && streakResult.error.code !== 'PGRST116') throw streakResult.error;
     if (prayerSessionsResult.error) throw prayerSessionsResult.error;
     if (prayerJournalResult.error) throw prayerJournalResult.error;
 
@@ -246,6 +270,7 @@ export async function fetchAllCloudData(): Promise<FullUserData | null> {
       bookmarks: bookmarksResult.data || [],
       pepites: pepitesResult.data || [],
       readingProgress: readingProgressResult.data || [],
+      reflections: reflectionsResult.data || [],
       streak: streakResult.data || null,
       prayerSessions: prayerSessionsResult.data || [],
       prayerJournal: prayerJournalResult.data || [],
@@ -349,6 +374,24 @@ export async function syncLocalToCloud(
           { onConflict: 'device_id,plan_id,day_index,reading_index' }
         );
       if (error) console.error('[CloudSync] Reading progress sync error:', error);
+    }
+
+    // 5b. Sync reflections
+    reportProgress('Réflexions');
+    if (data.reflections.length > 0) {
+      const { error } = await supabase
+        .from('user_reading_reflections')
+        .upsert(
+          data.reflections.map(r => ({
+            ...r,
+            device_id: deviceId,
+            user_id: authId || null,
+            answers: JSON.stringify(r.answers),
+            daily_prompts: JSON.stringify(r.daily_prompts),
+          })),
+          { onConflict: 'device_id,plan_id,day_index,reading_id,chapter' }
+        );
+      if (error) console.error('[CloudSync] Reflections sync error:', error);
     }
 
     // 6. Sync streak
@@ -512,6 +555,46 @@ export function mergeCloudToLocal(
       
       localStorage.setItem('huios_pepites_v1', JSON.stringify(localPepites));
       counts.pepites = cloudData.pepites.length;
+    }
+
+    // 4b. Merge reflections
+    reportProgress('Fusion des réflexions');
+    if (cloudData.reflections.length > 0) {
+      const localReflectionsRaw = localStorage.getItem('formation_biblique_reading_plan_reflections_v2');
+      const localReflections: any[] = localReflectionsRaw ? JSON.parse(localReflectionsRaw) : [];
+
+      for (const r of cloudData.reflections) {
+        const idx = localReflections.findIndex(lr =>
+          lr.planId === r.plan_id && lr.dayIndex === r.day_index &&
+          lr.readingId === r.reading_id && lr.chapter === r.chapter
+        );
+
+        const reflectionEntry = {
+          planId: r.plan_id,
+          dayIndex: r.day_index,
+          readingId: r.reading_id,
+          bookId: r.book_id,
+          bookName: r.book_name,
+          chapter: r.chapter,
+          answers: r.answers,
+          dailyPrompts: r.daily_prompts,
+          prayerCompletedAt: r.prayer_completed_at,
+          updatedAt: r.updated_at,
+          createdAt: r.created_at,
+        };
+
+        if (idx >= 0) {
+          // Cloud gagne si plus récent
+          if (new Date(r.updated_at) > new Date(localReflections[idx].updatedAt || 0)) {
+            localReflections[idx] = reflectionEntry;
+          }
+        } else {
+          localReflections.push(reflectionEntry);
+        }
+      }
+
+      localStorage.setItem('formation_biblique_reading_plan_reflections_v2', JSON.stringify(localReflections));
+      counts.reflections = cloudData.reflections.length;
     }
 
     // 5. Merge reading streak

@@ -20,42 +20,25 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Verse and reference are required' }, { status: 400 });
         }
 
-        const apiKey = process.env.OPENAI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+        const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 
         if (!apiKey) {
-            // Fallback pour la démo si aucune clé n'est configurée
             return NextResponse.json({
                 content: `### Vision Charis : ${reference}\n\n**Révélation de la Grâce** : Ce verset souligne la bonté infinie du Père. Même si aucune clé IA n'est configurée, la vérité reste : vous êtes aimé sans condition.\n\n**Ton Identité** : En Christ, vous êtes une nouvelle création. Vos erreurs passées sont effacées par Sa Lumière.\n\n**Application** : Repose-toi aujourd'hui dans Sa victoire plutôt que dans tes efforts.`
             });
         }
 
-        // Ici, on pourrait implémenter l'appel réel à OpenAI ou Gemini.
-        // Pour cet exemple, je fournis une structure robuste.
-        
-        // Exemple simplifié d'appel (simulation pour la structure)
-        /*
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
-            },
-            body: JSON.stringify({
-                model: 'gpt-4o',
-                messages: [
-                    { role: 'system', content: SYSTEM_PROMPT },
-                    { role: 'user', content: `Analyse ce verset : "${verse}" (${reference})` }
-                ]
-            })
-        });
-        const data = await response.json();
-        return NextResponse.json({ content: data.choices[0].message.content });
-        */
+        const { GoogleGenerativeAI } = await import("@google/generative-ai");
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-        // Fallback simulateur intelligent (en attendant la config réelle)
-        return NextResponse.json({
-            content: `### Vision Charis : ${reference}\n\n**Révélation de la Grâce** : À travers "${verse}", nous voyons que Dieu prend l'initiative de la relation. Ce n'est pas ton obéissance qui produit Sa faveur, c'est Sa faveur qui produit ton obéissance.\n\n**Ton Identité** : Tu n'es plus un esclave du doute, mais un héritier du Royaume. Ce verset confirme que ta position est scellée en Lui.\n\n**Application** : Aujourd'hui, marche avec la tête haute, non par orgueil, mais par gratitude pour ce qu'Il a fait en toi.`
-        });
+        const prompt = `${SYSTEM_PROMPT}\n\nANALYSE CE VERSET : "${verse}" (${reference})\n\nContexte supplémentaire (facultatif) : ${context || 'N/A'}`;
+
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
+
+        return NextResponse.json({ content: text });
 
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });

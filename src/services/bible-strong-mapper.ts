@@ -41,11 +41,11 @@ class BibleStrongMapper {
    */
   async annotateVerse(bookId: string, chapter: number, verse: number, text: string): Promise<AnnotatedVerse> {
     // Cherche les correspondances Strong pour ce verset spécifique
-    let strongMapping = bibleVersesStrongMap.getStrongMappingsForVerse(bookId, chapter, verse);
+    let strongMapping = await bibleVersesStrongMap.getStrongMappingsForVerse(bookId, chapter, verse);
     
     // Si aucune correspondance exacte n'est trouvée, essaie de trouver par texte
     if (!strongMapping) {
-      strongMapping = bibleVersesStrongMap.findStrongMappingsByText(bookId, chapter, verse, text);
+      strongMapping = await bibleVersesStrongMap.findStrongMappingsByText(bookId, chapter, verse, text);
     }
     
     if (!strongMapping) {

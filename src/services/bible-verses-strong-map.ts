@@ -121,88 +121,47 @@ class BibleVersesStrongMap {
   /**
    * Trouve les correspondances Strong pour un verset spécifique
    */
-  getStrongMappingsForVerse(bookId: string, chapter: number, verse: number): StrongMapping | null {
-    const key = `${normalizeBookId(bookId)}_${chapter}_${verse}`;
-    return this.mappings.get(key) || null;
+  async getStrongMappingsForVerse(bookId: string, chapter: number, verse: number): Promise<StrongMapping | null> {
+    try {
+      const url = `/api/bible/interlinear?bookId=${bookId}&chapter=${chapter}&verse=${verse}`;
+      const res = await fetch(url);
+      if (!res.ok) return null;
+      
+      const data = await res.json();
+      if (!data.words) return null;
+
+      return {
+        bookId,
+        chapter,
+        verse,
+        wordMappings: data.words.filter((w: any) => w.strongNumber).map((w: any, idx: number) => ({
+          word: w.translation,
+          strongNumber: w.strongNumber.replace(/^[HG]/, ''),
+          language: w.strongNumber.startsWith('H') ? 'hebrew' : 'greek',
+          positionInVerse: idx,
+          originalForm: w.original,
+          phonetic: w.phonetic
+        }))
+      };
+    } catch (error) {
+      console.error('Erreur BibleVersesStrongMap:', error);
+      return null;
+    }
   }
 
   /**
    * Trouve les correspondances Strong pour un texte de verset
-   * (Méthode de recherche approximative basée sur les mots dans le texte)
    */
-  findStrongMappingsByText(bookId: string, chapter: number, verse: number, verseText: string): StrongMapping | null {
-    const normalizedBookId = normalizeBookId(bookId);
-    // Essaie d'abord de trouver une correspondance exacte
-    const exactMatch = this.getStrongMappingsForVerse(normalizedBookId, chapter, verse);
-    if (exactMatch) {
-      return exactMatch;
-    }
-
-    // Sinon, essaie de trouver des correspondances basées sur les mots du texte
-    const words = verseText.toLowerCase().split(/\s+/).filter(w => w.length > 0);
-    
-    // Recherche dans toutes les correspondances pour trouver celles qui contiennent
-    // des mots similaires dans le texte
-    for (const [_, mapping] of this.mappings) {
-      // Vérifie si le livre correspond (au moins)
-      if (normalizeBookId(mapping.bookId) === normalizedBookId) {
-        // Vérifie si certains mots du verset correspondent à des mots mappés
-        const matchingWords = mapping.wordMappings.filter(mappedWord => 
-          words.some(verseWord => 
-            verseWord.includes(mappedWord.word.toLowerCase()) ||
-            mappedWord.word.toLowerCase().includes(verseWord)
-          )
-        );
-        
-        if (matchingWords.length > 0) {
-          return mapping;
-        }
-      }
-    }
-    
-    return null;
-  }
-
-  /**
-   * Ajoute une correspondance Strong pour un verset
-   * (Utile pour étendre les données)
-   */
-  addMapping(mapping: StrongMapping) {
-    const normalizedBookId = normalizeBookId(mapping.bookId);
-    const key = `${normalizedBookId}_${mapping.chapter}_${mapping.verse}`;
-    this.mappings.set(key, { ...mapping, bookId: normalizedBookId });
+  async findStrongMappingsByText(bookId: string, chapter: number, verse: number, _verseText: string): Promise<StrongMapping | null> {
+    return this.getStrongMappingsForVerse(bookId, chapter, verse);
   }
 
   /**
    * Obtient toutes les correspondances pour un chapitre
    */
-  getMappingsForChapter(bookId: string, chapter: number): StrongMapping[] {
-    const results: StrongMapping[] = [];
-    const normalizedBookId = normalizeBookId(bookId);
-    
-    for (const [key, mapping] of this.mappings) {
-      if (normalizeBookId(mapping.bookId) === normalizedBookId && mapping.chapter === chapter) {
-        results.push(mapping);
-      }
-    }
-    
-    return results;
-  }
-
-  /**
-   * Obtient toutes les correspondances pour un livre
-   */
-  getMappingsForBook(bookId: string): StrongMapping[] {
-    const results: StrongMapping[] = [];
-    const normalizedBookId = normalizeBookId(bookId);
-    
-    for (const [key, mapping] of this.mappings) {
-      if (normalizeBookId(mapping.bookId) === normalizedBookId) {
-        results.push(mapping);
-      }
-    }
-    
-    return results;
+  async getMappingsForChapter(bookId: string, chapter: number): Promise<StrongMapping[]> {
+    // Note: Pour une implémentation optimale, il faudrait une route API par chapitre
+    return [];
   }
 }
 
