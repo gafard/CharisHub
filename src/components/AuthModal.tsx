@@ -132,7 +132,10 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onSu
                 <div className="absolute inset-0 flex flex-col justify-between p-12 text-white">
                   <div className="flex items-center gap-3">
                     <img src="/images/Logo.png" alt="Logo" className="h-10 w-auto brightness-0 invert" />
-                    <span className="text-2xl font-black tracking-tighter">CharisHub</span>
+                    <div className="flex flex-col leading-none">
+                      <span className="text-2xl font-black tracking-tighter">CharisHub</span>
+                      <span className="text-[8px] font-bold uppercase tracking-widest text-amber-400/80">Connectés par la grâce</span>
+                    </div>
                   </div>
 
                   <div className="space-y-6">

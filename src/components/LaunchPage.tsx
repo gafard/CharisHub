@@ -92,7 +92,7 @@ export default function LaunchPage() {
             <span className="flex flex-col items-start leading-[1.05]">
               <span className="block text-[26px] font-black tracking-tight font-display">CharisHub</span>
               <span className="block text-[9px] font-bold uppercase tracking-[0.15em] text-[#c89f2d] max-w-full truncate">
-                Plateforme chrétienne de groupes & formations
+                Connectés par la grâce
               </span>
             </span>
           </button>
