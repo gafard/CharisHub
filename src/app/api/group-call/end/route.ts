@@ -24,7 +24,7 @@ export async function POST(req: Request) {
         ended_at: new Date().toISOString() 
       })
       .eq('id', callId)
-      .eq('status', 'active'); // Ne mettre à jour que si l'appel est encore actif
+      .in('status', ['ringing', 'active']); // Gère aussi le cas où l'organisateur raccroche avant qu'un pair rejoigne
 
     if (error) {
       console.error('Error updating call status:', error);

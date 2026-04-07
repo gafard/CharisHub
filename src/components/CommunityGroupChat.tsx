@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import {
   Check,
   CheckCheck,
@@ -383,7 +384,7 @@ export default function CommunityGroupChat({
   actor,
 }: {
   groupId: string;
-  actor: { deviceId: string; displayName: string };
+  actor: { deviceId: string; displayName: string; userId?: string | null };
 }) {
   const [messages, setMessages] = useState<CommunityPost[]>([]);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
@@ -563,7 +564,7 @@ export default function CommunityGroupChat({
           schema: 'public',
           table: 'charishub_posts',
         },
-        (payload) => {
+        (payload: RealtimePostgresChangesPayload<Record<string, unknown>>) => {
           const cleanedGroupId = cleanUuid(groupId);
           if (payload.eventType === 'INSERT') {
             const newPost = normalizePost(payload.new);
@@ -886,6 +887,7 @@ export default function CommunityGroupChat({
       await createPost({
         author_name: actor.displayName,
         author_device_id: actor.deviceId,
+        user_id: actor.userId,
         content: finalContent,
         media_url: mediaUrl,
         media_type: mediaType,

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Initialiser Schéma Backup - CharisHub</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      max-width: 600px;
+      width: 100%;
+      padding: 40px;
+    }
+    h1 {
+      font-size: 24px;
+      color: #1a202c;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      color: #718096;
+      font-size: 14px;
+      margin-bottom: 30px;
+    }
+    .step {
+      background: #f7fafc;
+      border-left: 4px solid #667eea;
+      padding: 16px;
+      margin-bottom: 16px;
+      border-radius: 8px;
+    }
+    .step-number {
+      background: #667eea;
+      color: white;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 14px;
+      margin-right: 12px;
+    }
+    .step-title {
+      font-weight: 600;
+      color: #2d3748;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+    }
+    .step-content {
+      color: #4a5568;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    code {
+      background: #edf2f7;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 13px;
+      color: #2d3748;
+    }
+    .btn {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 20px;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      background: #5a67d8;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .alert {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-top: 16px;
+      font-size: 14px;
+    }
+    .alert-info {
+      background: #ebf8ff;
+      border: 1px solid #90cdf4;
+      color: #2c5282;
+    }
+    .alert-success {
+      background: #f0fff4;
+      border: 1px solid #9ae6b4;
+      color: #276749;
+    }
+    .alert-error {
+      background: #fff5f5;
+      border: 1px solid #feb2b2;
+      color: #c53030;
+    }
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #ffffff;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 8px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .link {
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔧 Initialiser le Schéma Backup</h1>
+    <p class="subtitle">Créer les tables de sauvegarde cloud dans Supabase</p>
+
+    <div class="step">
+      <div class="step-title">
+        <span class="step-number">1</span>
+        Ouvrir le Dashboard Supabase
+      </div>
+      <div class="step-content">
+        Rendez-vous sur <a href="https://app.supabase.com" target="_blank" class="link">app.supabase.com</a> et connectez-vous.
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-title">
+        <span class="step-number">2</span>
+        Aller dans SQL Editor
+      </div>
+      <div class="step-content">
+        Sélectionnez votre projet CharisHub, puis cliquez sur <strong>"SQL Editor"</strong> dans le menu de gauche.
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-title">
+        <span class="step-number">3</span>
+        Copier le SQL
+      </div>
+      <div class="step-content">
+        Ouvrez le fichier <code>supabase-backup-sync.sql</code> (dans le dossier du projet) et copiez TOUT son contenu.
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-title">
+        <span class="step-number">4</span>
+        Exécuter le Script
+      </div>
+      <div class="step-content">
+        Collez le SQL dans l'éditeur, puis cliquez sur <strong>"Run"</strong> (ou Ctrl+Enter).
+      </div>
+    </div>
+
+    <div id="status"></div>
+
+    <button class="btn" onclick="checkTables()">
+      ✓ Vérifier que les tables ont été créées
+    </button>
+
+    <div class="alert alert-info" style="margin-top: 20px;">
+      <strong>💡 Astuce :</strong> Après avoir créé les tables, rechargez CharisHub et vous verrez le badge "Connecté" vert en bas à droite.
+    </div>
+  </div>
+
+  <script>
+    async function checkTables() {
+      const statusDiv = document.getElementById('status');
+      const btn = document.querySelector('.btn');
+      
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Vérification...';
+      statusDiv.innerHTML = '';
+
+      try {
+        const response = await fetch('/api/admin/init-backup-schema');
+        const data = await response.json();
+
+        if (data.allTablesExist) {
+          statusDiv.innerHTML = '<div class="alert alert-success">✅ Parfait ! Toutes les tables existent. La synchronisation cloud est prête !</div>';
+          btn.innerHTML = '✅ Tables créées avec succès';
+        } else {
+          const missingCount = (data.tables || []).filter(t => !t.exists).length;
+          statusDiv.innerHTML = `<div class="alert alert-error">❌ Il manque encore ${missingCount} table(s). Veuillez exécuter le script SQL dans le dashboard Supabase.</div>`;
+          btn.disabled = false;
+          btn.innerHTML = '🔄 Réessayer la vérification';
+        }
+      } catch (error) {
+        statusDiv.innerHTML = '<div class="alert alert-error">❌ Erreur lors de la vérification</div>';
+        btn.disabled = false;
+        btn.innerHTML = '🔄 Réessayer';
+      }
+    }
+  </script>
+</body>
+</html>

@@ -3,9 +3,10 @@ import { NextResponse } from 'next/server';
 export const runtime = 'nodejs';
 
 interface PrayerPromptInput {
-    chapterLabel: string; // e.g. "Jean 15"
-    reflectionInsights: string[]; // raw reflection answers
-    passageThemes?: string;
+  chapterLabel: string; // e.g. "Jean 15"
+  reflectionInsights: string[]; // raw reflection answers
+  passageText?: string;
+  passageThemes?: string;
 }
 
 interface PrayerPromptsOutput {
@@ -50,34 +51,34 @@ function normalizeOutput(raw: unknown): PrayerPromptsOutput | null {
 }
 
 function buildPrompt(input: PrayerPromptInput): string {
-    const { chapterLabel, reflectionInsights, passageThemes } = input;
-    const insightLines = reflectionInsights
-        .map((line, i) => `${i + 1}. ${line.trim()}`)
-        .join('\n');
+  const { chapterLabel, reflectionInsights, passageText, passageThemes } = input;
+  const insightLines = reflectionInsights.length > 0
+    ? `Voici les réflexions personnelles du croyant :\n${reflectionInsights.map((line, i) => `${i + 1}. ${line.trim()}`).join('\n')}`
+    : 'Le croyant n\'a pas laissé de notes spécifiques, base-toi uniquement sur la profondeur spirituelle du passage biblique.';
 
-    return `Tu es un accompagnateur spirituel chrétien évangélique. 
-Un croyant vient de lire et méditer le passage biblique : **${chapterLabel}**.
-${passageThemes ? `\nThèmes du passage : ${passageThemes}` : ''}
+  return `Tu es un accompagnateur spirituel chrétien chaleureux, profond et bienveillant. 
+Ta mission est d'aider un croyant à transformer sa lecture biblique du passage **${chapterLabel}** en un moment de prière intime et puissant (Méthode PRIAM).
 
-Voici ses réponses brutes aux questions de réflexion :
+${passageText ? `Voici le texte du passage :\n"${passageText.slice(0, 3000)}"\n` : ''}
+${passageThemes ? `Thèmes principaux identifiés : ${passageThemes}\n` : ''}
 ${insightLines}
 
-Ta mission : Reformule ces réponses brutes en **invitations à prier** courtes, personnelles et spirituellement profondes, pour chacun des 5 moments de prière PRIAM. Chaque invitation doit :
-- Partir de ce que le croyant a ressenti ou compris dans le passage
-- Être rédigée à la 2e personne (tutoiement ou vouvoiement, utilise "vous")
-- Être une invitation concrète à entrer dans ce type de prière
-- Faire entre 2 et 4 phrases maximum
-- Ne pas répéter mot pour mot les réflexions brutes
-- Être écrite en français soutenu mais accessible
+Crée 5 invitations à prier (Adoration, Repentance, Gratitude, Intercession, Engagement).
+Chaque invitation doit :
+1. Être rédigée à la 2e personne du pluriel ("vous") avec beaucoup de respect et de douceur.
+2. Reformuler les pensées du croyant (si présentes) avec des mots plus profonds, poétiques et spirituels.
+3. Si aucune note n'est présente, extraire l'essence spirituelle du texte pour guider la prière.
+4. Faire 2 à 3 phrases fluides.
+5. Éviter les clichés ; chercher la sincérité et la révélation de la grâce.
 
-Types de prière :
-- **adoration** : Louer Dieu pour ce que le passage révèle de Sa nature
-- **repentance** : S'il y a une prise de conscience de faiblesse ou de péché, l'apporter à Dieu
-- **gratitude** : Remercier Dieu pour ce passage ou une grâce reçue
-- **intercession** : Prier pour quelqu'un ou une situation inspirée par le passage
-- **engagement** : Prendre un engagement spirituel concret lié au passage
+Types de prière attendus :
+- **adoration** : Contempler la gloire de Dieu révélée ici.
+- **repentance** : Un moment d'humilité face à la sainteté de Dieu ou nos manquements.
+- **gratitude** : Dire merci pour l'œuvre de Christ ou une promesse du texte.
+- **intercession** : Porter les autres vers le Trône de grâce.
+- **engagement** : Un pas de foi concret pour la journée.
 
-IMPORTANT: Réponds UNIQUEMENT avec un JSON valide, sans markdown autour, exactement :
+Réponds UNIQUEMENT avec un JSON valide :
 {
   "adoration": "...",
   "repentance": "...",

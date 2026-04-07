@@ -27,7 +27,7 @@ export async function GET(req: Request) {
     let groups: any[] = [];
     try {
         const { data, error } = await supabaseServer
-            .from('community_groups')
+            .from('charishub_groups')
             .select('id,name,next_call_at')
             .gt('next_call_at', now.toISOString())
             .lte('next_call_at', in15min.toISOString());
@@ -53,7 +53,7 @@ export async function GET(req: Request) {
         let members: any[] = [];
         try {
             const { data, error } = await supabaseServer
-                .from('community_group_members')
+                .from('charishub_group_members')
                 .select('device_id')
                 .eq('group_id', group.id);
             if (error) throw error;

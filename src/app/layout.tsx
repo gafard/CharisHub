@@ -3,6 +3,8 @@ import { Inter, Poppins, Merriweather } from 'next/font/google';
 import './globals.css';
 import { I18nProvider } from '../contexts/I18nContext';
 import { SettingsProvider } from '../contexts/SettingsContext';
+import { AuthProvider } from '../contexts/AuthContext';
+import { CloudSyncProvider } from '../contexts/CloudSyncContext';
 import NotificationManager from '../components/NotificationManager';
 import GlobalCallManager from '../components/GlobalCallManager';
 
@@ -50,13 +52,17 @@ export default function RootLayout({
       className={`${inter.variable} ${poppins.variable} ${merriweather.variable}`}
     >
       <body className="pb-[92px] font-sans antialiased md:pb-0" suppressHydrationWarning={true}>
-        <I18nProvider>
-          <SettingsProvider>
-            {children}
-            <NotificationManager />
-            <GlobalCallManager />
-          </SettingsProvider>
-        </I18nProvider>
+        <AuthProvider>
+          <I18nProvider>
+            <SettingsProvider>
+              <CloudSyncProvider>
+                {children}
+                <NotificationManager />
+                <GlobalCallManager />
+              </CloudSyncProvider>
+            </SettingsProvider>
+          </I18nProvider>
+        </AuthProvider>
       </body>
     </html>
   );

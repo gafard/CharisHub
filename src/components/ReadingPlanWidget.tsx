@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import ReflectionSheet from './bible/ReflectionSheet';
 import {
@@ -161,70 +161,95 @@ export default function ReadingPlanWidget({
 
     return (
         <>
-            <div className="relative mx-auto w-full max-w-[760px] overflow-hidden rounded-[26px] border border-[rgba(246,225,192,0.1)] bg-[#110d0a] p-3.5 text-white shadow-[0_18px_54px_rgba(0,0,0,0.22)] sm:p-4">
+            <motion.div
+                className="relative mx-auto w-full max-w-[800px] overflow-hidden rounded-[32px] border border-[rgba(255,255,255,0.08)] bg-[#0c0c0e] p-5 text-white shadow-[0_24px_80px_rgba(0,0,0,0.3)] sm:p-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            >
+                {/* Effet de lumière de fond adaptatif */}
                 <div
-                    className="pointer-events-none absolute inset-0"
+                    className="pointer-events-none absolute inset-0 transition-opacity duration-1000"
                     style={{
-                        background: `radial-gradient(circle_at_top_left, ${teaserPresentation.theme.accentSoft}, transparent 26%), radial-gradient(circle_at_bottom_right, rgba(255,255,255,0.04), transparent 18%), linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0))`,
+                        background: `
+                            radial-gradient(circle at 0% 0%, ${activePlan ? teaserPresentation.theme.accentSoft : 'rgba(200,159,45,0.08)'} 0%, transparent 40%),
+                            radial-gradient(circle at 100% 100%, rgba(255,255,255,0.02) 0%, transparent 30%),
+                            linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%)
+                        `,
                     }}
                 />
-                <div className="relative z-10 flex min-h-[78px] items-center gap-3 sm:min-h-[84px] sm:gap-4">
-                    <button
-                        type="button"
-                        onClick={() => router.push(primaryHref)}
-                        className="flex min-w-0 flex-1 items-center gap-3 text-left"
-                    >
-                        <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-[16px] border border-white/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.16),rgba(255,255,255,0.04))] text-[#fff7ec] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] sm:h-12 sm:w-12 sm:rounded-[18px]">
+
+                {/* Texture de grain subtile */}
+                <div className="pointer-events-none absolute inset-0 opacity-[0.03] mix-blend-overlay bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]" />
+
+                <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-6">
+                    <div className="flex flex-1 items-center gap-5">
+                        {/* Icône principale avec halo */}
+                        <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-[20px] border border-white/10 bg-white/5 shadow-inner sm:h-16 sm:w-16 sm:rounded-[22px]">
                             <div
-                                className="absolute inset-0 rounded-[inherit] blur-xl"
-                                style={{ background: teaserPresentation.theme.accentSoft }}
+                                className="absolute inset-0 rounded-[inherit] blur-2xl"
+                                style={{ background: activePlan ? teaserPresentation.theme.accentSoft : 'rgba(200,159,45,0.2)' }}
                             />
-                            <div className="relative z-10 flex items-center justify-center">
-                                <PlanSymbol symbolId={teaserPresentation.art.symbolId} size={18} />
+                            <div className="relative z-10 flex items-center justify-center text-[#fff7ec]">
+                                <PlanSymbol symbolId={teaserPresentation.art.symbolId} size={24} />
                             </div>
                         </div>
+
                         <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-[rgba(255,240,222,0.6)]">
+                            <div className="flex flex-wrap items-center gap-2.5 text-[10px] font-black uppercase tracking-[0.25em] text-[rgba(255,240,222,0.45)]">
+                                {activePlan && <Sparkles size={10} className="text-[#c89f2d]" />}
                                 <span>{eyebrow}</span>
-                                {!activePlan && (
+                            </div>
+
+                            <h3 className="mt-1.5 font-display text-[20px] font-black leading-tight text-[#fffaf2] sm:text-[23px] tracking-tight">
+                                {title}
+                            </h3>
+
+                            <div className="mt-2 flex items-center gap-3 text-[13px] text-[rgba(255,241,220,0.6)]">
+                                <span className="truncate">{subtitle}</span>
+                                {detail && (
                                     <>
-                                        <span aria-hidden="true" className="text-[rgba(255,240,222,0.36)]">•</span>
-                                        <span>{PLAN_ENTRIES.length} parcours</span>
+                                        <span className="h-1 w-1 rounded-full bg-white/20" />
+                                        <span className="truncate font-medium text-[#c89f2d]">{detail}</span>
                                     </>
                                 )}
                             </div>
-                            <h3 className="mt-1 truncate font-display text-[17px] font-bold leading-none text-[#fff6ea] sm:text-[19px]">
-                                {title}
-                            </h3>
-                            <p className="mt-1 truncate text-[12px] text-[rgba(255,241,220,0.68)] sm:text-[12.5px]">
-                                {subtitle}
-                                {detail ? (
-                                    <>
-                                        <span className="mx-1.5 text-[rgba(255,240,222,0.3)]">•</span>
-                                        {detail}
-                                    </>
-                                ) : null}
-                            </p>
-                        </div>
-                    </button>
 
-                    <div className="hidden shrink-0 sm:block">
-                        <CompactPlanStack entries={teaserEntries} primaryPlanId={activePlan?.plan.id ?? ''} />
+                            {/* Barre de progression si actif */}
+                            {activePlan && (
+                                <div className="mt-4 flex items-center gap-3">
+                                    <div className="h-1 flex-1 overflow-hidden rounded-full bg-white/5">
+                                        <motion.div
+                                            className="h-full bg-[#c89f2d]"
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${(activePlan.completedDays.length / activePlan.plan.days.length) * 100}%` }}
+                                            transition={{ duration: 1, ease: 'circOut' }}
+                                        />
+                                    </div>
+                                    <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest">{Math.round((activePlan.completedDays.length / activePlan.plan.days.length) * 100)}%</span>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
-                    <motion.button
-                        type="button"
-                        onClick={() => router.push(primaryHref)}
-                        className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[#fff7ef] px-3.5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#160d0a] shadow-[0_14px_34px_rgba(0,0,0,0.18)] sm:px-4 sm:text-[11.5px]"
-                        whileHover={reducedMotion ? undefined : { y: -2, scale: 1.01 }}
-                        whileTap={reducedMotion ? undefined : { scale: 0.985 }}
-                        transition={{ duration: 0.32, ease: ENTRY_EASE }}
-                    >
-                        {primaryLabel}
-                        <ArrowUpRight size={15} strokeWidth={2.4} />
-                    </motion.button>
+                    <div className="flex items-center justify-between gap-4 border-t border-white/5 pt-4 md:border-t-0 md:pt-0">
+                        <div className={`${activePlan ? 'hidden' : 'block'} lg:block`}>
+                           <CompactPlanStack entries={teaserEntries} primaryPlanId={activePlan?.plan.id ?? ''} />
+                        </div>
+
+                        <motion.button
+                            type="button"
+                            onClick={() => router.push(primaryHref)}
+                            className="inline-flex shrink-0 items-center gap-2.5 rounded-full bg-gradient-to-br from-[#fffdfa] to-[#f4f2ee] px-6 py-3 text-[12px] font-black uppercase tracking-[0.18em] text-[#160d0a] shadow-[0_10px_30px_rgba(0,0,0,0.2)]"
+                            whileHover={{ y: -4, scale: 1.02 }}
+                            whileTap={{ scale: 0.97 }}
+                        >
+                            {primaryLabel}
+                            <ArrowUpRight size={16} strokeWidth={2.8} />
+                        </motion.button>
+                    </div>
                 </div>
-            </div>
+            </motion.div>
             {reflectionContext ? (
                 <ReflectionSheet
                     isOpen

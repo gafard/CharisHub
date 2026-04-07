@@ -39,10 +39,19 @@ export async function POST(req: Request) {
 
     // Récupérer les membres du groupe
     console.log('[start-call] step=fetch-group-members');
-    const { data: groupMembers, error: membersError } = await client
-      .from('community_group_members')
-      .select('device_id')
+    let { data: groupMembers, error: membersError } = await client
+      .from('charishub_group_members')
+      .select('device_id, status')
       .eq('group_id', groupId);
+
+    if (membersError && String(membersError.message || '').toLowerCase().includes('status')) {
+      const fallback = await client
+        .from('charishub_group_members')
+        .select('device_id')
+        .eq('group_id', groupId);
+      groupMembers = (fallback.data ?? []) as any[];
+      membersError = fallback.error;
+    }
 
     if (membersError) {
       console.error('Error getting group members:', membersError);
@@ -52,7 +61,8 @@ export async function POST(req: Request) {
 
     // Créer les invitations pour chaque membre (sauf initiateur)
     console.log('[start-call] step=filter-other-members');
-    const otherMembers = groupMembers.filter(member => member.device_id !== userId);
+    const approvedMembers = (groupMembers ?? []).filter((member: any) => !member.status || member.status === 'approved');
+    const otherMembers = approvedMembers.filter((member: any) => member.device_id !== userId);
     console.log('[start-call] step=create-invites');
     const invitePromises = otherMembers.map(member =>
       client.from('charishub_group_call_invites').upsert({
@@ -82,7 +92,7 @@ export async function POST(req: Request) {
       // Ne pas échouer l'appel si les notifications push échouent
     }
 
-    return NextResponse.json({ success: true, callId: call.id, roomId: call.room_id });
+    return NextResponse.json({ success: true, callId: call.id, roomId: call.room_id, call });
   } catch (error: any) {
     console.error('Error starting group call:', error);
     console.error('Error details:', {
@@ -114,8 +124,8 @@ async function sendPushNotificationsToOfflineMembers(
 
     // Récupérer les membres du groupe
     const { data: groupMembers, error: membersError } = await client
-      .from('community_group_members')
-      .select('device_id')
+      .from('charishub_group_members')
+      .select('device_id, status')
       .eq('group_id', groupId);
 
     if (membersError) {
@@ -130,7 +140,8 @@ async function sendPushNotificationsToOfflineMembers(
 
     // Send to ALL members except initiator (no offline-only filter)
     const memberDeviceIds = groupMembers
-      .map(m => m.device_id)
+      .filter((m: any) => !m.status || m.status === 'approved')
+      .map((m: any) => m.device_id)
       .filter(id => id && id !== initiatorId);
 
     if (memberDeviceIds.length === 0) {
@@ -168,7 +179,7 @@ async function sendPushNotificationsToOfflineMembers(
         await sendWebPush(sub.subscription_json, {
           title: 'Appel de groupe',
           body: 'Un appel de groupe a commencé. Appuyez pour rejoindre.',
-          url: `/groups?group=${encodeURIComponent(groupId)}&call=${encodeURIComponent(callId)}`,
+          url: `/groups?group=${encodeURIComponent(groupId)}&call=${encodeURIComponent(callId)}&autoJoin=true`,
           tag: `group-call-${callId}`,
           icon: '/globe.svg',
           badge: '/globe.svg',

@@ -42,6 +42,7 @@ import MyHighlightsModal from './bible/MyHighlightsModal';
 import strongService, { type StrongEntry } from '../services/strong-service';
 import BibleVersesStrongMap from '../services/bible-verses-strong-map';
 import { recordReading, getStreak } from '../lib/bibleStreak';
+import { getActivePlan, isReadingChapterCompleted } from '../lib/readingPlans';
 
 import { graceService } from '../lib/graceService';
 import { pepitesStore } from '../lib/pepitesStore';
@@ -939,16 +940,31 @@ function readFromOsis(doc: Document, book: BibleBook, chapter: number) {
 
 export default function BibleReader({ 
   embedded = false, 
-  onSyncBible 
+  onSyncBible,
+  initialBookId,
+  initialChapter,
+  initialVerse
 }: { 
   embedded?: boolean;
   onSyncBible?: (ref: string, content: string) => void;
+  initialBookId?: string;
+  initialChapter?: number;
+  initialVerse?: number;
 }) {
   const { t } = useI18n();
   const [isClient, setIsClient] = useState(false);
   const [translationId, setTranslationId] = useState(LOCAL_BIBLE_TRANSLATIONS[0]?.id ?? 'LSG');
   const [bookId, setBookId] = useState('jhn');
   const [chapter, setChapter] = useState(3);
+
+  // External Navigation Sync
+  useEffect(() => {
+    if (initialBookId && initialBookId !== bookId) setBookId(initialBookId);
+    if (initialChapter && initialChapter !== chapter) setChapter(initialChapter);
+    if (initialVerse) {
+        // Optionnel : Scrollez vers le verset ici
+    }
+  }, [initialBookId, initialChapter, initialVerse]);
   const [searchVerse, setSearchVerse] = useState('');
   const [fontScale, setFontScale] = useState(1);
   const [verses, setVerses] = useState<VerseRow[]>([]);
@@ -1057,6 +1073,8 @@ export default function BibleReader({
     verse: null,
     progress: 0,
   });
+
+  const hasInitializedRef = useRef(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -1182,6 +1200,23 @@ export default function BibleReader({
     referencePreview.open
   );
 
+  const currentMatchingReading = useMemo(() => {
+    if (typeof window === 'undefined') return null;
+    const active = getActivePlan();
+    if (!active) return null;
+    const todayDay = active.plan.days[active.todayIndex];
+    const reading = todayDay?.readings.find((r) =>
+      r.bookId === book.id && r.chapters.includes(chapter)
+    );
+    if (!reading) return null;
+    return {
+      planId: active.planId,
+      dayIndex: active.todayIndex,
+      reading,
+      isCompleted: isReadingChapterCompleted(active.planId, active.todayIndex, reading.id, chapter)
+    };
+  }, [book.id, chapter, isClient]);
+
   const referenceKey = makeStorageKey(translation?.id ?? 'fr', book.id, chapter);
   // Changement : Utiliser le nouveau type HighlightMap
   const highlightMap: HighlightMap = highlights[referenceKey] || {};
@@ -1235,6 +1270,7 @@ export default function BibleReader({
         {}
       )
     );
+    hasInitializedRef.current = true;
   }, []);
 
   // Sync with URL parameters on mount
@@ -1278,21 +1314,17 @@ export default function BibleReader({
 
     if (planParam) {
       reflectionTriggeredRef.current = false;
-      setReadingPlanActive(false);
-      if (readingPlanTimerRef.current) clearTimeout(readingPlanTimerRef.current);
-      readingPlanTimerRef.current = setTimeout(() => {
-        setReadingPlanActive(true);
-      }, 5000);
+      setReadingPlanActive(true);
     }
   }, [isClient, searchParams]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || !isClient || !hasInitializedRef.current) return;
     localStorage.setItem(
       STORAGE_KEYS.settings,
       JSON.stringify({ translationId, bookId, chapter, fontScale })
     );
-  }, [translationId, bookId, chapter, fontScale]);
+  }, [translationId, bookId, chapter, fontScale, isClient]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -2868,6 +2900,36 @@ export default function BibleReader({
                           </button>
                         );
                       })}
+
+                      {currentMatchingReading && (
+                        <div className="mt-16 mb-32 flex flex-col items-center px-4">
+                          <div className="mb-6 h-[1px] w-24 bg-gradient-to-r from-transparent via-[#c89f2d]/30 to-transparent" />
+                          <motion.button
+                            onClick={() => {
+                              setTriggerReflection(Date.now());
+                              // Forced refresh for the memo
+                              setTimeout(() => setTriggerReflection(0), 100);
+                            }}
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            whileInView={{ opacity: 1, scale: 1 }}
+                            whileHover={{ scale: 1.05, y: -4 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="group relative flex items-center gap-3 overflow-hidden rounded-full bg-[#161c35] px-8 py-4 text-white shadow-xl transition-all hover:shadow-[#c89f2d]/20"
+                          >
+                            <div className="absolute inset-0 bg-gradient-to-r from-[#c89f2d]/20 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+                            <Sparkles size={18} className="text-[#c89f2d]" />
+                            <span className="text-xs font-black uppercase tracking-[0.2em]">
+                              {currentMatchingReading.isCompleted ? 'Revoir ma méditation' : 'Valider ma lecture'}
+                            </span>
+                            <div className="ml-1 h-1.5 w-1.5 rounded-full bg-[#c89f2d] shadow-[0_0_8px_#c89f2d]" />
+                          </motion.button>
+                          {!currentMatchingReading.isCompleted && (
+                            <p className="mt-4 text-[11px] font-bold uppercase tracking-widest text-[#161c35]/30">
+                              Jour {currentMatchingReading.dayIndex + 1} du plan
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -3222,12 +3284,12 @@ export default function BibleReader({
         </div>
       ) : null}
       {toast ? (
-        <div className="fixed bottom-[calc(162px+env(safe-area-inset-bottom))] left-1/2 z-[13000] -translate-x-1/2 rounded-full bg-black/70 px-4 py-2 text-sm font-bold text-white shadow-xl md:bottom-6">
+        <div className="fixed bottom-[calc(170px+env(safe-area-inset-bottom))] left-1/2 z-[13000] -translate-x-1/2 rounded-full bg-black/70 px-4 py-2 text-sm font-bold text-white shadow-xl md:bottom-24">
           {toast}
         </div>
       ) : null}
 
-      <div className="fixed bottom-4 left-0 right-0 z-[12500] px-4 md:left-[90px] md:px-6 pointer-events-none">
+      <div className="fixed bottom-[calc(84px+env(safe-area-inset-bottom))] left-0 right-0 z-[12500] px-4 md:bottom-6 md:left-[90px] md:px-6 pointer-events-none">
         <div className="mx-auto max-w-4xl pointer-events-auto">
           <BibleToolbar
             tool={tool}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import { useCommunityIdentity } from '../lib/useCommunityIdentity';
 import { supabase } from '../lib/supabase';
 import { sendNotification, ensureNotificationPermission, syncPushSubscription } from './notifications';
@@ -86,7 +87,7 @@ export default function NotificationManager() {
                     schema: 'public',
                     table: 'charishub_posts',
                 },
-                async (payload) => {
+                async (payload: RealtimePostgresChangesPayload<Record<string, unknown>>) => {
                     console.log('[NotificationManager] 📬 New post detected:', payload);
                     const post = payload.new as any;
 
@@ -129,7 +130,7 @@ export default function NotificationManager() {
                     });
                 }
             )
-            .subscribe((status) => {
+            .subscribe((status: string) => {
                 console.log('[NotificationManager] Realtime subscription status:', status);
             });
 

@@ -2,8 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import type { ReactNode } from 'react';
-import { BookOpen, CalendarDays, Home, Settings, Users } from 'lucide-react';
+import { useState, type ReactNode } from 'react';
+import { BookOpen, Home, Settings, Users, LogIn, User as UserIcon } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import AuthModal from './AuthModal';
 
 const NAV_ITEMS = [
   {
@@ -28,6 +30,8 @@ const NAV_ITEMS = [
 
 export default function StudyAppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const { user, profile, loading } = useAuth();
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   return (
     <div className="relative min-h-screen bg-[#FCF9F3] text-[#1a2142]">
@@ -47,27 +51,51 @@ export default function StudyAppShell({ children }: { children: ReactNode }) {
             </Link>
           </div>
 
-          <nav className="hidden items-center gap-2 md:flex">
-            {NAV_ITEMS.map((item) => {
-              const Icon = item.icon;
-              const active = item.match(pathname);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={[
-                    'inline-flex items-center gap-2 rounded-full border px-5 py-2.5 text-xs font-bold transition-all',
-                    active
-                      ? 'border-[#c89f2d]/30 bg-[#fdfaf3] text-[#b78616] shadow-sm'
-                      : 'border-transparent bg-transparent text-[#1a2142]/60 hover:text-[#1a2142] hover:bg-[#1a2142]/5',
-                  ].join(' ')}
-                >
-                  <Icon size={16} />
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
+          <div className="flex items-center gap-4">
+            <nav className="hidden items-center gap-2 md:flex">
+              {NAV_ITEMS.map((item) => {
+                const Icon = item.icon;
+                const active = item.match(pathname);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={[
+                      'inline-flex items-center gap-2 rounded-full border px-5 py-2.5 text-xs font-bold transition-all',
+                      active
+                        ? 'border-[#c89f2d]/30 bg-[#fdfaf3] text-[#b78616] shadow-sm'
+                        : 'border-transparent bg-transparent text-[#1a2142]/60 hover:text-[#1a2142] hover:bg-[#1a2142]/5',
+                    ].join(' ')}
+                  >
+                    <Icon size={16} />
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </nav>
+
+            {!loading && (
+              <div className="flex items-center">
+                {user ? (
+                  <Link href="/settings" className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 border-amber-200/50 bg-amber-50">
+                    {profile?.avatar_url ? (
+                      <img src={profile.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
+                    ) : (
+                      <UserIcon size={20} className="text-amber-600" />
+                    )}
+                  </Link>
+                ) : (
+                  <button
+                    onClick={() => setIsAuthModalOpen(true)}
+                    className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#B8941F] px-5 py-2.5 text-xs font-bold text-white shadow-lg shadow-amber-200/50 transition-all hover:scale-105 active:scale-95"
+                  >
+                    <LogIn size={16} />
+                    <span>Se connecter</span>
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -96,6 +124,8 @@ export default function StudyAppShell({ children }: { children: ReactNode }) {
           })}
         </div>
       </nav>
+
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
     </div>
   );
 }

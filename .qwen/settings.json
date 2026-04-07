@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Read(//Users/gafardgnane/Downloads/claudy/**)",
-      "Bash(git checkout *)"
+      "Bash(git checkout *)",
+      "Bash(npx *)",
+      "Bash(test *)",
+      "Bash(npm run *)"
     ]
   },
   "$version": 3

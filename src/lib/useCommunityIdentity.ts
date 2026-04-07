@@ -1,12 +1,15 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const KEY = 'formation_biblique_identity_v1';
 
 export type CommunityIdentity = {
-  deviceId: string;     // identifiant local (pour limiter spam + signature soft)
+  deviceId: string;     // identifiant local
   displayName: string;  // pseudo/nom
+  userId?: string;      // UUID Supabase si connecté
+  avatarUrl?: string;
 };
 
 function makeDeviceId() {
@@ -15,25 +18,42 @@ function makeDeviceId() {
 }
 
 export function useCommunityIdentity() {
-  const [identity, setIdentity] = useState<CommunityIdentity | null>(null);
+  const { user, profile } = useAuth();
+  const [localIdentity, setLocalIdentity] = useState<CommunityIdentity | null>(null);
 
+  // Charger l'identité locale (deviceId)
   useEffect(() => {
     try {
       const raw = localStorage.getItem(KEY);
       if (raw) {
-        setIdentity(JSON.parse(raw));
+        setLocalIdentity(JSON.parse(raw));
         return;
       }
       const init: CommunityIdentity = { deviceId: makeDeviceId(), displayName: '' };
       localStorage.setItem(KEY, JSON.stringify(init));
-      setIdentity(init);
+      setLocalIdentity(init);
     } catch {
-      setIdentity({ deviceId: makeDeviceId(), displayName: '' });
+      setLocalIdentity({ deviceId: makeDeviceId(), displayName: '' });
     }
   }, []);
 
+  // L'identité finale est soit celle du compte, soit la locale
+  const identity = useMemo((): CommunityIdentity | null => {
+    if (user && profile) {
+      return {
+        deviceId: localIdentity?.deviceId || 'unknown',
+        displayName: profile.display_name || user.email?.split('@')[0] || 'Utilisateur',
+        userId: user.id,
+        avatarUrl: profile.avatar_url || undefined,
+      };
+    }
+    return localIdentity;
+  }, [user, profile, localIdentity]);
+
   const updateName = (displayName: string) => {
-    setIdentity((prev) => {
+    // Si connecté, on pourrait mettre à jour le profil Supabase ici
+    // Pour l'instant, on met à jour le local
+    setLocalIdentity((prev) => {
       const next = { ...(prev ?? { deviceId: makeDeviceId(), displayName: '' }), displayName };
       try { localStorage.setItem(KEY, JSON.stringify(next)); } catch {}
       return next;

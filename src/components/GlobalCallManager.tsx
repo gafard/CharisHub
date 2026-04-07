@@ -4,13 +4,14 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../lib/supabase';
 import { useCommunityIdentity } from '../lib/useCommunityIdentity';
-import { fetchGroups } from './communityApi';
+import { fetchGroups, respondToGroupCallInvitation } from './communityApi';
 import IncomingGroupCallModal from './IncomingGroupCallModal';
 import { releaseAudioFocus } from '../lib/audioFocus';
 import { sendNotification } from './notifications';
 
 type IncomingCallPayload = {
-    callId: string; // Group ID
+    callId: string;
+    groupId: string;
     startedBy: string; // Device ID
     startedByUserName: string;
     groupName?: string;
@@ -160,6 +161,7 @@ export default function GlobalCallManager() {
                             console.log('[GlobalCallManager] 🔔 RINGER TRIGGERED for call:', callId);
                             setIncomingCall({
                                 callId,
+                                groupId: group.id,
                                 startedBy,
                                 startedByUserName: String(raw.startedByUserName || 'Un membre'),
                                 groupName: String(raw.groupName || group.name || 'Groupe'),
@@ -170,12 +172,12 @@ export default function GlobalCallManager() {
                                 title: `Appel de groupe: ${String(raw.groupName || group.name || 'Communaute')}`,
                                 body: `${String(raw.startedByUserName || 'Un membre')} vous invite a rejoindre l'appel`,
                                 tag: `group-call-${callId}`,
-                                url: `/groups?group=${encodeURIComponent(callId)}&autoJoin=true`,
+                                url: `/groups?group=${encodeURIComponent(group.id)}&call=${encodeURIComponent(callId)}&autoJoin=true`,
                                 icon: '/globe.svg',
                             });
                         });
 
-                        channel.subscribe((status) => {
+                        channel.subscribe((status: string) => {
                             console.log(`[GlobalCallManager] 📡 Channel ${channelName} status:`, status);
                             if (status === 'SUBSCRIBED') {
                                 console.log(`[GlobalCallManager] ✅ Ready on ${channelName}`);
@@ -217,18 +219,24 @@ export default function GlobalCallManager() {
             open={!!incomingCall}
             call={{
                 callId: incomingCall.callId,
-                groupId: incomingCall.callId,
+                groupId: incomingCall.groupId,
                 fromName: incomingCall.startedByUserName,
                 groupName: incomingCall.groupName || 'Appel de groupe',
                 startedAt: incomingCall.startedAt,
             }}
             onJoin={async (call) => {
                 stopRinging();
-                router.push(`/groups?group=${encodeURIComponent(call.groupId)}&autoJoin=true`);
+                if (deviceId) {
+                    await respondToGroupCallInvitation(call.callId, deviceId, 'accept');
+                }
+                router.push(`/groups?group=${encodeURIComponent(call.groupId)}&call=${encodeURIComponent(call.callId)}&autoJoin=true`);
                 setIncomingCall(null);
             }}
-            onDismiss={async () => {
+            onDismiss={async (call) => {
                 stopRinging();
+                if (deviceId) {
+                    await respondToGroupCallInvitation(call.callId, deviceId, 'decline');
+                }
                 setIncomingCall(null);
             }}
             enableVibrate={true}

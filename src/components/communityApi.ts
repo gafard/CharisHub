@@ -7,6 +7,7 @@ export type CommunityPost = {
   updated_at?: string | null;
   author_name: string;
   author_device_id: string;
+  user_id?: string | null;
   content: string;
   media_url?: string | null;
   media_type?: string | null;
@@ -22,6 +23,7 @@ export type CommunityComment = {
   created_at: string;
   author_name: string;
   author_device_id: string;
+  user_id?: string | null;
   content: string;
 };
 
@@ -42,6 +44,7 @@ export type CommunityStory = {
   created_at: string;
   author_name: string;
   author_device_id: string;
+  user_id?: string | null;
   verse_text: string;
   verse_reference: string;
   image_url?: string | null;
@@ -72,6 +75,7 @@ export type CommunityGroup = {
   group_type: CommunityGroupType;
   created_by_name: string;
   created_by_device_id: string;
+  user_id?: string | null;
   call_provider?: CommunityCallProvider | null;
   call_link?: string | null;
   next_call_at?: string | null;
@@ -90,6 +94,7 @@ export type CommunityGroupMemberStatus = 'pending' | 'approved' | 'rejected';
 export type CommunityGroupMember = {
   group_id: string;
   device_id: string;
+  user_id?: string | null;
   display_name: string;
   joined_at: string;
   status: CommunityGroupMemberStatus;
@@ -119,6 +124,17 @@ export type CommunityGroupCallPresence = {
   shared_bible_content?: string | null;
   prayerFlowOpen?: boolean;
   prayerFlowStepIndex?: number;
+};
+
+export type GroupCallSession = {
+  id: string;
+  group_id: string;
+  room_id: string;
+  created_by: string;
+  status: 'ringing' | 'active' | 'ended';
+  started_at: string;
+  ended_at?: string | null;
+  created_at: string;
 };
 
 const KIND_PREFIX: Record<CommunityKind, string> = {
@@ -492,6 +508,7 @@ export function normalizePost(row: any): CommunityPost {
     updated_at: row?.updated_at ? String(row.updated_at) : null,
     author_name: String(row?.author_name ?? row?.display_name ?? 'Invite').trim(),
     author_device_id: String(row?.author_device_id ?? row?.guest_id ?? row?.device_id ?? '').trim(),
+    user_id: row?.user_id || null,
     content: extracted.content,
     media_url: row?.media_url ?? withNoInlineMedia.mediaUrl ?? null,
     media_type: row?.media_type ?? null,
@@ -509,6 +526,7 @@ function normalizeComment(row: any): CommunityComment {
     created_at: String(row?.created_at ?? new Date().toISOString()),
     author_name: String(row?.author_name ?? row?.display_name ?? 'Invite').trim(),
     author_device_id: String(row?.author_device_id ?? row?.guest_id ?? row?.device_id ?? '').trim(),
+    user_id: row?.user_id || null,
     content: String(row?.content ?? '').trim(),
   };
 }
@@ -741,6 +759,7 @@ function normalizeGroup(row: any, options?: { membersCount?: number; joined?: bo
     group_type: normalizeGroupType(row?.group_type),
     created_by_name: String(row?.created_by_name ?? row?.author_name ?? 'Invite'),
     created_by_device_id: creatorId,
+    user_id: row?.user_id || null,
     call_provider: normalizeCallProvider(row?.call_provider),
     call_link: row?.call_link ? String(row.call_link) : null,
     next_call_at: row?.next_call_at ? String(row.next_call_at) : null,
@@ -750,6 +769,7 @@ function normalizeGroup(row: any, options?: { membersCount?: number; joined?: bo
     is_paid: Boolean(row?.is_paid),
     price: Math.max(0, Number(row?.price ?? 0)),
     pass_code: String(row?.pass_code ?? ''),
+    session_tasks: Array.isArray(row?.session_tasks) ? row.session_tasks : [],
   };
 }
 
@@ -762,6 +782,7 @@ function normalizeGroupMember(row: any, groupId: string): CommunityGroupMember |
     device_id: actorId,
     display_name: String(row?.display_name ?? row?.author_name ?? 'Invite').trim() || 'Invite',
     joined_at: joinedAt,
+    user_id: row?.user_id || null,
     status: (row?.status as CommunityGroupMemberStatus) || 'approved',
   };
 }
@@ -840,6 +861,7 @@ function localCreateGroup(payload: {
   is_paid?: boolean;
   price?: number;
   pass_code?: string;
+  user_id?: string | null;
 }) {
   const group = normalizeGroup({
     id: makeId('group'),
@@ -858,6 +880,7 @@ function localCreateGroup(payload: {
     is_paid: payload.is_paid || false,
     price: payload.price || 0,
     pass_code: payload.pass_code || '',
+    user_id: payload.user_id || null,
   });
   
   const current = loadLocalGroups();
@@ -1019,9 +1042,50 @@ export async function triggerGroupCallPush(payload: {
   callerDisplayName: string;
   callType: 'audio' | 'video';
   groupName?: string;
+  callId?: string | null;
 }) {
   if (!isBrowser()) return;
   try {
+    if (supabase) {
+      const channelNames = [`group-call:${payload.groupId}`, `group:${payload.groupId}`];
+      await Promise.all(
+        channelNames.map(
+          (channelName) =>
+            new Promise<void>((resolve) => {
+              const channel = supabase.channel(`outgoing:${channelName}:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`);
+              channel.subscribe(async (status: string) => {
+                if (status === 'SUBSCRIBED') {
+                  try {
+                    await channel.send({
+                      type: 'broadcast',
+                      event: 'call.invite',
+                      payload: {
+                        callId: payload.callId || undefined,
+                        groupId: payload.groupId,
+                        startedBy: payload.callerDeviceId,
+                        startedByUserName: payload.callerDisplayName,
+                        groupName: payload.groupName,
+                        callType: payload.callType,
+                        startedAt: new Date().toISOString(),
+                      },
+                    });
+                  } finally {
+                    supabase.removeChannel(channel);
+                    resolve();
+                  }
+                  return;
+                }
+
+                if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+                  supabase.removeChannel(channel);
+                  resolve();
+                }
+              });
+            })
+        )
+      );
+    }
+
     await fetch('/api/push/group-call-notification', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -1030,6 +1094,86 @@ export async function triggerGroupCallPush(payload: {
   } catch {
     // Ignore push errors.
   }
+}
+
+export async function startGroupCallSession(payload: {
+  groupId: string;
+  userId: string;
+  userName: string;
+}): Promise<GroupCallSession | null> {
+  if (!isBrowser()) return null;
+
+  const response = await fetch('/api/group-call/start', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  const body = (await response.json().catch(() => ({}))) as {
+    error?: string;
+    call?: Partial<GroupCallSession>;
+    callId?: string;
+    roomId?: string;
+  };
+
+  if (!response.ok) {
+    throw new Error(body.error || 'Impossible de démarrer l’appel de groupe.');
+  }
+
+  const call = body.call;
+  const callId = String(call?.id || body.callId || '').trim();
+  if (!callId) return null;
+
+  return {
+    id: callId,
+    group_id: String(call?.group_id || payload.groupId),
+    room_id: String(call?.room_id || body.roomId || ''),
+    created_by: String(call?.created_by || payload.userId),
+    status: (call?.status as GroupCallSession['status']) || 'ringing',
+    started_at: String(call?.started_at || call?.created_at || new Date().toISOString()),
+    ended_at: call?.ended_at ? String(call.ended_at) : null,
+    created_at: String(call?.created_at || new Date().toISOString()),
+  };
+}
+
+export async function activateGroupCallSession(callId: string, deviceId: string) {
+  if (!isBrowser() || !callId || !deviceId) return false;
+
+  const response = await fetch('/api/group-call/activate', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ callId, deviceId }),
+  });
+
+  return response.ok;
+}
+
+export async function endGroupCallSession(callId: string, deviceId: string) {
+  if (!isBrowser() || !callId || !deviceId) return false;
+
+  const response = await fetch('/api/group-call/end', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ callId, deviceId }),
+  });
+
+  return response.ok;
+}
+
+export async function respondToGroupCallInvitation(
+  callId: string,
+  userId: string,
+  action: 'accept' | 'decline' | 'miss'
+) {
+  if (!isBrowser() || !callId || !userId) return false;
+
+  const response = await fetch('/api/group-call/respond', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ callId, userId, action }),
+  });
+
+  return response.ok;
 }
 
 async function triggerCommentPush(payload: {
@@ -1088,6 +1232,37 @@ export async function fetchGroupCallPresence(groupId: string): Promise<any[]> {
     return data || [];
   } catch {
     return [];
+  }
+}
+
+export async function fetchActiveGroupCall(groupId: string): Promise<GroupCallSession | null> {
+  if (!groupId || !supabase) return null;
+
+  try {
+    const { data, error } = await supabase
+      .from('charishub_group_calls')
+      .select('*')
+      .eq('group_id', cleanUuid(groupId))
+      .in('status', ['ringing', 'active'])
+      .order('started_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) return null;
+
+    return {
+      id: String(data.id),
+      group_id: String(data.group_id),
+      room_id: String(data.room_id || ''),
+      created_by: String(data.created_by || ''),
+      status: (data.status as GroupCallSession['status']) || 'ringing',
+      started_at: String(data.started_at || data.created_at || new Date().toISOString()),
+      ended_at: data.ended_at ? String(data.ended_at) : null,
+      created_at: String(data.created_at || new Date().toISOString()),
+    };
+  } catch {
+    return null;
   }
 }
 
@@ -1234,6 +1409,7 @@ export async function fetchPostById(postId: string) {
 export async function createPost(payload: {
   author_name: string;
   author_device_id: string;
+  user_id?: string | null;
   content: string;
   media_url?: string | null;
   media_type?: string | null;
@@ -1296,6 +1472,7 @@ export async function createPost(payload: {
       const insertPayload: Record<string, any> = {
         author_name: payload.author_name,
         content: contentForInsert,
+        user_id: payload.user_id || null,
       };
 
       if (variant.includeMediaUrl) insertPayload.media_url = payload.media_url;
@@ -1381,12 +1558,15 @@ export async function updatePost(
     return localUpdatePost(postId, actorDeviceId, updatePayload);
   }
 
+  const session = (await supabase.auth.getSession()).data.session;
+  const authId = session?.user?.id;
+
   try {
     let attempt = await supabase
       .from('charishub_posts')
       .update(updatePayload)
       .eq('id', postId)
-      .eq('author_device_id', actorDeviceId)
+      .or(`user_id.eq.${authId},author_device_id.eq.${actorDeviceId}`)
       .select('*')
       .single();
 
@@ -1477,22 +1657,26 @@ export async function toggleLike(postId: string, deviceId: string) {
     }
   }
 
-  // Final fallback: always keep UX functional, even with schema/API mismatch.
   return localToggleLike(postId, deviceId);
 }
 
 export async function fetchComments(postId: string) {
   if (!supabase) return localFetchComments(postId);
   try {
-    const { data, error } = await supabase
+    const query = supabase
       .from('charishub_comments')
       .select('*')
-      .eq('post_id', postId)
+      .eq('post_id', cleanUuid(postId))
       .order('created_at', { ascending: true });
-    if (error) throw error;
-    return (data ?? []).map(normalizeComment);
+
+    const { data, error } = await query;
+    if (error) {
+      console.warn('[fetchComments] error, falling back to local:', error.message);
+      return localFetchComments(postId);
+    }
+    return (data || []).map(normalizeComment);
   } catch (error: any) {
-    throw new Error(error?.message || 'Erreur lors du chargement des commentaires.');
+    return localFetchComments(postId);
   }
 }
 
@@ -1500,6 +1684,7 @@ export async function addComment(payload: {
   post_id: string;
   author_name: string;
   author_device_id: string;
+  user_id?: string | null;
   content: string;
 }) {
   if (!supabase) return localAddComment(payload);
@@ -1517,6 +1702,7 @@ export async function addComment(payload: {
         post_id: payload.post_id,
         author_name: payload.author_name,
         content: payload.content,
+        user_id: payload.user_id || null,
       };
       if (variant.includeAuthorDevice) insertPayload.author_device_id = payload.author_device_id;
       if (variant.includeGuest) insertPayload.guest_id = payload.author_device_id;
@@ -1548,7 +1734,10 @@ export async function addComment(payload: {
 
     throw lastError;
   } catch (error: any) {
-    throw new Error(error?.message || 'Erreur lors de l envoi du commentaire.');
+    if (isMissingTableError(error, 'charishub_comments')) {
+      return localAddComment(payload);
+    }
+    throw new Error(error?.message || 'Erreur lors de l’envoi du commentaire.');
   }
 }
 
@@ -1631,11 +1820,14 @@ export async function reportPost(payload: {
 export async function deletePost(postId: string, actorDeviceId: string): Promise<DeletePostResult> {
   if (!supabase) return localDeletePost(postId, actorDeviceId);
 
+  const session = (await supabase.auth.getSession()).data.session;
+  const authId = session?.user?.id;
+
   let removePost = await supabase
     .from('charishub_posts')
     .delete()
     .eq('id', postId)
-    .eq('author_device_id', actorDeviceId);
+    .or(`user_id.eq.${authId},author_device_id.eq.${actorDeviceId}`);
   if (!removePost.error) return { ok: true };
 
   if (isMissingColumnError(removePost.error, 'author_device_id')) {
@@ -1676,6 +1868,7 @@ export async function deletePost(postId: string, actorDeviceId: string): Promise
 export async function createStory(payload: {
   author_name: string;
   author_device_id: string;
+  user_id?: string | null;
   verse_reference: string;
   verse_text: string;
   image_data_url?: string;
@@ -1751,6 +1944,7 @@ export async function createStory(payload: {
     const insertPayload: Record<string, any> = {
       author_name: payload.author_name,
       author_device_id: payload.author_device_id,
+      user_id: payload.user_id || null,
       verse_reference: payload.verse_reference,
       verse_text: payload.verse_text,
       image_url: imageUrl,
@@ -1938,7 +2132,7 @@ export async function fetchGroupMembers(groupId: string, limit = 80): Promise<Co
       }
 
       if (queryError) {
-        if (isMissingTableError(queryError, 'community_group_members')) {
+        if (isMissingTableError(queryError, 'charishub_group_members')) {
           return localFetchGroupMembers(groupId, limit);
         }
         if (isMissingColumnError(queryError, 'group_id')) {
@@ -1962,8 +2156,14 @@ export async function moderateGroupMember(
 ) {
   if (!supabase) return;
 
+  const session = (await supabase.auth.getSession()).data.session;
+  const authId = session?.user?.id;
+
   if (action === 'reject') {
-    await supabase.from('charishub_group_members').delete().eq('group_id', groupId).eq('device_id', memberDeviceId);
+    await supabase.from('charishub_group_members')
+      .delete()
+      .eq('group_id', groupId)
+      .or(`user_id.eq.${authId},device_id.eq.${memberDeviceId}`);
     return;
   }
 
@@ -1971,7 +2171,7 @@ export async function moderateGroupMember(
     .from('charishub_group_members')
     .update({ status: 'approved' })
     .eq('group_id', groupId)
-    .eq('device_id', memberDeviceId);
+    .or(`user_id.eq.${authId},device_id.eq.${memberDeviceId}`);
 }
 
 export async function createGroup(payload: {
@@ -1986,6 +2186,7 @@ export async function createGroup(payload: {
   is_paid?: boolean;
   price?: number;
   pass_code?: string;
+  user_id?: string | null;
 }) {
   const name = (payload.name || '').trim();
   if (name.length < 3) throw new Error('Le nom du groupe doit contenir au moins 3 caracteres.');
@@ -1996,7 +2197,8 @@ export async function createGroup(payload: {
     return localCreateGroup({ 
       ...payload, 
       name, 
-      created_by_name 
+      created_by_name,
+      user_id: payload.user_id || null
     });
   }
 
@@ -2006,6 +2208,7 @@ export async function createGroup(payload: {
     group_type: payload.group_type || 'general',
     created_by_name,
     created_by_device_id: payload.created_by_device_id,
+    user_id: payload.user_id || null,
     created_by: payload.created_by_device_id, // Common variant
     author_device_id: payload.created_by_device_id, // Another common variant
     call_link: payload.call_link || null,
@@ -2079,18 +2282,21 @@ export async function createGroup(payload: {
       {
         group_id: created.id,
         device_id: payload.created_by_device_id,
+        user_id: payload.user_id || null,
         display_name: payload.created_by_name || 'Invite',
         status: 'approved',
         role: 'admin',
       },
       {
         group_id: created.id,
+        user_id: payload.user_id || null,
         device_id: payload.created_by_device_id,
         display_name: payload.created_by_name || 'Invite',
         status: 'approved',
       },
       {
         group_id: created.id,
+        user_id: payload.user_id || null,
         device_id: payload.created_by_device_id,
         status: 'approved',
       },
@@ -2154,10 +2360,14 @@ export async function deleteGroup(groupId: string, actorDeviceId: string) {
   }
 
   // 3. Final Group Delete
+  const session = (await supabase.auth.getSession()).data.session;
+  const authId = session?.user?.id;
+
   const { error } = await supabase
     .from('charishub_groups')
     .delete()
-    .eq('id', cleanedId);
+    .eq('id', cleanedId)
+    .or(`user_id.eq.${authId},created_by_device_id.eq.${actorDeviceId}`);
 
   if (error) throw error;
 
@@ -2168,7 +2378,7 @@ export async function deleteGroup(groupId: string, actorDeviceId: string) {
   return { ok: true };
 }
 
-export async function joinGroup(groupId: string, deviceId: string, displayName: string) {
+export async function joinGroup(groupId: string, deviceId: string, displayName: string, userId?: string | null) {
   if (!groupId || !deviceId) return;
   if (!supabase) {
     localJoinGroup(groupId, deviceId, displayName);
@@ -2176,7 +2386,7 @@ export async function joinGroup(groupId: string, deviceId: string, displayName: 
   }
 
   const variants: Array<Record<string, any>> = [
-    { group_id: groupId, device_id: deviceId, display_name: displayName || 'Invite', status: 'pending' },
+    { group_id: groupId, device_id: deviceId, user_id: userId || null, display_name: displayName || 'Invite', status: 'pending' },
     { group_id: groupId, device_id: deviceId, status: 'pending' },
   ];
 
@@ -2191,7 +2401,7 @@ export async function joinGroup(groupId: string, deviceId: string, displayName: 
       (variant.display_name && isMissingColumnError(result.error, 'display_name')) ||
       (variant.status && isMissingColumnError(result.error, 'status'));
     if (missingExpectedColumn) continue;
-    if (isMissingTableError(result.error, 'community_group_members')) {
+    if (isMissingTableError(result.error, 'charishub_group_members')) {
       localJoinGroup(groupId, deviceId, displayName);
       return;
     }
@@ -2214,17 +2424,20 @@ export async function leaveGroup(groupId: string, deviceId: string) {
     { column: 'guest_id' as const, value: deviceId },
   ];
 
+  const session = (await supabase.auth.getSession()).data.session;
+  const authId = session?.user?.id;
+
   for (const variant of deleteVariants) {
     const result = await supabase
       .from('charishub_group_members')
       .delete()
       .eq('group_id', groupId)
-      .eq(variant.column, variant.value);
+      .or(`user_id.eq.${authId},${variant.column}.eq.${variant.value}`);
 
     if (!result.error) return;
     lastError = result.error;
     if (isMissingColumnError(result.error, variant.column)) continue;
-    if (isMissingTableError(result.error, 'community_group_members')) {
+    if (isMissingTableError(result.error, 'charishub_group_members')) {
       localLeaveGroup(groupId, deviceId);
       return;
     }
@@ -2236,6 +2449,7 @@ export async function leaveGroup(groupId: string, deviceId: string) {
 
 export async function updateGroup(
   groupId: string,
+  actorDeviceId: string,
   payload: {
     call_provider?: CommunityCallProvider | null;
     call_link?: string | null;
@@ -2248,27 +2462,25 @@ export async function updateGroup(
   if (!groupId) return null;
   if (!supabase) return localUpdateGroup(groupId, payload);
 
-  let updatePayload: Record<string, any> = {
-    call_provider: payload.call_provider ?? null,
-    call_link: payload.call_link ?? null,
-    next_call_at: payload.next_call_at ?? null,
-  };
-  if (payload.session_tasks) updatePayload.session_tasks = payload.session_tasks;
-  if (typeof payload.description === 'string') {
-    updatePayload.description = payload.description;
-  }
-  if (Array.isArray(payload.admin_ids)) {
-    updatePayload.admin_ids = payload.admin_ids;
-  }
-
   let lastError: any = null;
+  const session = (await supabase.auth.getSession()).data.session;
+  const authId = session?.user?.id;
+
   for (let attempt = 0; attempt < 8; attempt += 1) {
-    const result = await supabase
+    const updatePayload: Record<string, any> = { ...payload, updated_at: new Date().toISOString() };
+    
+    let query = supabase
       .from('charishub_groups')
       .update(updatePayload)
-      .eq('id', groupId)
-      .select('*')
-      .single();
+      .eq('id', cleanUuid(groupId));
+
+    if (authId) {
+      query = query.eq('user_id', authId);
+    } else {
+      query = query.eq('created_by_device_id', actorDeviceId);
+    }
+
+    const result = await query.select('*').single();
     if (!result.error && result.data) return normalizeGroup(result.data);
 
     lastError = result.error;
@@ -2313,8 +2525,21 @@ export async function upsertGroupCallPresence(payload: {
   sharedBibleContent?: string | null;
   prayerFlowOpen?: boolean;
   prayerFlowStepIndex?: number;
+  userId?: string | null;
 }) {
   if (!payload.groupId || !payload.deviceId) return false;
+  if (isBrowser()) {
+    try {
+      const response = await fetch('/api/group-call/presence', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ action: 'upsert', ...payload }),
+      });
+      if (response.ok) return true;
+    } catch {
+      // Fallback to direct Supabase below when possible.
+    }
+  }
   if (!supabase) return false;
 
   const now = new Date().toISOString();
@@ -2331,6 +2556,7 @@ export async function upsertGroupCallPresence(payload: {
     shared_bible_content: payload.sharedBibleContent,
     prayer_flow_open: !!payload.prayerFlowOpen,
     prayer_flow_step_index: payload.prayerFlowStepIndex || 0,
+    user_id: payload.userId || null,
   };
 
   const variants: Array<{ row: Record<string, any>; onConflict: string }> = [
@@ -2383,6 +2609,18 @@ export async function upsertGroupCallPresence(payload: {
 
 export async function clearGroupCallPresence(groupId: string, deviceId: string) {
   if (!groupId || !deviceId || typeof groupId !== 'string' || typeof deviceId !== 'string') return false;
+  if (isBrowser()) {
+    try {
+      const response = await fetch('/api/group-call/presence', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ action: 'clear', groupId, deviceId }),
+      });
+      if (response.ok) return true;
+    } catch {
+      // Fallback to direct Supabase below when possible.
+    }
+  }
   if (!supabase) return false;
 
   const variants = [
@@ -2421,6 +2659,7 @@ export async function logGroupCallEvent(payload: {
   displayName: string;
   eventType: CommunityGroupCallEventType;
   details?: Record<string, unknown>;
+  userId?: string | null;
 }) {
   if (!payload.groupId || !payload.deviceId) return false;
   if (!CALL_EVENT_TYPES.has(payload.eventType)) return false;
@@ -2433,6 +2672,7 @@ export async function logGroupCallEvent(payload: {
     display_name: payload.displayName || 'Invite',
     event_type: payload.eventType,
     payload: payload.details || {},
+    user_id: payload.userId || null,
   };
 
   const variants: Array<Record<string, any>> = [

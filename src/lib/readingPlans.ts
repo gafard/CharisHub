@@ -494,3 +494,25 @@ export function formatReadingLabel(reading: PlanReading): string {
 export function formatDayReadingsLabel(readings: PlanReading[]): string {
     return readings.map(formatReadingLabel).join(' · ');
 }
+
+export function getFirstUncompletedReading(planId: string): { bookId: string; chapter: number } | null {
+    const progress = getPlanProgress(planId);
+    if (!progress) return null;
+
+    const day = progress.plan.days[progress.todayIndex];
+    if (!day) return null;
+
+    const completedDay = progress.completedChaptersByDay[progress.todayIndex] ?? {};
+
+    for (const reading of day.readings) {
+        for (const chapter of reading.chapters) {
+            if (!completedDay[reading.id]?.includes(chapter)) {
+                return { bookId: reading.bookId, chapter };
+            }
+        }
+    }
+
+    // Default to first reading of the day if all done
+    const firstReading = day.readings[0];
+    return firstReading ? { bookId: firstReading.bookId, chapter: firstReading.chapters[0] } : null;
+}

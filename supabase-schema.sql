@@ -1,0 +1,476 @@
+-- ============================================================
+-- CharisHub — Schéma Supabase Complet
+-- Exécuter dans l'éditeur SQL du dashboard Supabase
+-- ============================================================
+
+-- Enable UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- ============================================================
+-- Drop existant (nouvelle base de données)
+-- ============================================================
+DROP TABLE IF EXISTS community_group_call_events CASCADE;
+DROP TABLE IF EXISTS community_group_call_presence CASCADE;
+DROP TABLE IF EXISTS charishub_group_call_invites CASCADE;
+DROP TABLE IF EXISTS charishub_group_calls CASCADE;
+DROP TABLE IF EXISTS charishub_group_challenges CASCADE;
+DROP TABLE IF EXISTS community_stories CASCADE;
+DROP TABLE IF EXISTS charishub_comments CASCADE;
+DROP TABLE IF EXISTS charishub_posts CASCADE;
+DROP TABLE IF EXISTS charishub_group_members CASCADE;
+DROP TABLE IF EXISTS moderation_reports CASCADE;
+DROP TABLE IF EXISTS charishub_groups CASCADE;
+DROP TABLE IF EXISTS push_subscriptions CASCADE;
+
+-- ============================================================
+-- 1. charishub_groups
+-- ============================================================
+CREATE TABLE IF NOT EXISTS charishub_groups (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  name TEXT NOT NULL,
+  description TEXT DEFAULT '',
+  group_type TEXT NOT NULL DEFAULT 'general',
+  created_by_name TEXT NOT NULL DEFAULT 'Invite',
+  created_by_device_id TEXT NOT NULL DEFAULT '',
+  call_provider TEXT,
+  call_link TEXT,
+  next_call_at TIMESTAMPTZ,
+  members_count INT NOT NULL DEFAULT 0,
+  admin_ids TEXT[] DEFAULT '{}',
+  is_paid BOOLEAN NOT NULL DEFAULT false,
+  price INT NOT NULL DEFAULT 0,
+  pass_code TEXT DEFAULT '',
+  session_tasks TEXT[] DEFAULT '{}',
+  visibility TEXT NOT NULL DEFAULT 'public'
+);
+
+COMMENT ON COLUMN charishub_groups.group_type IS 'general, prayer, study, support, formation';
+
+CREATE INDEX IF NOT EXISTS idx_groups_created_at ON charishub_groups(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_groups_created_by_device_id ON charishub_groups(created_by_device_id);
+
+ALTER TABLE charishub_groups ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Groups are publicly readable" ON charishub_groups
+  FOR SELECT USING (true);
+CREATE POLICY "Anyone can insert groups" ON charishub_groups
+  FOR INSERT WITH CHECK (true);
+CREATE POLICY "Creator can update their own group" ON charishub_groups
+  FOR UPDATE USING (created_by_device_id = current_setting('request.jwt.claims', true)::json->>'device_id');
+
+-- ============================================================
+-- 2. charishub_group_members
+-- ============================================================
+CREATE TABLE IF NOT EXISTS charishub_group_members (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  group_id UUID NOT NULL REFERENCES charishub_groups(id) ON DELETE CASCADE,
+  device_id TEXT NOT NULL DEFAULT '',
+  guest_id TEXT DEFAULT '',
+  display_name TEXT NOT NULL DEFAULT 'Invite',
+  joined_at TIMESTAMPTZ DEFAULT NOW(),
+  status TEXT NOT NULL DEFAULT 'approved',
+  role TEXT DEFAULT 'member',
+  UNIQUE(group_id, device_id)
+);
+
+COMMENT ON COLUMN charishub_group_members.status IS 'pending, approved, rejected';
+COMMENT ON COLUMN charishub_group_members.role IS 'member, admin';
+
+CREATE INDEX IF NOT EXISTS idx_members_group_id ON charishub_group_members(group_id);
+CREATE INDEX IF NOT EXISTS idx_members_device_id ON charishub_group_members(device_id);
+
+ALTER TABLE charishub_group_members ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Members are publicly readable" ON charishub_group_members
+  FOR SELECT USING (true);
+CREATE POLICY "Anyone can join groups" ON charishub_group_members
+  FOR INSERT WITH CHECK (true);
+CREATE POLICY "Admins can update member status" ON charishub_group_members
+  FOR UPDATE USING (true);
+CREATE POLICY "Users can delete their own membership" ON charishub_group_members
+  FOR DELETE USING (device_id = current_setting('request.jwt.claims', true)::json->>'device_id');
+
+-- ============================================================
+-- 3. charishub_posts
+-- ============================================================
+CREATE TABLE IF NOT EXISTS charishub_posts (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ,
+  author_name TEXT NOT NULL DEFAULT 'Invite',
+  author_device_id TEXT DEFAULT '',
+  guest_id TEXT DEFAULT '',
+  content TEXT NOT NULL DEFAULT '',
+  media_url TEXT,
+  media_type TEXT,
+  group_id UUID REFERENCES charishub_groups(id) ON DELETE SET NULL,
+  likes_count INT NOT NULL DEFAULT 0,
+  comments_count INT NOT NULL DEFAULT 0,
+  kind TEXT NOT NULL DEFAULT 'general',
+  visibility TEXT NOT NULL DEFAULT 'public'
+);
+
+COMMENT ON COLUMN charishub_posts.kind IS 'general, prayer, help, announcement, content';
+
+CREATE INDEX IF NOT EXISTS idx_posts_group_id ON charishub_posts(group_id);
+CREATE INDEX IF NOT EXISTS idx_posts_created_at ON charishub_posts(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_posts_kind ON charishub_posts(kind);
+CREATE INDEX IF NOT EXISTS idx_posts_visibility ON charishub_posts(visibility);
+
+ALTER TABLE charishub_posts ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Public posts are readable by all" ON charishub_posts
+  FOR SELECT USING (visibility = 'public');
+CREATE POLICY "Anyone can create posts" ON charishub_posts
+  FOR INSERT WITH CHECK (true);
+CREATE POLICY "Author can update their own post" ON charishub_posts
+  FOR UPDATE USING (author_device_id = current_setting('request.jwt.claims', true)::json->>'device_id');
+CREATE POLICY "Author can delete their own post" ON charishub_posts
+  FOR DELETE USING (author_device_id = current_setting('request.jwt.claims', true)::json->>'device_id');
+
+-- ============================================================
+-- 4. charishub_comments
+-- ============================================================
+CREATE TABLE IF NOT EXISTS charishub_comments (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  post_id UUID NOT NULL REFERENCES charishub_posts(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  author_name TEXT NOT NULL DEFAULT 'Invite',
+  author_device_id TEXT DEFAULT '',
+  guest_id TEXT DEFAULT '',
+  content TEXT NOT NULL DEFAULT ''
+);
+
+CREATE INDEX IF NOT EXISTS idx_comments_post_id ON charishub_comments(post_id);
+CREATE INDEX IF NOT EXISTS idx_comments_created_at ON charishub_comments(created_at DESC);
+
+ALTER TABLE charishub_comments ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Comments are publicly readable" ON charishub_comments
+  FOR SELECT USING (true);
+CREATE POLICY "Anyone can create comments" ON charishub_comments
+  FOR INSERT WITH CHECK (true);
+CREATE POLICY "Author can delete their own comment" ON charishub_comments
+  FOR DELETE USING (author_device_id = current_setting('request.jwt.claims', true)::json->>'device_id');
+
+-- ============================================================
+-- 5. community_stories
+-- ============================================================
+CREATE TABLE IF NOT EXISTS community_stories (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  author_name TEXT NOT NULL DEFAULT 'Invite',
+  author_device_id TEXT NOT NULL DEFAULT '',
+  verse_reference TEXT NOT NULL,
+  verse_text TEXT NOT NULL,
+  image_url TEXT,
+  kind TEXT NOT NULL DEFAULT 'verse',
+  config JSONB
+);
+
+COMMENT ON COLUMN community_stories.kind IS 'verse, text, image';
+
+CREATE INDEX IF NOT EXISTS idx_stories_created_at ON community_stories(created_at DESC);
+
+ALTER TABLE community_stories ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Stories are publicly readable" ON community_stories
+  FOR SELECT USING (true);
+CREATE POLICY "Anyone can create stories" ON community_stories
+  FOR INSERT WITH CHECK (true);
+
+-- ============================================================
+-- 6. moderation_reports
+-- ============================================================
+CREATE TABLE IF NOT EXISTS moderation_reports (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  target_type TEXT NOT NULL DEFAULT 'post',
+  target_id UUID NOT NULL,
+  reason TEXT NOT NULL DEFAULT 'other',
+  message TEXT,
+  reporter_user_id TEXT,
+  reporter_device_id TEXT,
+  status TEXT NOT NULL DEFAULT 'open'
+);
+
+COMMENT ON COLUMN moderation_reports.reason IS 'spam, harassment, illegal, other';
+
+ALTER TABLE moderation_reports ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can report" ON moderation_reports
+  FOR INSERT WITH CHECK (true);
+CREATE POLICY "Admins can view reports" ON moderation_reports
+  FOR SELECT USING (true);
+
+-- ============================================================
+-- 7. push_subscriptions
+-- ============================================================
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  endpoint TEXT PRIMARY KEY,
+  p256dh TEXT NOT NULL,
+  auth TEXT NOT NULL,
+  device_id TEXT NOT NULL DEFAULT '',
+  subscription_json JSONB,
+  locale TEXT,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_subscriptions_device_id ON push_subscriptions(device_id);
+
+ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can subscribe" ON push_subscriptions
+  FOR INSERT WITH CHECK (true);
+CREATE POLICY "Anyone can update their subscription" ON push_subscriptions
+  FOR UPDATE USING (device_id = current_setting('request.jwt.claims', true)::json->>'device_id');
+CREATE POLICY "Anyone can unsubscribe" ON push_subscriptions
+  FOR DELETE USING (true);
+
+-- ============================================================
+-- 8. charishub_group_calls
+-- ============================================================
+CREATE TABLE IF NOT EXISTS charishub_group_calls (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  group_id UUID NOT NULL REFERENCES charishub_groups(id) ON DELETE CASCADE,
+  room_id TEXT NOT NULL,
+  created_by TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'ringing',
+  started_at TIMESTAMPTZ DEFAULT NOW(),
+  ended_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+COMMENT ON COLUMN charishub_group_calls.status IS 'ringing, active, ended';
+
+CREATE INDEX IF NOT EXISTS idx_calls_group_id ON charishub_group_calls(group_id);
+CREATE INDEX IF NOT EXISTS idx_calls_status ON charishub_group_calls(status);
+
+ALTER TABLE charishub_group_calls ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Calls are publicly readable" ON charishub_group_calls
+  FOR SELECT USING (true);
+CREATE POLICY "Anyone can start calls" ON charishub_group_calls
+  FOR INSERT WITH CHECK (true);
+CREATE POLICY "Creator can end calls" ON charishub_group_calls
+  FOR UPDATE USING (true);
+
+-- ============================================================
+-- 9. charishub_group_call_invites
+-- ============================================================
+CREATE TABLE IF NOT EXISTS charishub_group_call_invites (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  call_id UUID NOT NULL REFERENCES charishub_group_calls(id) ON DELETE CASCADE,
+  group_id UUID NOT NULL,
+  device_id TEXT NOT NULL,
+  state TEXT NOT NULL DEFAULT 'pending',
+  responded_at TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(call_id, device_id)
+);
+
+COMMENT ON COLUMN charishub_group_call_invites.state IS 'pending, accept, decline, miss';
+
+CREATE INDEX IF NOT EXISTS idx_invites_call_id ON charishub_group_call_invites(call_id);
+CREATE INDEX IF NOT EXISTS idx_invites_device_id ON charishub_group_call_invites(device_id);
+
+ALTER TABLE charishub_group_call_invites ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Invites are publicly readable" ON charishub_group_call_invites
+  FOR SELECT USING (true);
+CREATE POLICY "Anyone can respond to invites" ON charishub_group_call_invites
+  FOR INSERT WITH CHECK (true);
+CREATE POLICY "Anyone can update invites" ON charishub_group_call_invites
+  FOR UPDATE USING (true);
+
+-- ============================================================
+-- 10. community_group_call_presence
+-- ============================================================
+CREATE TABLE IF NOT EXISTS community_group_call_presence (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  group_id TEXT NOT NULL,
+  device_id TEXT NOT NULL DEFAULT '',
+  guest_id TEXT DEFAULT '',
+  display_name TEXT NOT NULL DEFAULT 'Invite',
+  audio_enabled BOOLEAN NOT NULL DEFAULT true,
+  video_enabled BOOLEAN NOT NULL DEFAULT false,
+  joined_at TIMESTAMPTZ DEFAULT NOW(),
+  last_seen_at TIMESTAMPTZ DEFAULT NOW(),
+  shared_bible_ref TEXT,
+  shared_bible_content TEXT,
+  prayer_flow_open BOOLEAN DEFAULT false,
+  prayer_flow_step_index INT DEFAULT 0,
+  UNIQUE(group_id, device_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_presence_group_id ON community_group_call_presence(group_id);
+
+ALTER TABLE community_group_call_presence ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Presence is publicly readable" ON community_group_call_presence
+  FOR SELECT USING (true);
+CREATE POLICY "Anyone can update presence" ON community_group_call_presence
+  FOR INSERT WITH CHECK (true);
+CREATE POLICY "Anyone can delete their own presence" ON community_group_call_presence
+  FOR DELETE USING (device_id = current_setting('request.jwt.claims', true)::json->>'device_id');
+
+-- ============================================================
+-- 11. community_group_call_events
+-- ============================================================
+CREATE TABLE IF NOT EXISTS community_group_call_events (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  group_id TEXT NOT NULL,
+  device_id TEXT NOT NULL DEFAULT '',
+  guest_id TEXT DEFAULT '',
+  display_name TEXT NOT NULL DEFAULT 'Invite',
+  event_type TEXT NOT NULL,
+  payload JSONB
+);
+
+COMMENT ON COLUMN community_group_call_events.event_type IS 'join, leave, mute, unmute, video_on, video_off, mode_audio, mode_video, error';
+
+CREATE INDEX IF NOT EXISTS idx_events_group_id ON community_group_call_events(group_id);
+CREATE INDEX IF NOT EXISTS idx_events_created_at ON community_group_call_events(created_at DESC);
+
+ALTER TABLE community_group_call_events ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can log events" ON community_group_call_events
+  FOR INSERT WITH CHECK (true);
+CREATE POLICY "Events are publicly readable" ON community_group_call_events
+  FOR SELECT USING (true);
+
+-- ============================================================
+-- 12. charishub_group_challenges
+-- ============================================================
+CREATE TABLE IF NOT EXISTS charishub_group_challenges (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  group_id UUID NOT NULL REFERENCES charishub_groups(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_challenges_group_id ON charishub_group_challenges(group_id);
+
+ALTER TABLE charishub_group_challenges ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Challenges are publicly readable" ON charishub_group_challenges
+  FOR SELECT USING (true);
+CREATE POLICY "Anyone can create challenges" ON charishub_group_challenges
+  FOR INSERT WITH CHECK (true);
+
+-- ============================================================
+-- FONCTION: Fonction pour supprimer un groupe et ses dépendances
+-- ============================================================
+CREATE OR REPLACE FUNCTION delete_group_with_cascade(p_group_id UUID)
+RETURNS VOID AS $$
+BEGIN
+  -- Supprimer les membres
+  DELETE FROM charishub_group_members WHERE group_id = p_group_id;
+  -- Supprimer les posts du groupe
+  DELETE FROM charishub_posts WHERE group_id = p_group_id;
+  -- Supprimer les challenges
+  DELETE FROM charishub_group_challenges WHERE group_id = p_group_id;
+  -- Supprimer le groupe
+  DELETE FROM charishub_groups WHERE id = p_group_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ============================================================
+-- FONCTION: Incrémenter le compteur de membres
+-- ============================================================
+CREATE OR REPLACE FUNCTION increment_member_count()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE charishub_groups
+  SET members_count = members_count + 1
+  WHERE id = NEW.group_id;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER trg_increment_members
+AFTER INSERT ON charishub_group_members
+FOR EACH ROW
+EXECUTE FUNCTION increment_member_count();
+
+-- ============================================================
+-- FONCTION: Décrémenter le compteur de membres
+-- ============================================================
+CREATE OR REPLACE FUNCTION decrement_member_count()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE charishub_groups
+  SET members_count = GREATEST(0, members_count - 1)
+  WHERE id = OLD.group_id;
+  RETURN OLD;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER trg_decrement_members
+AFTER DELETE ON charishub_group_members
+FOR EACH ROW
+EXECUTE FUNCTION decrement_member_count();
+
+-- ============================================================
+-- FONCTION: Incrémenter comments_count
+-- ============================================================
+CREATE OR REPLACE FUNCTION increment_comment_count()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE charishub_posts
+  SET comments_count = comments_count + 1
+  WHERE id = NEW.post_id;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER trg_increment_comments
+AFTER INSERT ON charishub_comments
+FOR EACH ROW
+EXECUTE FUNCTION increment_comment_count();
+
+-- ============================================================
+-- Storage Buckets (à créer manuellement dans le dashboard)
+-- ============================================================
+-- 1. community-media (public)
+-- 2. stories (public)
+--
+-- SQL pour les créer automatiquement:
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('community-media', 'community-media', true)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('stories', 'stories', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Policy pour community-media
+CREATE POLICY "Anyone can upload to community-media"
+ON storage.objects FOR INSERT
+WITH CHECK (bucket_id = 'community-media');
+
+CREATE POLICY "Anyone can view community-media"
+ON storage.objects FOR SELECT
+USING (bucket_id = 'community-media');
+
+CREATE POLICY "Anyone can delete from community-media"
+ON storage.objects FOR DELETE
+USING (bucket_id = 'community-media');
+
+-- Policy pour stories
+CREATE POLICY "Anyone can upload stories"
+ON storage.objects FOR INSERT
+WITH CHECK (bucket_id = 'stories');
+
+CREATE POLICY "Anyone can view stories"
+ON storage.objects FOR SELECT
+USING (bucket_id = 'stories');
+
+CREATE POLICY "Anyone can delete stories"
+ON storage.objects FOR DELETE
+USING (bucket_id = 'stories');
+
+-- ============================================================
+-- FIN DU SCHÉMA
+-- ============================================================

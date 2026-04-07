@@ -7,7 +7,7 @@
 
 const STREAK_KEY = 'formation_biblique_bible_streak_v1';
 
-interface StreakData {
+export interface StreakData {
     /** Current consecutive days count */
     current: number;
     /** Longest streak ever */

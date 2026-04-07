@@ -162,9 +162,11 @@ export default function ReflectionSheet({
       .join(' ');
     const insights = getReflectionInsights(planId, dayIndex);
 
-    // Try AI-reformulation first
+    // Try AI-reformulation if possible
     let aiPrompts: Record<string, string> | null = null;
-    if (insights.length > 0) {
+    const canCallAI = insights.length > 0 || passageText.trim().length > 0;
+
+    if (canCallAI) {
       setLoadingPrayer(true);
       try {
         const res = await fetch('/api/bible/prayer-prompts', {
@@ -173,6 +175,7 @@ export default function ReflectionSheet({
           body: JSON.stringify({
             chapterLabel: readingSummary,
             reflectionInsights: insights,
+            passageText: passageText || undefined,
             passageThemes: undefined,
           }),
         });
@@ -182,8 +185,8 @@ export default function ReflectionSheet({
             aiPrompts = data;
           }
         }
-      } catch {
-        // fall through to static
+      } catch (error) {
+        console.error('AI Prayer failed, falling back to static', error);
       } finally {
         setLoadingPrayer(false);
       }
@@ -221,15 +224,15 @@ export default function ReflectionSheet({
             <div className="min-w-0">
               <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.22em] text-[rgba(255,240,222,0.7)]">
                 <Sparkles size={13} />
-                {finalChapter ? 'Dernier chapitre du jour' : 'Réflexion de chapitre'}
+                {finalChapter ? 'Méditation Finale' : 'Cœur à Cœur'}
               </div>
               <h2 className="mt-4 font-display text-[28px] font-bold leading-[0.95] text-[#fff7ec] sm:text-[36px]">
-                {focus ? `${focus.reading.bookName} ${focus.chapter}` : 'Lecture du jour'}
+                {focus ? `${focus.reading.bookName} ${focus.chapter}` : 'Méditation'}
               </h2>
               <p className="mt-2 max-w-[56ch] text-[13px] leading-relaxed text-[rgba(255,240,222,0.66)] sm:text-[14px]">
                 {finalChapter
-                  ? 'Vous êtes au dernier chapitre du jour. Vos réflexions précédentes sont conservées et nourriront la prière finale.'
-                  : 'Gardez une trace. Prenez un instant pour noter ce qui a touché votre cœur dans ce chapitre.'}
+                  ? 'Félicitations pour votre lecture. Prenez maintenant un temps sacré pour sceller cette Parole par la prière et la méditation.'
+                  : 'Que dit Dieu à votre cœur à travers ce chapitre ? Prenez un court instant de pause pour méditer.'}
               </p>
             </div>
 

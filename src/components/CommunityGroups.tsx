@@ -12,9 +12,11 @@ import {
 } from 'lucide-react';
 import {
   createGroup,
+  fetchActiveGroupCall,
   fetchGroupMembers,
   fetchGroups,
   moderateGroupMember,
+  startGroupCallSession,
   triggerGroupCallPush,
   joinGroup,
   leaveGroup,
@@ -26,12 +28,15 @@ import {
   type CommunityGroupMemberStatus,
   type CommunityGroupType,
   type CommunityCallProvider,
+  type GroupCallSession,
 } from './communityApi';
 import CommunityGroupChat from './CommunityGroupChat';
 import CommunityGroupCall from './CommunityGroupCall';
 import { supabase } from '../lib/supabase';
 import { useCommunityIdentity } from '../lib/useCommunityIdentity';
 import { useI18n } from '../contexts/I18nContext';
+import { useAuth } from '../contexts/AuthContext';
+import AuthModal from './AuthModal';
 
 type CreateState = 'idle' | 'saving';
 type GroupListMode = 'all' | 'joined' | 'discover';
@@ -218,12 +223,16 @@ function GroupCard({
   index,
   busy,
   onOpen,
+  isCreator,
+  onDelete,
   t,
 }: {
   group: CommunityGroup;
   index: number;
   busy: boolean;
   onOpen: () => void;
+  isCreator?: boolean;
+  onDelete?: () => void;
   t: TranslateFn;
 }) {
   const themes = [
@@ -234,50 +243,66 @@ function GroupCard({
   const theme = themes[index % themes.length];
 
   return (
-    <button
-      type="button"
-      onClick={onOpen}
-      className={[
-        'group relative flex h-full flex-col overflow-hidden rounded-[32px] p-8 text-left transition-all hover:scale-[1.02] active:scale-[0.98]',
-        theme.bg,
-      ].join(' ')}
-    >
-      <div className="flex flex-1 flex-col">
-        <h4 className={[
-          'text-3xl font-black leading-tight tracking-tight font-display mb-3',
-          theme.text
-        ].join(' ')}>
-          {group.name}
-        </h4>
-        <p className="line-clamp-3 text-sm font-medium leading-relaxed opacity-70">
-          {group.description || "Un espace pour grandir ensemble dans la Parole et la prière."}
-        </p>
-      </div>
+    <div className="group relative h-full">
+      <button
+        type="button"
+        onClick={onOpen}
+        className={[
+          'relative flex h-full w-full flex-col overflow-hidden rounded-[32px] p-8 text-left transition-all hover:scale-[1.02] active:scale-[0.98]',
+          theme.bg,
+        ].join(' ')}
+      >
+        <div className="flex flex-1 flex-col">
+          <h4 className={[
+            'text-3xl font-black leading-tight tracking-tight font-display mb-3',
+            theme.text
+          ].join(' ')}>
+            {group.name}
+          </h4>
+          <p className="line-clamp-3 text-sm font-medium leading-relaxed opacity-70">
+            {group.description || "Un espace pour grandir ensemble dans la Parole et la prière."}
+          </p>
+        </div>
 
-      <div className="mt-12 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {group.membershipStatus === 'pending' ? (
-            <span className="rounded-full bg-white/30 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md">
-              Demande envoyée ⏳
-            </span>
-          ) : (
-            <>
-              <AvatarPile count={group.members_count || 0} label={group.name} />
-              <span className="text-xs font-bold opacity-60">{group.members_count || 0} membres</span>
-            </>
-          )}
+        <div className="mt-12 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {group.membershipStatus === 'pending' ? (
+              <span className="rounded-full bg-white/30 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md">
+                Demande envoyée ⏳
+              </span>
+            ) : (
+              <>
+                <AvatarPile count={group.members_count || 0} label={group.name} />
+                <span className="text-xs font-bold opacity-60">{group.members_count || 0} membres</span>
+              </>
+            )}
+          </div>
+          <div className={[
+            'flex h-10 w-10 items-center justify-center rounded-full bg-white/40 backdrop-blur-sm transition-colors group-hover:bg-white/60',
+            theme.text
+          ].join(' ')}>
+            <span className="text-xl font-black">{group.membershipStatus === 'pending' ? '...' : '↗'}</span>
+          </div>
         </div>
-        <div className={[
-          'flex h-10 w-10 items-center justify-center rounded-full bg-white/40 backdrop-blur-sm transition-colors group-hover:bg-white/60',
-          theme.text
-        ].join(' ')}>
-          <span className="text-xl font-black">{group.membershipStatus === 'pending' ? '...' : '↗'}</span>
-        </div>
-      </div>
-      
-      {/* Decorative element like the image */}
-      <div className="absolute -bottom-6 -right-6 h-32 w-32 opacity-10 blur-2xl bg-current" />
-    </button>
+        
+        <div className="absolute -bottom-6 -right-6 h-32 w-32 opacity-10 blur-2xl bg-current" />
+      </button>
+
+      {isCreator && onDelete && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onDelete();
+          }}
+          className="absolute right-4 top-4 z-10 grid h-10 w-10 place-items-center rounded-2xl bg-white/50 text-rose-600 backdrop-blur-md transition-all hover:bg-rose-500 hover:text-white"
+          title="Supprimer le groupe"
+        >
+          <Trash2 size={18} />
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -300,7 +325,10 @@ function GroupDetailTabs({
   setSessionTasks,
   taskDraft,
   setTaskDraft,
-  setCallFullscreenOpen,
+  callBusy,
+  activeCallId,
+  onStartGroupCall,
+  onOpenCallRoom,
   onJoin,
   onLeave,
   onSaveGroupSettings,
@@ -342,7 +370,10 @@ function GroupDetailTabs({
   setSessionTasks: React.Dispatch<React.SetStateAction<string[]>>;
   taskDraft: string;
   setTaskDraft: React.Dispatch<React.SetStateAction<string>>;
-  setCallFullscreenOpen: (open: boolean) => void;
+  callBusy: boolean;
+  activeCallId?: string | null;
+  onStartGroupCall: () => Promise<void> | void;
+  onOpenCallRoom: () => void;
   onJoin: (id: string, code?: string) => void;
   onLeave: (id: string) => void;
   onSaveGroupSettings: () => void;
@@ -371,6 +402,7 @@ function GroupDetailTabs({
   const [activeTab, setActiveTab] = useState<'feed' | 'members' | 'about'>('feed');
   const isAdmin = isGroupAdmin(selectedGroup, actor.deviceId);
   const isCreator = selectedGroup.created_by_device_id === actor.deviceId;
+  const callAvailable = callParticipants.length > 0 || !!activeCallId;
 
   return (
     <div className="space-y-6">
@@ -409,7 +441,7 @@ function GroupDetailTabs({
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-2xl font-black tracking-tight text-[color:var(--foreground)]">{selectedGroup.name}</h1>
-                  {callParticipants.length > 0 && (
+                  {callAvailable && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-rose-500 px-2.5 py-0.5 text-[10px] font-bold text-white shadow animate-pulse">
                       <span className="h-1 w-1 rounded-full bg-white animate-ping" />
                       En direct
@@ -425,32 +457,19 @@ function GroupDetailTabs({
               {isAdmin && (
                 <button
                   type="button"
-                  onClick={async () => {
-                    try {
-                      const { triggerGroupCallPush } = await import('./communityApi');
-                      void triggerGroupCallPush({
-                        groupId: selectedGroup.id,
-                        callerDeviceId: actor.deviceId,
-                        callerDisplayName: actor.displayName,
-                        callType: 'audio',
-                        groupName: selectedGroup.name,
-                      });
-                    } catch (e) {
-                      console.error('Failed to trigger call push', e);
-                    }
-                    setCallFullscreenOpen(true);
-                  }}
+                  onClick={() => void onStartGroupCall()}
+                  disabled={callBusy}
                   className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-lg text-white shadow-lg shadow-emerald-500/20 transition hover:scale-105"
                 >
-                  📞
+                  {callBusy ? <Loader2 size={18} className="animate-spin" /> : '📞'}
                 </button>
               )}
 
               {/* Non-admin join call button */}
-              {!isAdmin && callParticipants.length > 0 && currentUserStatus === 'approved' && (
+              {!isAdmin && callAvailable && currentUserStatus === 'approved' && (
                 <button
                   type="button"
-                  onClick={() => setCallFullscreenOpen(true)}
+                  onClick={onOpenCallRoom}
                   className="flex h-11 w-11 shrink-0 animate-bounce items-center justify-center rounded-xl bg-rose-500 text-lg text-white shadow-lg shadow-rose-500/20 transition hover:scale-110"
                 >
                   🤙
@@ -498,7 +517,7 @@ function GroupDetailTabs({
                 <button
                   onClick={() => {
                     if (selectedGroup.call_link) window.open(selectedGroup.call_link, '_blank');
-                    else setCallFullscreenOpen(true);
+                    else onOpenCallRoom();
                   }}
                   className="shrink-0 rounded-full bg-[color:var(--accent)] px-6 py-3 text-sm font-bold text-black shadow-lg shadow-[color:var(--accent)]/20 transition hover:scale-105"
                 >
@@ -957,40 +976,6 @@ function GroupDetailTabs({
                     <Trash2 size={16} />
                     Supprimer définitivement le groupe
                   </button>
-
-                  {/* CUSTOM DELETE SHEET OVERLAY */}
-                  {showDeleteConfirm && (
-                    <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center p-4">
-                      <div className="w-full max-w-sm rounded-[32px] bg-white p-8 shadow-2xl animate-in slide-in-from-bottom-8 duration-300">
-                        <div className="mb-6 text-center">
-                          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-rose-100 text-rose-600">
-                            <Trash2 size={32} />
-                          </div>
-                          <h3 className="text-xl font-black text-gray-900">Supprimer le groupe ?</h3>
-                          <p className="mt-2 text-sm text-gray-500">
-                            Cette action supprimera tous les messages et membres. C'est irréversible.
-                          </p>
-                        </div>
-                        <div className="space-y-3">
-                          <button
-                            onClick={() => {
-                              onDeleteGroup(selectedGroup.id);
-                              setShowDeleteConfirm(false);
-                            }}
-                            className="w-full rounded-2xl bg-rose-600 py-4 text-sm font-bold text-white shadow-lg active:scale-[0.97] transition-transform"
-                          >
-                            Oui, supprimer
-                          </button>
-                          <button
-                            onClick={() => setShowDeleteConfirm(false)}
-                            className="w-full rounded-2xl bg-gray-100 py-4 text-sm font-bold text-gray-600 active:scale-[0.97] transition-transform"
-                          >
-                            Non, annuler
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </div>
               )}
             </div>
@@ -1007,6 +992,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const autoJoinRequested = searchParams.get('autoJoin') === 'true';
+  const queryCallId = searchParams.get('call') || '';
   const queryGroupId = searchParams.get('group') || '';
   const { identity } = useCommunityIdentity();
   const [groups, setGroups] = useState<CommunityGroup[]>([]);
@@ -1023,6 +1009,8 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
   const [membersStatus, setMembersStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [callFullscreenOpen, setCallFullscreenOpen] = useState(false);
   const [callParticipants, setCallParticipants] = useState<any[]>([]);
+  const [activeGroupCall, setActiveGroupCall] = useState<GroupCallSession | null>(null);
+  const [startedCallSession, setStartedCallSession] = useState<GroupCallSession | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const detailPanelRef = useRef<HTMLElement | null>(null);
 
@@ -1042,12 +1030,24 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const initialSyncDone = useRef(false);
 
+  const { user, profile } = useAuth();
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
   const actor = useMemo(() => {
     return {
       deviceId: identity?.deviceId || '',
-      displayName: (identity?.displayName || '').trim() || t('identity.guest'),
+      displayName: identity?.displayName || user?.email?.split('@')[0] || t('identity.guest'),
+      userId: user?.id,
     };
-  }, [identity?.deviceId, identity?.displayName, t]);
+  }, [identity?.deviceId, identity?.displayName, user, t]);
+
+  const ensureAuth = useCallback(() => {
+    if (!user) {
+      setIsAuthModalOpen(true);
+      return false;
+    }
+    return true;
+  }, [user]);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [listMode, setListMode] = useState<GroupListMode>('all');
@@ -1113,6 +1113,15 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
     return member?.status || null;
   }, [groupMembers, actor.deviceId]);
 
+  const currentCallSession = useMemo(() => {
+    if (!selectedGroupId) return null;
+    if (activeGroupCall?.group_id === selectedGroupId) return activeGroupCall;
+    if (startedCallSession?.group_id === selectedGroupId) return startedCallSession;
+    return null;
+  }, [activeGroupCall, selectedGroupId, startedCallSession]);
+
+  const currentCallId = queryCallId || currentCallSession?.id || '';
+
   const onModerate = useCallback(
     async (memberDeviceId: string, action: 'approve' | 'reject') => {
       if (!selectedGroup) return;
@@ -1137,18 +1146,26 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
   useEffect(() => {
     if (!selectedGroupId || !supabase) {
       setCallParticipants([]);
+      setActiveGroupCall(null);
       return;
     }
 
     const checkCall = async () => {
-      const active = await fetchGroupCallPresence(selectedGroupId);
-      setCallParticipants(active);
+      const [presenceRows, activeCall] = await Promise.all([
+        fetchGroupCallPresence(selectedGroupId),
+        fetchActiveGroupCall(selectedGroupId),
+      ]);
+      setCallParticipants(presenceRows);
+      setActiveGroupCall(activeCall);
+      if (!activeCall && startedCallSession?.group_id === selectedGroupId) {
+        setStartedCallSession(null);
+      }
     };
 
     checkCall();
-    const interval = setInterval(checkCall, 30000); // Polling toutes les 30s
+    const interval = setInterval(checkCall, 15000);
     return () => clearInterval(interval);
-  }, [selectedGroupId, supabase]);
+  }, [selectedGroupId, startedCallSession, supabase]);
 
   const updateGroupQuery = useCallback(
     (groupId: string | null) => {
@@ -1175,6 +1192,76 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
   const onCloseGroupPage = useCallback(() => {
     updateGroupQuery(null);
   }, [updateGroupQuery]);
+
+  const closeCallRoom = useCallback(() => {
+    setCallFullscreenOpen(false);
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('call');
+    params.delete('autoJoin');
+    const qs = params.toString();
+    const url = qs ? `${pathname}?${qs}` : pathname;
+    router.replace(url, { scroll: false });
+  }, [pathname, router, searchParams]);
+
+  const openCallRoom = useCallback(
+    (callId?: string | null) => {
+      if (!selectedGroupId) return;
+      setCallFullscreenOpen(true);
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('group', selectedGroupId);
+      if (callId) params.set('call', callId);
+      else params.delete('call');
+      params.delete('autoJoin');
+      const qs = params.toString();
+      const url = qs ? `${pathname}?${qs}` : pathname;
+      router.replace(url, { scroll: false });
+    },
+    [pathname, router, searchParams, selectedGroupId]
+  );
+
+  const onStartGroupCall = useCallback(async () => {
+    if (!selectedGroup || !actor.deviceId) return;
+
+    const busyKey = `call-${selectedGroup.id}`;
+    setActionState((prev) => ({ ...prev, [busyKey]: true }));
+    try {
+      let call = currentCallSession;
+      const shouldAnnounce = !call || call.status === 'ended';
+
+      if (shouldAnnounce) {
+        call = await startGroupCallSession({
+          groupId: selectedGroup.id,
+          userId: actor.deviceId,
+          userName: actor.displayName,
+        });
+        if (call) {
+          setStartedCallSession(call);
+          setActiveGroupCall(call);
+        }
+      }
+
+      if (shouldAnnounce && call) {
+        await triggerGroupCallPush({
+          groupId: selectedGroup.id,
+          callerDeviceId: actor.deviceId,
+          callerDisplayName: actor.displayName,
+          callType: 'audio',
+          groupName: selectedGroup.name,
+          callId: call.id,
+        });
+      }
+
+      openCallRoom(call?.id || null);
+    } catch (error: any) {
+      setFeedback(error?.message || 'Impossible de démarrer l’appel de groupe.');
+    } finally {
+      setActionState((prev) => ({ ...prev, [busyKey]: false }));
+    }
+  }, [actor.deviceId, actor.displayName, currentCallSession, openCallRoom, selectedGroup]);
+
+  const onOpenCallRoom = useCallback(() => {
+    openCallRoom(currentCallId || null);
+  }, [currentCallId, openCallRoom]);
 
   useEffect(() => {
     if (!autoJoinRequested) return;
@@ -1414,6 +1501,8 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
   }, [callFullscreenOpen]);
 
   const onCreate = async () => {
+    if (!ensureAuth()) return;
+
     const trimmedName = name.trim();
     if (trimmedName.length < 3) {
       setFeedback(t('community.groups.nameTooShort'));
@@ -1437,6 +1526,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
         is_paid: isPaid,
         price: price,
         pass_code: passCode,
+        user_id: actor.userId,
       });
 
       if (isPaid && created) {
@@ -1465,6 +1555,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
   };
 
   const onJoin = async (groupId: string, code?: string) => {
+    if (!ensureAuth()) return;
     if (!actor.deviceId) return;
     const group = groups.find(g => g.id === groupId);
     
@@ -1479,7 +1570,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
 
     setActionState((prev) => ({ ...prev, [groupId]: true }));
     try {
-      await joinGroup(groupId, actor.deviceId, actor.displayName);
+      await joinGroup(groupId, actor.deviceId, actor.displayName, actor.userId);
       await loadGroups();
       if (groupId === selectedGroupId) {
         await loadGroupMembers(groupId);
@@ -1511,7 +1602,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
     if (!selectedGroup) return;
     setSavingGroupState(true);
     try {
-      await updateGroup(selectedGroup.id, {
+      await updateGroup(selectedGroup.id, actor.deviceId, {
         description: detailDescription.trim(),
         call_provider: detailCallProvider,
         call_link: detailCallLink.trim() || null,
@@ -1548,7 +1639,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
     setActionState((prev) => ({ ...prev, [`promote-${memberDeviceId}`]: true }));
     try {
       const newAdminIds = [...(selectedGroup.admin_ids || []), memberDeviceId];
-      await updateGroup(selectedGroup.id, { admin_ids: newAdminIds });
+      await updateGroup(selectedGroup.id, actor.deviceId, { admin_ids: newAdminIds });
       setFeedback(t('community.groups.adminPromoted'));
       await loadGroups(); // Refresh groups to get updated admin_ids
       await loadGroupMembers(selectedGroup.id); // Refresh members list
@@ -1677,7 +1768,10 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
             setDetailDescription={setDetailDescription}
             detailNextCallAt={detailNextCallAt}
             setDetailNextCallAt={setDetailNextCallAt}
-            setCallFullscreenOpen={setCallFullscreenOpen}
+            callBusy={!!actionState[`call-${selectedGroup.id}`]}
+            activeCallId={currentCallId || null}
+            onStartGroupCall={onStartGroupCall}
+            onOpenCallRoom={onOpenCallRoom}
             onJoin={onJoin}
             onLeave={onLeave}
             onSaveGroupSettings={onSaveGroupSettings}
@@ -1866,6 +1960,11 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
                   index={i}
                   busy={!!actionState[group.id]}
                   onOpen={() => onSelectGroup(group.id)}
+                  isCreator={group.created_by_device_id === actor.deviceId}
+                  onDelete={() => {
+                    setSelectedGroupId(group.id);
+                    setShowDeleteConfirm(true);
+                  }}
                   t={t}
                 />
               ))}
@@ -1876,10 +1975,45 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
 
       {/* Feedback Toast */}
       {feedback ? (
-        <div className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)] px-4 py-2 text-sm shadow-lg">
+        <div className="fixed bottom-24 left-1/2 z-[500] -translate-x-1/2 rounded-2xl border border-[#e2e8f0] bg-white px-4 py-2 text-sm shadow-xl font-bold text-[#161c35]">
           {feedback}
         </div>
       ) : null}
+
+      {/* GLOBAL GROUP DELETE CONFIRMATION */}
+      {showDeleteConfirm && selectedGroup && (
+        <div className="fixed inset-0 z-[1000] flex items-end justify-center bg-black/40 backdrop-blur-sm sm:items-center p-4">
+          <div className="w-full max-w-sm rounded-[32px] bg-white p-8 shadow-2xl animate-in slide-in-from-bottom-8 duration-300">
+            <div className="mb-6 text-center">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-rose-100 text-rose-600">
+                <Trash2 size={32} />
+              </div>
+              <h3 className="text-xl font-black text-gray-900">Supprimer le groupe ?</h3>
+              <p className="mt-2 text-sm text-gray-500 font-medium">
+                Voulez-vous vraiment supprimer "{selectedGroup.name}" ?<br/>
+                Cette action est irréversible.
+              </p>
+            </div>
+            <div className="space-y-3">
+              <button
+                onClick={() => {
+                  onDeleteGroup(selectedGroup.id);
+                  setShowDeleteConfirm(false);
+                }}
+                className="w-full rounded-2xl bg-rose-600 py-4 text-sm font-bold text-white shadow-lg active:scale-[0.97] transition-transform"
+              >
+                Oui, supprimer définitivement
+              </button>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="w-full rounded-2xl bg-gray-100 py-4 text-sm font-bold text-gray-600 active:scale-[0.97] transition-transform"
+              >
+                Non, garder le groupe
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Legacy Fullscreen Call (kept for compatibility) */}
       {callFullscreenOpen && selectedGroup ? (
@@ -1889,7 +2023,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
               <button
                 type="button"
                 className="btn-base rounded-full border border-white/25 bg-black/40 px-3 py-1.5 text-xs text-white"
-                onClick={() => setCallFullscreenOpen(false)}
+                onClick={closeCallRoom}
               >
                 {t('community.groups.callCloseFullscreen')}
               </button>
@@ -1899,13 +2033,18 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
                 groupId={selectedGroup.id}
                 deviceId={actor.deviceId}
                 displayName={actor.displayName}
+                userId={actor.userId}
+                callId={currentCallId || null}
+                callOwnerId={currentCallSession?.created_by || null}
                 initialTasks={selectedGroup?.session_tasks || []}
-                onClose={() => setCallFullscreenOpen(false)}
+                onClose={closeCallRoom}
               />
             </div>
           </div>
         </div>
       ) : null}
+
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
     </div>
   );
 }

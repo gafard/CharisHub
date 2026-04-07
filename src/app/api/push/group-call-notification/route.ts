@@ -10,6 +10,7 @@ type GroupCallNotificationBody = {
   callerDisplayName: string;
   callType: 'audio' | 'video';
   groupName?: string;
+  callId?: string | null;
 };
 
 export async function POST(req: Request) {
@@ -40,7 +41,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  const { groupId, callerDeviceId, callerDisplayName, callType, groupName } = body;
+  const { groupId, callerDeviceId, callerDisplayName, callType, groupName, callId } = body;
 
   if (!groupId || !callerDeviceId || !callerDisplayName) {
     console.error('Champs requis manquants:', { groupId, callerDeviceId, callerDisplayName });
@@ -54,14 +55,14 @@ export async function POST(req: Request) {
     // Récupérer les membres du groupe sauf l'appelant
     console.log('Récupération des membres du groupe...');
     let { data: groupMembers, error: membersError } = await supabaseServer
-      .from('community_group_members')
+      .from('charishub_group_members')
       .select('device_id, status')
       .eq('group_id', groupId);
 
     if (membersError && String(membersError.message).includes('status')) {
       console.log('Colonne status manquante, repli sur une sélection sans status');
       const fallback = await supabaseServer
-        .from('community_group_members')
+        .from('charishub_group_members')
         .select('device_id')
         .eq('group_id', groupId);
       groupMembers = (fallback.data ?? []) as any[];
@@ -139,8 +140,8 @@ export async function POST(req: Request) {
             {
                       title: `Appel ${callType === 'video' ? 'video' : 'audio'}${groupName ? ` - ${groupName}` : ' de groupe'}`,
                       body: `${callerDisplayName} vous invite a rejoindre un appel de groupe`,
-                      url: `/groups?group=${encodeURIComponent(groupId)}&autoJoin=true`,
-                      tag: `group-call-${groupId}`,
+                      url: `/groups?group=${encodeURIComponent(groupId)}${callId ? `&call=${encodeURIComponent(callId)}` : ''}&autoJoin=true`,
+                      tag: `group-call-${callId || groupId}`,
                       icon: '/globe.svg',
                       badge: '/globe.svg',
                     }
