@@ -1200,8 +1200,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
   const loadGroups = useCallback(async () => {
     setStatus('loading');
     try {
-      const list = await fetchGroups(60, actor.deviceId || undefined);
-      setGroups(list);
+      const list = await fetchGroups(60, actor.deviceId || undefined, actor.userId || undefined);
       if (list.length) {
         // Validation logic for current selection
         const hasCurrent = !!selectedGroupId && list.some((item) => item.id === selectedGroupId);

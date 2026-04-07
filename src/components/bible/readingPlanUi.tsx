@@ -257,32 +257,6 @@ export function PlanStageCard({
         >
             <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.14),rgba(255,255,255,0.04)_22%,rgba(4,7,14,0.14)_55%,rgba(4,7,14,0.36)_100%)]" />
 
-            {showImage && (
-                <Image
-                    src={presentation.art.imageSrc}
-                    alt={presentation.imageAlt}
-                    fill
-                    priority={priority}
-                    sizes={compact ? '(max-width: 640px) 190px, 216px' : '(max-width: 640px) 244px, (max-width: 1024px) 320px, (max-width: 1440px) 390px, 410px'}
-                    className="object-cover mix-blend-screen"
-                    style={{
-                        objectPosition: presentation.art.objectPosition,
-                        opacity: photoOpacity,
-                    }}
-                />
-            )}
-
-            {presentation.art.textureSrc ? (
-                <Image
-                    src={presentation.art.textureSrc}
-                    alt=""
-                    aria-hidden="true"
-                    fill
-                    sizes={compact ? '(max-width: 640px) 190px, 216px' : '(max-width: 640px) 244px, (max-width: 1024px) 320px, (max-width: 1440px) 390px, 410px'}
-                    className="object-cover mix-blend-overlay opacity-18"
-                />
-            ) : null}
-
             <div
                 className="absolute inset-0 opacity-70"
                 style={{

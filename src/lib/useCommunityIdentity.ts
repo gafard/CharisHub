@@ -18,7 +18,7 @@ function makeDeviceId() {
 }
 
 export function useCommunityIdentity() {
-  const { user, profile } = useAuth();
+  const { user, profile, updateProfile } = useAuth();
   const [localIdentity, setLocalIdentity] = useState<CommunityIdentity | null>(null);
 
   // Charger l'identité locale (deviceId)
@@ -54,14 +54,16 @@ export function useCommunityIdentity() {
     return localIdentity;
   }, [user, profile, localIdentity, isAuthenticated]);
 
-  const updateName = (displayName: string) => {
-    // Note: On ne met plus à jour le nom local si on veut forcer l'auth
-    // Le nom devrait venir du profil Supabase
-    setLocalIdentity((prev) => {
-      const next = { ...(prev ?? { deviceId: makeDeviceId(), displayName: '' }), displayName };
-      try { localStorage.setItem(KEY, JSON.stringify(next)); } catch {}
-      return next;
-    });
+  const updateName = async (displayName: string) => {
+    if (isAuthenticated) {
+      await updateProfile({ display_name: displayName });
+    } else {
+      setLocalIdentity((prev) => {
+        const next = { ...(prev ?? { deviceId: makeDeviceId(), displayName: '' }), displayName };
+        try { localStorage.setItem(KEY, JSON.stringify(next)); } catch {}
+        return next;
+      });
+    }
   };
 
   return useMemo(() => ({ 

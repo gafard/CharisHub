@@ -1857,7 +1857,7 @@ export async function fetchStories(limit = 40): Promise<CommunityStory[]> {
   }
 }
 
-export async function fetchGroups(limit = 40, deviceId?: string) {
+export async function fetchGroups(limit = 40, deviceId?: string, userId?: string | null) {
   let remoteGroups: CommunityGroup[] = [];
   
   if (supabase) {
@@ -1906,7 +1906,7 @@ export async function fetchGroups(limit = 40, deviceId?: string) {
         const membersByGroup = new Map<string, number>();
         const membershipStatusMap = new Map<string, 'approved' | 'pending'>();
 
-        (membersData ?? []).forEach((m: { group_id: string; device_id: string; status?: string }) => {
+        (membersData ?? []).forEach((m: { group_id: string; device_id: string; user_id?: string; status?: string }) => {
           const gId = m.group_id;
           const status = m.status || 'approved'; // Default to approved if status column doesn't exist yet
           
@@ -1914,7 +1914,10 @@ export async function fetchGroups(limit = 40, deviceId?: string) {
             membersByGroup.set(gId, (membersByGroup.get(gId) || 0) + 1);
           }
           
-          if (deviceId && m.device_id === deviceId) {
+          if (
+            (deviceId && m.device_id === deviceId) || 
+            (userId && m.user_id === userId)
+          ) {
             membershipStatusMap.set(gId, status as any);
           }
         });

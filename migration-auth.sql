@@ -133,8 +133,8 @@ ALTER TABLE user_sync_metadata ENABLE ROW LEVEL SECURITY;
 -- ==========================================
 DROP POLICY IF EXISTS "Public groups are readable" ON charishub_groups;
 DROP POLICY IF EXISTS "Groups are readable by authenticated users" ON charishub_groups;
-CREATE POLICY "Groups are readable by authenticated users" ON charishub_groups
-  FOR SELECT USING (auth.uid() IS NOT NULL);
+CREATE POLICY "Groups are readable by everyone" ON charishub_groups
+  FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "Authenticated users can create groups" ON charishub_groups;
 CREATE POLICY "Authenticated users can create groups" ON charishub_groups
@@ -150,8 +150,8 @@ CREATE POLICY "Creator can update their own group" ON charishub_groups
 -- TABLE: charishub_group_members
 -- ==========================================
 DROP POLICY IF EXISTS "Group members are readable by authenticated users" ON charishub_group_members;
-CREATE POLICY "Group members are readable by authenticated users" ON charishub_group_members
-  FOR SELECT USING (auth.uid() IS NOT NULL);
+CREATE POLICY "Group members are readable by everyone" ON charishub_group_members
+  FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "Authenticated users can join groups" ON charishub_group_members;
 CREATE POLICY "Authenticated users can join groups" ON charishub_group_members
@@ -166,8 +166,8 @@ CREATE POLICY "Users can leave their own memberships" ON charishub_group_members
 -- ==========================================
 DROP POLICY IF EXISTS "Posts are readable" ON charishub_posts;
 DROP POLICY IF EXISTS "Posts are readable by authenticated users" ON charishub_posts;
-CREATE POLICY "Posts are readable by authenticated users" ON charishub_posts
-  FOR SELECT USING (auth.uid() IS NOT NULL);
+CREATE POLICY "Posts are readable by everyone" ON charishub_posts
+  FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "Authors can create their own posts" ON charishub_posts;
 CREATE POLICY "Authors can create their own posts" ON charishub_posts
@@ -187,8 +187,8 @@ CREATE POLICY "Author can delete their own post" ON charishub_posts
 -- TABLE: charishub_comments
 -- ==========================================
 DROP POLICY IF EXISTS "Comments are readable by authenticated users" ON charishub_comments;
-CREATE POLICY "Comments are readable by authenticated users" ON charishub_comments
-  FOR SELECT USING (auth.uid() IS NOT NULL);
+CREATE POLICY "Comments are readable by everyone" ON charishub_comments
+  FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "Authors can create their own comments" ON charishub_comments;
 CREATE POLICY "Authors can create their own comments" ON charishub_comments
@@ -208,8 +208,8 @@ CREATE POLICY "Authors can delete their own comments" ON charishub_comments
 -- TABLE: community_stories
 -- ==========================================
 DROP POLICY IF EXISTS "Stories are readable by authenticated users" ON community_stories;
-CREATE POLICY "Stories are readable by authenticated users" ON community_stories
-  FOR SELECT USING (auth.uid() IS NOT NULL);
+CREATE POLICY "Stories are readable by everyone" ON community_stories
+  FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "Authors can create their own stories" ON community_stories;
 CREATE POLICY "Authors can create their own stories" ON community_stories
@@ -223,8 +223,8 @@ CREATE POLICY "Authors can delete their own stories" ON community_stories
 -- TABLE: community_group_call_presence
 -- ==========================================
 DROP POLICY IF EXISTS "Presence is readable by authenticated users" ON community_group_call_presence;
-CREATE POLICY "Presence is readable by authenticated users" ON community_group_call_presence
-  FOR SELECT USING (auth.uid() IS NOT NULL);
+CREATE POLICY "Presence is readable by everyone" ON community_group_call_presence
+  FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "Users can upsert their own presence" ON community_group_call_presence;
 CREATE POLICY "Users can upsert their own presence" ON community_group_call_presence
@@ -244,8 +244,8 @@ CREATE POLICY "Users can delete their own presence" ON community_group_call_pres
 -- TABLE: community_group_call_events
 -- ==========================================
 DROP POLICY IF EXISTS "Events are readable by authenticated users" ON community_group_call_events;
-CREATE POLICY "Events are readable by authenticated users" ON community_group_call_events
-  FOR SELECT USING (auth.uid() IS NOT NULL);
+CREATE POLICY "Events are readable by everyone" ON community_group_call_events
+  FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "Users can log their own events" ON community_group_call_events;
 CREATE POLICY "Users can log their own events" ON community_group_call_events
