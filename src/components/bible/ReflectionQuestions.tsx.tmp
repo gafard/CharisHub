@@ -11,7 +11,8 @@ import {
   PenLine,
   Sparkles,
 } from 'lucide-react';
-import { formatDayReadingsLabel, type PlanReading, findReadingPlan } from '../../lib/readingPlans';
+import { formatDayReadingsLabel, type PlanReading } from '../../lib/readingPlans';
+import { getReadingPlan } from '../../lib/readingPlans';
 import {
   getChapterReflection,
   getDayDailyPrompts,
@@ -68,7 +69,7 @@ function getFocusContext(
 }
 
 function getBookDisplayName(bookId: string): string {
-  const book = BIBLE_BOOKS.find(b => b.id === bookId);
+  const book = BIBLE_BOOKS.find(b => b.id === bookId || b.apiId === bookId);
   return book?.name || bookId;
 }
 
@@ -97,7 +98,7 @@ export default function ReflectionQuestions({
     if (!focus) return;
     setAiLoading(true);
     try {
-      const plan = findReadingPlan(planId);
+      const plan = getReadingPlan(planId);
       const bookName = getBookDisplayName(focus.reading.bookId);
       const res = await fetch('/api/bible/reflection-questions', {
         method: 'POST',
@@ -177,7 +178,7 @@ export default function ReflectionQuestions({
           <div className="min-w-0">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-[rgba(255,255,255,0.05)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.22em] text-[rgba(255,240,222,0.7)]">
               <Sparkles size={13} />
-              {finalChapter ? 'Réflexion finale du jour' : 'Réflexion du chapitre'}
+              {finalChapter ? 'R'eflexion finale du jour' : 'R'eflexion du chapitre'}
               {aiLoading && <Loader2 size={12} className="animate-spin ml-1" />}
             </div>
             <h3 className="mt-3 font-display text-[24px] font-bold leading-[0.98] text-[#fff7ec] sm:text-[28px]">
@@ -185,14 +186,14 @@ export default function ReflectionQuestions({
             </h3>
             <p className="mt-2 max-w-[52ch] text-[13px] leading-relaxed text-[rgba(255,240,222,0.66)]">
               {finalChapter
-                ? `${readingLabel}. Terminez votre relecture intérieure avant d'entrer dans la prière.`
-                : 'Prenez une minute pour fixer ce que Dieu a mis en lumière dans ce chapitre.'}
+                ? `${readingLabel}. Terminez votre relecture int'erieure avant d'entrer dans la pri`ere.`
+                : 'Prenez une minute pour fixer ce que Dieu a mis en lumi`ere dans ce chapitre.'}
             </p>
           </div>
 
           <div className="grid shrink-0 gap-2 text-right">
             <span className="inline-flex items-center justify-center rounded-full border border-white/10 bg-[rgba(255,255,255,0.05)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[rgba(255,240,222,0.76)]">
-              {answeredCount}/{questions.length} réponses
+              {answeredCount}/{questions.length} r'eponses
             </span>
             {finalChapter ? (
               <span className="inline-flex items-center justify-center rounded-full border border-white/10 bg-[rgba(255,255,255,0.05)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[rgba(255,240,222,0.76)]">
@@ -252,7 +253,7 @@ export default function ReflectionQuestions({
                           [question.id]: event.target.value,
                         });
                       }}
-                      placeholder="Écrivez votre réflexion..."
+                      placeholder="'Ecrivez votre r'eflexion..."
                       className="min-h-[118px] w-full resize-none bg-transparent py-4 pl-11 pr-4 text-[14px] leading-relaxed text-[#fff7ec] outline-none placeholder:text-[rgba(255,240,222,0.3)]"
                     />
                   </div>
@@ -269,13 +270,13 @@ export default function ReflectionQuestions({
           <div className="flex items-center gap-2 text-[#fff6e6]">
             <BookMarked size={15} />
             <span className="text-[11px] font-semibold uppercase tracking-[0.2em]">
-              Chapitre sauvegardé
+              Chapitre sauvegard'e
             </span>
           </div>
           <p className="mt-2">
             {chapterComplete
-              ? "Votre réflexion est conservée. Vous pourrez la retrouver dans la synthèse du dernier chapitre du jour."
-              : "Vous pouvez laisser une seule phrase. L'app gardera cette trace pour la synthèse finale du jour."}
+              ? 'Votre r'eflexion est conserv'ee. Vous pourrez la retrouver dans la synth`ese du dernier chapitre du jour.'
+              : 'Vous pouvez laisser une seule phrase. L'app gardera cette trace pour la synth`ese finale du jour.'}
           </p>
         </div>
       ) : (
@@ -290,9 +291,9 @@ export default function ReflectionQuestions({
               <Sparkles size={16} />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[15px] font-semibold text-[#fff8ef]">Synthèse et élans de prière</p>
+              <p className="text-[15px] font-semibold text-[#fff8ef]">Synth`ese et 'elans de pri`ere</p>
               <p className="mt-1 text-[12px] text-[rgba(255,240,222,0.62)]">
-                Dernier chapitre du jour: préparez la prière finale.
+                Dernier chapitre du jour: pr'eparez la pri`ere finale.
               </p>
             </div>
             <div className="rounded-full border border-white/10 bg-white/[0.05] p-1.5 text-[rgba(255,240,222,0.62)]">

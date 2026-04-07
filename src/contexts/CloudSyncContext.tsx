@@ -59,6 +59,7 @@ export function CloudSyncProvider({ children }: { children: ReactNode }) {
         bookmarks: [],
         pepites: [],
         readingProgress: [],
+        reflections: [],
         streak: null,
         prayerSessions: [],
         prayerJournal: [],

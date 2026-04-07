@@ -3,6 +3,9 @@
  *
  * Day progression is based on the calendar date since the user started the plan.
  * The user cannot skip or manually advance days.
+ *
+ * REQUIRES REGISTRATION: Plans are only available to registered users
+ * (those with a displayName set in localStorage identity).
  */
 
 import {
@@ -15,6 +18,34 @@ import {
 const PLANS_KEY = 'formation_biblique_reading_plans_v3';
 const LEGACY_PLANS_KEY = 'formation_biblique_reading_plans_v2';
 const ACTIVE_PLAN_KEY = 'formation_biblique_active_reading_plan_v1';
+const IDENTITY_KEY = 'formation_biblique_identity_v1';
+
+/**
+ * Vérifie si l'utilisateur est "inscrit" (a défini un nom d'affichage).
+ * Un utilisateur "invité" sans nom ne peut pas activer de plan.
+ */
+export function isUserRegistered(): boolean {
+    if (typeof window === 'undefined') return false;
+    try {
+        const raw = localStorage.getItem(IDENTITY_KEY);
+        if (!raw) return false;
+        const identity = JSON.parse(raw);
+        return !!(identity?.displayName && identity.displayName.trim().length > 0);
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * Vérifie et retourne l'erreur si l'utilisateur n'est pas inscrit.
+ */
+export function checkUserRegistered(): { allowed: true } | { allowed: false; reason: string } {
+    if (isUserRegistered()) return { allowed: true };
+    return {
+        allowed: false,
+        reason: 'Les plans de lecture nécessitent un compte. Veuillez définir votre nom dans les paramètres.',
+    };
+}
 
 type LegacyPlanProgress = {
     planId: string;
@@ -288,6 +319,13 @@ export function startPlan(planId: string): PlanProgress {
 }
 
 export function startOrActivatePlan(planId: string): ActiveReadingPlan | null {
+    // Vérifier que l'utilisateur est inscrit
+    const check = checkUserRegistered();
+    if (!check.allowed) {
+        console.warn('[ReadingPlans] Plan activation refusé — utilisateur non inscrit:', check.reason);
+        return null;
+    }
+
     const plan = getPlanById(planId);
     if (!plan) return null;
 

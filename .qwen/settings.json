@@ -5,7 +5,12 @@
       "Bash(git checkout *)",
       "Bash(npx *)",
       "Bash(test *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(file *)",
+      "Bash(tr *)",
+      "Bash(iconv *)",
+      "Bash(mv *)",
+      "Bash(python3 *)"
     ]
   },
   "$version": 3
