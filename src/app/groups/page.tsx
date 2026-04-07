@@ -8,13 +8,15 @@ export default function GroupsPage() {
       <section className="space-y-4">
         <div className="rounded-[32px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]/90 p-6">
           <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-[color:var(--foreground)]/55">
-            Communauté
+            Groupes · Appels · Formations
           </div>
-          <h1 className="mt-2 text-3xl font-extrabold">Grandissez ensemble dans la Parole</h1>
+          <h1 className="mt-2 text-3xl font-extrabold">
+            Organisez vos groupes et animez vos sessions chrétiennes
+          </h1>
           <p className="mt-3 max-w-3xl text-sm leading-7 text-[color:var(--foreground)]/68">
-            Rejoignez des groupes, organisez vos temps de prière, préparez les prochaines rencontres
-            et vivez des moments de communion avec les appels vidéo, le chat, le partage d&apos;écran
-            et la lecture biblique synchronisée.
+            Créez des groupes d’étude, lancez des appels en direct, planifiez vos rencontres,
+            proposez des formations gratuites ou payantes et accompagnez votre communauté
+            dans un cadre centré sur la Parole.
           </p>
         </div>
         <Suspense

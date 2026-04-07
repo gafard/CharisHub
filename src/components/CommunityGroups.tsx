@@ -260,7 +260,7 @@ function GroupCard({
             {group.name}
           </h4>
           <p className="line-clamp-3 text-sm font-medium leading-relaxed opacity-70">
-            {group.description || "Un espace pour grandir ensemble dans la Parole et la prière."}
+            {group.description || "Un espace pour organiser des appels, enseigner, prier et grandir ensemble dans la Parole."}
           </p>
         </div>
 
@@ -491,7 +491,7 @@ function GroupDetailTabs({
         <div className="rounded-[28px] border border-[color:var(--accent)]/20 bg-[color:var(--accent)]/5 p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <div className="text-[10px] font-black uppercase tracking-[0.15em] text-[color:var(--accent)]">Prochain temps</div>
+              <div className="text-[10px] font-black uppercase tracking-[0.15em] text-[color:var(--accent)]">Prochaine session</div>
               <div className="mt-1 text-sm font-medium text-[color:var(--foreground)]/70">
                 {detailNextCallAt ? formatWhen(detailNextCallAt) : 'Non défini'}
               </div>
@@ -582,9 +582,9 @@ function GroupDetailTabs({
           {/* Content */}
           <div className="relative px-6 py-6">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-xl font-bold tracking-tight text-[color:var(--foreground)]">Prochain temps</h2>
+              <h2 className="text-xl font-bold tracking-tight text-[color:var(--foreground)]">Prochaine session</h2>
               <span className="rounded-full bg-[color:var(--surface)] px-3 py-1.5 text-xs font-medium text-[color:var(--foreground)]/60 ring-1 ring-[color:var(--border-soft)] backdrop-blur-xl">
-                {detailNextCallAt ? formatWhen(detailNextCallAt) : 'Aucun planifié'}
+                {detailNextCallAt ? formatWhen(detailNextCallAt) : 'Aucune session planifiée'}
               </span>
             </div>
 
@@ -751,7 +751,7 @@ function GroupDetailTabs({
             {activeTab === 'feed' && (
               <div className="absolute inset-0 bg-gradient-to-br from-[color:var(--accent-soft)]/35 to-transparent" />
             )}
-            <span className="relative">Échanges</span>
+            <span className="relative">Discussion</span>
           </button>
           <button
             type="button"
@@ -1838,12 +1838,12 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
                 </div>
 
                 <h1 className="text-4xl font-black leading-[1.1] tracking-tight text-[#161c35] sm:text-6xl lg:text-7xl font-display">
-                  <span className="block text-sm font-black uppercase tracking-[0.18em] text-[#c89f2d] mb-2">Communauté</span>
-                  Grandis avec ta <span className="text-[#c89f2d]">communauté.</span>
+                  <span className="block text-sm font-black uppercase tracking-[0.18em] text-[#c89f2d] mb-2">Plateforme chrétienne</span>
+                  Crée tes groupes, lance tes appels, transmets ton <span className="text-[#c89f2d]">enseignement.</span>
                 </h1>
 
                 <p className="mt-8 max-w-xl text-lg font-medium leading-relaxed text-[#4b556f] lg:text-xl">
-                  Un espace pour prier, partager et grandir ensemble dans la Parole. Rejoins une communauté et avance dans ton identité en Christ.
+                  Réunissez des croyants, organisez des appels en direct, animez des groupes d’étude et proposez des formations chrétiennes gratuites ou payantes dans un environnement dédié.
                 </p>
 
                 <div className="mt-10 flex flex-wrap items-center justify-center gap-4 lg:justify-start">
@@ -1854,12 +1854,12 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
                     }}
                     className="h-14 rounded-full bg-[#161c35] px-8 text-sm font-black text-white transition-transform hover:scale-105 active:scale-95"
                   >
-                    Créer un groupe
+                    Créer un groupe ou une formation
                   </button>
                   <div className="relative">
                     <input
                       type="text"
-                      placeholder="Rechercher un groupe..."
+                      placeholder="Rechercher un groupe, une session ou une formation..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="h-14 w-full min-w-[240px] rounded-full border border-[#e8ebf1] bg-white px-12 text-sm font-medium outline-none transition-all focus:border-[#c89f2d] focus:ring-4 focus:ring-[#c89f2d]/5"
@@ -1876,7 +1876,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
             {showCreateForm && (
               <div className="mb-12 rounded-[32px] border border-dashed border-[#e8ebf1] bg-white p-8">
                 <div className="mb-6 flex items-center justify-between">
-                  <h3 className="text-2xl font-black">Créer un groupe</h3>
+                  <h3 className="text-2xl font-black">Créer un groupe ou une formation</h3>
                   <button onClick={() => setShowCreateForm(false)} className="opacity-50 hover:opacity-100">
                     <X size={24} />
                   </button>
@@ -1929,6 +1929,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
                     <input
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
+                      placeholder="Décris l’objectif du groupe, de la session ou de la formation"
                       className="h-12 rounded-2xl bg-gray-50 px-4 text-sm font-bold outline-none"
                     />
                   </label>
@@ -1952,7 +1953,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
               
               {status === 'ready' && groups.length === 0 && (
                 <div className="col-span-full py-20 text-center opacity-40">
-                  <p className="text-xl font-bold">Aucun groupe n’est disponible pour le moment.</p>
+                  <p className="text-xl font-bold">Aucun groupe ou formation n’est disponible pour le moment.</p>
                 </div>
               )}
 

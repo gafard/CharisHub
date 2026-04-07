@@ -23,9 +23,10 @@ interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialMode?: 'login' | 'register';
+  onSuccess?: () => void;
 }
 
-export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalProps) {
+export default function AuthModal({ isOpen, onClose, initialMode = 'login', onSuccess }: AuthModalProps) {
   const { signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth();
   const [mode, setMode] = useState<'login' | 'register'>(initialMode);
   const [loading, setLoading] = useState(false);
@@ -63,11 +64,13 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
           return;
         }
         await signUpWithEmail(email, password, displayName);
-        setSuccess('Compte créé avec succès !');
+        setSuccess('Compte cree avec succes !');
+        onSuccess?.();
         setTimeout(() => onClose(), 1500);
       } else {
         await signInWithEmail(email, password);
-        setSuccess('Connexion réussie !');
+        setSuccess('Connexion reussie !');
+        onSuccess?.();
         setTimeout(() => onClose(), 1000);
       }
     } catch (err: any) {
