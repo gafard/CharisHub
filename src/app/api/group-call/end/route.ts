@@ -1,3 +1,4 @@
+import logger from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabaseServer';
 
@@ -5,7 +6,7 @@ export const runtime = 'nodejs';
 
 export async function POST(req: Request) {
   if (!supabaseServer) {
-    console.error('Supabase server client is not initialized');
+    logger.error('Supabase server client is not initialized');
     return NextResponse.json({ error: 'Supabase server client is not configured' }, { status: 503 });
   }
 
@@ -27,13 +28,13 @@ export async function POST(req: Request) {
       .in('status', ['ringing', 'active']); // Gère aussi le cas où l'organisateur raccroche avant qu'un pair rejoigne
 
     if (error) {
-      console.error('Error updating call status:', error);
+      logger.error('Error updating call status:', error);
       return NextResponse.json({ error: 'Failed to end call' }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error('Error ending group call:', error);
+    logger.error('Error ending group call:', error);
     return NextResponse.json({ error: 'Failed to end group call' }, { status: 500 });
   }
 }

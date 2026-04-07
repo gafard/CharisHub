@@ -1,3 +1,4 @@
+import logger from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabaseServer';
 import { hasWebPushConfig, sendWebPush } from '@/lib/webPush';

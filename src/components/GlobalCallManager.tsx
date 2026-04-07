@@ -1,5 +1,7 @@
 'use client';
 
+import logger from '@/lib/logger';
+
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../lib/supabase';
@@ -111,13 +113,13 @@ export default function GlobalCallManager() {
 
         const setupListeners = async () => {
             try {
-                console.log('[GlobalCallManager] Fetching groups for device:', deviceId);
+                logger.log('[GlobalCallManager] Fetching groups for device:', deviceId);
                 const groups = await fetchGroups(40, deviceId);
                 if (!active) return;
-                console.log('[GlobalCallManager] Groups fetched:', groups.length, groups.map(g => g.id));
+                logger.log('[GlobalCallManager] Groups fetched:', groups.length, groups.map(g => g.id));
 
                 if (groups.length === 0) {
-                    console.warn('[GlobalCallManager] No groups found. User will not receive calls.');
+                    logger.warn('[GlobalCallManager] No groups found. User will not receive calls.');
                 }
 
                 // Only subscribe to groups where the user is effectively a member.
@@ -126,7 +128,7 @@ export default function GlobalCallManager() {
                     (group) => group.joined || group.created_by_device_id === deviceId
                 );
                 if (joinedGroups.length === 0) {
-                    console.log('[GlobalCallManager] No joined groups. Skipping call listeners.');
+                    logger.log('[GlobalCallManager] No joined groups. Skipping call listeners.');
                     return;
                 }
 
@@ -134,7 +136,7 @@ export default function GlobalCallManager() {
                     const channelNames = [`group-call:${group.id}`, `group:${group.id}`];
 
                     channelNames.forEach((channelName) => {
-                        console.log('[GlobalCallManager] Subscribing to channel:', channelName);
+                        logger.log('[GlobalCallManager] Subscribing to channel:', channelName);
                         const channel = client.channel(channelName);
                         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                         // @ts-ignore
@@ -145,7 +147,7 @@ export default function GlobalCallManager() {
 
                             if (!startedBy) return;
                             if (startedBy === deviceId) {
-                                console.log('[GlobalCallManager] Ignoring own call');
+                                logger.log('[GlobalCallManager] Ignoring own call');
                                 return;
                             }
 
@@ -157,8 +159,8 @@ export default function GlobalCallManager() {
                             }
                             recentInviteRef.current[dedupeKey] = now;
 
-                            console.log('[GlobalCallManager] 📞 EVENT RECEIVED:', raw);
-                            console.log('[GlobalCallManager] 🔔 RINGER TRIGGERED for call:', callId);
+                            logger.log('[GlobalCallManager] 📞 EVENT RECEIVED:', raw);
+                            logger.log('[GlobalCallManager] 🔔 RINGER TRIGGERED for call:', callId);
                             setIncomingCall((prev) => {
                                 if (prev?.callId === callId) return prev;
                                 return {
@@ -181,22 +183,22 @@ export default function GlobalCallManager() {
                         });
 
                         channel.subscribe((status: string) => {
-                            console.log(`[GlobalCallManager] 📡 Channel ${channelName} status:`, status);
+                            logger.log(`[GlobalCallManager] 📡 Channel ${channelName} status:`, status);
                             if (status === 'SUBSCRIBED') {
-                                console.log(`[GlobalCallManager] ✅ Ready on ${channelName}`);
+                                logger.log(`[GlobalCallManager] ✅ Ready on ${channelName}`);
                             } else if (status === 'CHANNEL_ERROR') {
-                                console.warn(
+                                logger.warn(
                                     `[GlobalCallManager] ⚠️ Realtime unavailable for ${channelName} (permission or network)`
                                 );
                             } else if (status === 'TIMED_OUT') {
-                                console.warn(`[GlobalCallManager] ⚠️ Timeout subscribing to ${channelName}`);
+                                logger.warn(`[GlobalCallManager] ⚠️ Timeout subscribing to ${channelName}`);
                             }
                         });
                         channels.push(channel);
                     });
                 });
 
-                console.log(`[GlobalCallManager] Écoute des appels sur ${joinedGroups.length} groupes rejoints`);
+                logger.log(`[GlobalCallManager] Écoute des appels sur ${joinedGroups.length} groupes rejoints`);
             } catch (e) {
                 console.error('[GlobalCallManager] Erreur setup:', e);
             }

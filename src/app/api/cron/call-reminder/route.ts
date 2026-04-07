@@ -1,3 +1,4 @@
+import logger from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabaseServer';
 import { hasWebPushConfig, sendWebPush } from '@/lib/webPush';
@@ -36,7 +37,7 @@ export async function GET(req: Request) {
         groups = data ?? [];
     } catch (err: any) {
         // Table might not exist or column missing
-        console.error('[call-reminder] Error fetching groups:', err?.message);
+        logger.error('[call-reminder] Error fetching groups:', err?.message);
         return NextResponse.json({ ok: true, sent: 0, groups: 0, note: 'No groups table or column' });
     }
 

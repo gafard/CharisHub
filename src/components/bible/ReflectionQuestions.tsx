@@ -1,5 +1,7 @@
 'use client';
 
+import logger from '@/lib/logger';
+
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   BookMarked,
@@ -114,7 +116,7 @@ export default function ReflectionQuestions({
         setAiQuestions(data);
       }
     } catch (err) {
-      console.warn('[ReflectionQuestions] AI fetch failed, using defaults:', err);
+      logger.warn('[ReflectionQuestions] AI fetch failed, using defaults:', err);
     } finally {
       setAiLoading(false);
     }

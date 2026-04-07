@@ -1,3 +1,4 @@
+import logger from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
@@ -45,7 +46,7 @@ export async function POST() {
           .limit(1);
 
         if (!checkError) {
-          console.log(`[InitBackup] Table ${table} existe déjà`);
+          logger.log(`[InitBackup] Table ${table} existe déjà`);
           createdTables.push({ name: table, status: 'already_exists' });
           continue;
         }

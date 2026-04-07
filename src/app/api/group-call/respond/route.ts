@@ -1,3 +1,4 @@
+import logger from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabaseServer';
 
@@ -27,13 +28,13 @@ export async function POST(req: Request) {
       .eq('device_id', userId);
 
     if (error) {
-      console.error('Error updating call invite:', error);
+      logger.error('Error updating call invite:', error);
       throw error;
     }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error('Error updating call invite:', error);
+    logger.error('Error updating call invite:', error);
     return NextResponse.json({ error: 'Failed to update call invite' }, { status: 500 });
   }
 }

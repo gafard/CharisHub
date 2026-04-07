@@ -1,3 +1,4 @@
+import logger from '@/lib/logger';
 /**
  * Bible Reading Plans — date-synchronized, auto-advancing plans.
  *
@@ -330,7 +331,7 @@ export function startOrActivatePlan(planId: string, userId?: string | null): Act
     // Vérifier que l'utilisateur est inscrit
     const check = checkUserRegistered(userId);
     if (!check.allowed) {
-        console.warn('[ReadingPlans] Plan activation refuse — utilisateur non inscrit:', check.reason);
+        logger.warn('[ReadingPlans] Plan activation refuse — utilisateur non inscrit:', check.reason);
         return null;
     }
 

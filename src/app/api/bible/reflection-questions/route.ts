@@ -1,3 +1,4 @@
+import logger from '@/lib/logger';
 import { NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
@@ -213,7 +214,7 @@ export async function POST(req: Request) {
     return NextResponse.json(DEFAULT_QUESTIONS);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error('[reflection-questions] error:', message);
+    logger.error('[reflection-questions] error:', message);
     return NextResponse.json({ error: compactErrorText(message) }, { status: 500 });
   }
 }

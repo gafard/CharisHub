@@ -1,3 +1,4 @@
+import logger from '@/lib/logger';
 import { supabase } from '../lib/supabase';
 import { renderVerseStoryPng } from '../lib/storyImage';
 
@@ -1373,7 +1374,7 @@ export async function fetchPosts(limit = 30, kind?: CommunityKind, groupId?: str
     if (error) throw error;
     remotePosts = (data as any[] || []).filter((row: any) => isPublicVisibilityRow(row)).map(normalizePost);
   } catch (err) {
-    console.warn('[fetchPosts] Remote fetch failed, using local only:', err);
+    logger.warn('[fetchPosts] Remote fetch failed, using local only:', err);
   }
 
   const localPosts = await localFetchPosts(limit, kind, groupId);
@@ -1599,7 +1600,7 @@ export async function fetchComments(postId: string) {
 
     const { data, error } = await query;
     if (error) {
-      console.warn('[fetchComments] error, falling back to local:', error.message);
+      logger.warn('[fetchComments] error, falling back to local:', error.message);
       return localFetchComments(postId);
     }
     return (data || []).map(normalizeComment);
@@ -2319,7 +2320,7 @@ export async function clearGroupCallPresence(groupId: string, deviceId: string) 
       
       // Known structural error
       if (isMissingTableError(result.error, 'community_group_call_presence')) {
-        console.warn('[CommunityAPI] Table de présence absente.');
+        logger.warn('[CommunityAPI] Table de présence absente.');
         return false;
       }
     }

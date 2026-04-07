@@ -1,3 +1,4 @@
+import logger from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import Database from 'better-sqlite3';
 import path from 'path';
@@ -98,7 +99,7 @@ export async function GET(req: Request) {
     });
 
   } catch (error: any) {
-    console.error('Interlinear API Error:', error);
+    logger.error('Interlinear API Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   } finally {
     if (db) db.close();

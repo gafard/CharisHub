@@ -1,5 +1,7 @@
 'use client';
 
+import logger from '@/lib/logger';
+
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -687,7 +689,7 @@ export default function CommunityGroupCall({
             const backoff = Math.min(1000 * Math.pow(2, attempts), 30000);
             reconnectAttemptsRef.current.set(targetPeerId, attempts + 1);
             
-            console.log(`[Reconnexion] Tentative ${attempts + 1}/5 pour ${targetPeerId} dans ${backoff}ms`);
+            logger.log(`[Reconnexion] Tentative ${attempts + 1}/5 pour ${targetPeerId} dans ${backoff}ms`);
             
             const timer = setTimeout(() => {
               peerConnectionsRef.current.delete(targetPeerId);
@@ -697,7 +699,7 @@ export default function CommunityGroupCall({
             
             reconnectTimersRef.current.set(targetPeerId, timer);
           } else {
-            console.warn(`[Reconnexion] Échec après 5 tentatives pour ${targetPeerId}`);
+            logger.warn(`[Reconnexion] Échec après 5 tentatives pour ${targetPeerId}`);
             peerConnectionsRef.current.delete(targetPeerId);
             setRemotePeers((prev) => prev.filter((p) => p.peerId !== targetPeerId));
           }
@@ -869,7 +871,7 @@ export default function CommunityGroupCall({
           // Stocker dans Supabase
           await supabase.from('community_call_summaries').insert(summary);
           
-          console.log('[Résumé] Appel terminé:', summary);
+          logger.log('[Résumé] Appel terminé:', summary);
         } catch (err) {
           console.error('[Résumé] Échec génération résumé:', err);
         }
@@ -1404,7 +1406,7 @@ export default function CommunityGroupCall({
         // === ENREGISTREMENT ===
         .on('broadcast', { event: 'recording.started' }, ({ payload }: { payload: any }) => {
           if (payload?.peerId !== deviceId) {
-            console.log('[Enregistrement] Participant', payload.peerId, 'a démarré');
+            logger.log('[Enregistrement] Participant', payload.peerId, 'a démarré');
           }
         })
         .subscribe(async (status: string) => {

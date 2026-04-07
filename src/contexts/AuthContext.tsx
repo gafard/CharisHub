@@ -1,5 +1,7 @@
 'use client';
 
+import logger from '@/lib/logger';
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { claimLegacyData } from '@/lib/cloudSync';
@@ -124,7 +126,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Si les donnees ont deja ete migrees, on skip
       if (identity._migratedToAccount) return;
 
-      console.log('[Auth] Migration (RPC) des donnees locales vers le compte:', userId);
+      logger.log('[Auth] Migration (RPC) des donnees locales vers le compte:', userId);
       
       // Appel de la nouvelle fonction SQL sécurisée
       const { error } = await supabase.rpc('link_device_to_user', { p_device_id: deviceId });

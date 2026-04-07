@@ -1,3 +1,4 @@
+import logger from '@/lib/logger';
 // src/app/api/push/subscribe/route.ts
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabaseServer';

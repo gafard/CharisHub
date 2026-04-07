@@ -1,5 +1,7 @@
 'use client';
 
+import logger from '@/lib/logger';
+
 type NotifyPayload = {
   title: string;
   body?: string;
@@ -58,16 +60,16 @@ function toUint8Array(base64PublicKey: string) {
 
 export async function ensureNotificationPermission(): Promise<NotificationPermission | 'unsupported'> {
   if (typeof window === 'undefined' || !('Notification' in window)) {
-    console.warn('[Notifications] Not supported in this browser');
+    logger.warn('[Notifications] Not supported in this browser');
     return 'unsupported';
   }
   if (Notification.permission === 'granted') return 'granted';
   if (Notification.permission === 'denied') {
-    console.warn('[Notifications] Permission previously denied');
+    logger.warn('[Notifications] Permission previously denied');
     return 'denied';
   }
   const result = await Notification.requestPermission();
-  console.log('[Notifications] Permission request result:', result);
+  logger.log('[Notifications] Permission request result:', result);
   return result;
 }
 
@@ -117,7 +119,7 @@ export async function syncPushSubscription(
 
     if (!enabled) {
       if (existing) {
-        console.log('[Notifications] Unsubscribing...');
+        logger.log('[Notifications] Unsubscribing...');
         const json = existing.toJSON();
         await fetch('/api/push/unsubscribe', {
           method: 'POST',
@@ -133,7 +135,7 @@ export async function syncPushSubscription(
       return { ok: true };
     }
 
-    console.log('[Notifications] Checking permission...');
+    logger.log('[Notifications] Checking permission...');
     const permission = await ensureNotificationPermission();
     if (permission !== 'granted') {
       return { ok: false, error: 'Permission not granted (denied or dismissed)' };
@@ -145,7 +147,7 @@ export async function syncPushSubscription(
       return { ok: false, error: 'Configuration error: NEXT_PUBLIC_VAPID_PUBLIC_KEY missing' };
     }
 
-    console.log('[Notifications] Subscribing with VAPID key...');
+    logger.log('[Notifications] Subscribing with VAPID key...');
     const subscription =
       existing ||
       (await registration.pushManager.subscribe({
@@ -153,7 +155,7 @@ export async function syncPushSubscription(
         applicationServerKey: toUint8Array(vapidPublicKey),
       }));
 
-    console.log('[Notifications] Syncing with server...');
+    logger.log('[Notifications] Syncing with server...');
     const response = await fetch('/api/push/subscribe', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -173,7 +175,7 @@ export async function syncPushSubscription(
       return { ok: false, error: `Server error: ${text || response.statusText}` };
     }
 
-    console.log('[Notifications] Subscription successful ✅');
+    logger.log('[Notifications] Subscription successful ✅');
     return { ok: true };
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error during subscription';

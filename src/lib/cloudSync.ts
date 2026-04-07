@@ -1,3 +1,4 @@
+import logger from '@/lib/logger';
 /**
  * Cloud Sync Service — Synchronisation localStorage ↔ Supabase
  * 
@@ -280,9 +281,9 @@ export async function fetchAllCloudData(): Promise<FullUserData | null> {
     const errorMessage = error?.message || error?.details || 'Erreur inconnue';
     
     if (errorMessage.includes('relation') || errorMessage.includes('does not exist')) {
-      console.warn('[CloudSync] ⚠️ Tables de backup non initialisées.');
-      console.warn('[CloudSync] Exécutez le schéma SQL : supabase-backup-sync.sql');
-      console.warn('[CloudSync] Ou utilisez l\'API : POST /api/admin/init-backup-schema');
+      logger.warn('[CloudSync] ⚠️ Tables de backup non initialisées.');
+      logger.warn('[CloudSync] Exécutez le schéma SQL : supabase-backup-sync.sql');
+      logger.warn('[CloudSync] Ou utilisez l\'API : POST /api/admin/init-backup-schema');
     } else {
       console.error('[CloudSync] Error fetching data:', error);
     }
@@ -410,7 +411,7 @@ export async function syncLocalToCloud(
         }, { onConflict: 'device_id' });
 
       if (error) {
-        console.warn('[CloudSync] Streak sync warning:', error.message || 'Unknown');
+        logger.warn('[CloudSync] Streak sync warning:', error.message || 'Unknown');
       }
     }
 
@@ -448,7 +449,7 @@ export async function syncLocalToCloud(
         sync_version: 'v1',
       }, { onConflict: 'device_id' });
 
-    console.log('[CloudSync] Sync completed successfully');
+    logger.log('[CloudSync] Sync completed successfully');
     return true;
   } catch (error) {
     console.error('[CloudSync] Sync failed:', error);
@@ -609,7 +610,7 @@ export function mergeCloudToLocal(
       counts.streak = 1;
     }
 
-    console.log('[CloudSync] Merge completed:', counts);
+    logger.log('[CloudSync] Merge completed:', counts);
     return { success: true, counts };
   } catch (error) {
     console.error('[CloudSync] Merge failed:', error);
@@ -757,7 +758,7 @@ function safeParse<T>(value: string | null, fallback: T): T {
 export async function claimLegacyData(deviceId: string, userId: string) {
   if (!supabase || !deviceId || !userId) return;
 
-  console.log('[CloudSync] 🔄 Tentative de récupération des données legacy pour ce compte...');
+  logger.log('[CloudSync] 🔄 Tentative de récupération des données legacy pour ce compte...');
 
   const userDataTables = [
     'user_bible_highlights',
@@ -780,7 +781,7 @@ export async function claimLegacyData(deviceId: string, userId: string) {
         .eq('device_id', deviceId)
         .is('user_id', null);
       
-      if (error) console.warn(`[claimLegacyData] Erreur backfill ${table}:`, error.message);
+      if (error) logger.warn(`[claimLegacyData] Erreur backfill ${table}:`, error.message);
     } catch (e) {
       // Ignore
     }
@@ -802,13 +803,13 @@ export async function claimLegacyData(deviceId: string, userId: string) {
         .eq(table.col, deviceId)
         .is('user_id', null);
       
-      if (error) console.warn(`[claimLegacyData] Erreur backfill ${table.name}:`, error.message);
+      if (error) logger.warn(`[claimLegacyData] Erreur backfill ${table.name}:`, error.message);
     } catch (e) {
       // Ignore
     }
   }
 
-  console.log('[CloudSync] ✅ Backfill terminé.');
+  logger.log('[CloudSync] ✅ Backfill terminé.');
 }
 
 // Sync automatique au démarrage (optionnel)
@@ -818,12 +819,12 @@ export async function performInitialSync(
   onProgress?: (progress: SyncProgress) => void
 ): Promise<{ success: boolean; direction: 'local-to-cloud' | 'cloud-to-local' | 'none' }> {
   if (!isSupabaseConfigured()) {
-    console.log('[CloudSync] Supabase not configured, skipping sync');
+    logger.log('[CloudSync] Supabase not configured, skipping sync');
     return { success: false, direction: 'none' };
   }
 
   if (syncInProgress) {
-    console.log('[CloudSync] Sync already in progress, skipping');
+    logger.log('[CloudSync] Sync already in progress, skipping');
     return { success: false, direction: 'none' };
   }
 
@@ -831,7 +832,7 @@ export async function performInitialSync(
 
   try {
     // Stratégie : Cloud gagne (premier appareil qui sync)
-    console.log('[CloudSync] Starting cloud-to-local sync...');
+    logger.log('[CloudSync] Starting cloud-to-local sync...');
     
     // BACKFILL : Si on est connecté, on tente de rattacher les données legacy avant de fetch
     const sessionRes = await supabase.auth.getSession();
@@ -849,7 +850,7 @@ export async function performInitialSync(
       syncInProgress = false;
       
       if (result.success) {
-        console.log('[CloudSync] Cloud-to-local sync completed');
+        logger.log('[CloudSync] Cloud-to-local sync completed');
         return { success: true, direction: 'cloud-to-local' };
       }
     }

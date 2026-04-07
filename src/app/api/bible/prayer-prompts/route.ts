@@ -1,3 +1,4 @@
+import logger from '@/lib/logger';
 import { NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
@@ -195,7 +196,7 @@ export async function POST(req: Request) {
         return NextResponse.json(fallbackPrompts(body));
     } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
-        console.error('[prayer-prompts] error:', message);
+        logger.error('[prayer-prompts] error:', message);
         return NextResponse.json({ error: compactErrorText(message) }, { status: 500 });
     }
 }

@@ -1,5 +1,7 @@
 'use client';
 
+import logger from '@/lib/logger';
+
 import { useEffect, useRef } from 'react';
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import { useCommunityIdentity } from '../lib/useCommunityIdentity';
@@ -22,12 +24,12 @@ export default function NotificationManager() {
 
         navigator.serviceWorker.getRegistration().then(async (existing) => {
             if (existing) {
-                console.log('[NotificationManager] SW already registered:', existing.scope);
+                logger.log('[NotificationManager] SW already registered:', existing.scope);
                 return;
             }
             try {
                 const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
-                console.log('[NotificationManager] SW registered successfully:', reg.scope);
+                logger.log('[NotificationManager] SW registered successfully:', reg.scope);
             } catch (err) {
                 console.error('[NotificationManager] SW registration failed:', err);
             }
@@ -43,16 +45,16 @@ export default function NotificationManager() {
 
         (async () => {
             const status = await ensureNotificationPermission();
-            console.log('[NotificationManager] Permission status:', status);
+            logger.log('[NotificationManager] Permission status:', status);
 
             if (status === 'granted' && !pushSyncDone.current) {
                 pushSyncDone.current = true;
-                console.log('[NotificationManager] Auto-syncing push subscription...');
+                logger.log('[NotificationManager] Auto-syncing push subscription...');
                 const result = await syncPushSubscription(true, identity?.userId);
                 if (result.ok) {
-                    console.log('[NotificationManager] Push subscription synced ✅');
+                    logger.log('[NotificationManager] Push subscription synced ✅');
                 } else {
-                    console.warn('[NotificationManager] Push sync issue:', result.error || result.warning);
+                    logger.warn('[NotificationManager] Push sync issue:', result.error || result.warning);
                 }
             }
         })();
@@ -64,7 +66,7 @@ export default function NotificationManager() {
     useEffect(() => {
         if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
             navigator.serviceWorker.ready.then(registration => {
-                console.log('[NotificationManager] Service Worker ready:', registration.scope);
+                logger.log('[NotificationManager] Service Worker ready:', registration.scope);
             });
         }
     }, []);
@@ -76,7 +78,7 @@ export default function NotificationManager() {
         if (!supabase || !identity?.deviceId || !notificationsEnabled) return;
         const client = supabase;
 
-        console.log('[NotificationManager] Setting up realtime listener for community posts');
+        logger.log('[NotificationManager] Setting up realtime listener for community posts');
 
         const channel = client
             .channel('public:charishub_posts')
@@ -88,18 +90,18 @@ export default function NotificationManager() {
                     table: 'charishub_posts',
                 },
                 async (payload: RealtimePostgresChangesPayload<Record<string, unknown>>) => {
-                    console.log('[NotificationManager] 📬 New post detected:', payload);
+                    logger.log('[NotificationManager] 📬 New post detected:', payload);
                     const post = payload.new as any;
 
                     // Don't notify for own posts
                     if (post.author_device_id === identity.deviceId) {
-                        console.log('[NotificationManager] Skipping notification for own post');
+                        logger.log('[NotificationManager] Skipping notification for own post');
                         return;
                     }
 
                     // Only send a local notification if the page is visible.
                     if (document.visibilityState !== 'visible') {
-                        console.log('[NotificationManager] Page hidden — relying on push');
+                        logger.log('[NotificationManager] Page hidden — relying on push');
                         return;
                     }
 
@@ -111,7 +113,7 @@ export default function NotificationManager() {
                         const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
                         if (pushSub && !isLocal) {
-                            console.log('[NotificationManager] Push subscription active — skipping local notification');
+                            logger.log('[NotificationManager] Push subscription active — skipping local notification');
                             return;
                         }
                     } catch {
@@ -131,11 +133,11 @@ export default function NotificationManager() {
                 }
             )
             .subscribe((status: string) => {
-                console.log('[NotificationManager] Realtime subscription status:', status);
+                logger.log('[NotificationManager] Realtime subscription status:', status);
             });
 
         return () => {
-            console.log('[NotificationManager] Cleaning up realtime subscription');
+            logger.log('[NotificationManager] Cleaning up realtime subscription');
             client.removeChannel(channel);
         };
     }, [identity?.deviceId, notificationsEnabled]);

@@ -1,3 +1,4 @@
+import logger from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabaseServer';
 import { hasWebPushConfig, sendWebPush } from '@/lib/webPush';
@@ -15,10 +16,10 @@ type GroupCallNotificationBody = {
 };
 
 export async function POST(req: Request) {
-  console.log('Requête reçue pour notification d\'appel de groupe');
+  logger.log('Requête reçue pour notification d\'appel de groupe');
 
   if (!supabaseServer) {
-    console.error('SUPABASE_SERVICE_ROLE_KEY manquant');
+    logger.error('SUPABASE_SERVICE_ROLE_KEY manquant');
     return NextResponse.json(
       { ok: false, error: 'SUPABASE_SERVICE_ROLE_KEY missing' },
       { status: 503 }
@@ -26,7 +27,7 @@ export async function POST(req: Request) {
   }
 
   if (!hasWebPushConfig()) {
-    console.error('VAPID config manquante');
+    logger.error('VAPID config manquante');
     return NextResponse.json(
       { ok: false, error: 'VAPID config missing' },
       { status: 503 }
@@ -36,16 +37,16 @@ export async function POST(req: Request) {
   let body: GroupCallNotificationBody;
   try {
     body = (await req.json()) as GroupCallNotificationBody;
-    console.log('Données reçues:', body);
+    logger.log('Données reçues:', body);
   } catch {
-    console.error('Données JSON JSON invalides');
+    logger.error('Données JSON JSON invalides');
     return NextResponse.json({ ok: false, error: 'Invalid JSON body' }, { status: 400 });
   }
 
   const { groupId, callerDeviceId, callerUserId, callerDisplayName, callType, groupName, callId } = body;
 
   if (!groupId || !callerDeviceId || !callerDisplayName) {
-    console.error('Champs requis manquants:', { groupId, callerDeviceId, callerDisplayName });
+    logger.error('Champs requis manquants:', { groupId, callerDeviceId, callerDisplayName });
     return NextResponse.json(
       { ok: false, error: 'Missing required fields' },
       { status: 400 }
@@ -54,14 +55,14 @@ export async function POST(req: Request) {
 
   try {
     // Récupérer les membres du groupe sauf l'appelant
-    console.log('Récupération des membres du groupe...');
+    logger.log('Récupération des membres du groupe...');
     let { data: groupMembers, error: membersError } = await supabaseServer
       .from('charishub_group_members')
       .select('device_id, user_id, status')
       .eq('group_id', groupId);
 
     if (membersError && String(membersError.message).includes('status')) {
-      console.log('Colonne status manquante, repli sur une sélection sans status');
+      logger.log('Colonne status manquante, repli sur une sélection sans status');
       const fallback = await supabaseServer
         .from('charishub_group_members')
         .select('device_id, user_id')
@@ -71,16 +72,16 @@ export async function POST(req: Request) {
     }
 
     if (membersError) {
-      console.error('Erreur lors de la récupération des membres du groupe:', membersError);
+      logger.error('Erreur lors de la récupération des membres du groupe:', membersError);
       throw new Error(membersError.message);
     }
 
     // Si la colonne status est présente, on ne garde que les 'approved'
     const approvedMembers = groupMembers ? groupMembers.filter((m: any) => !m.status || m.status === 'approved') : [];
-    console.log('Membres du groupe trouvés (approuvés):', approvedMembers);
+    logger.log('Membres du groupe trouvés (approuvés):', approvedMembers);
 
     if (approvedMembers.length === 0) {
-      console.log('Aucun membre à notifier');
+      logger.log('Aucun membre à notifier');
       return NextResponse.json({ ok: true, message: 'No members to notify' });
     }
 
@@ -93,15 +94,15 @@ export async function POST(req: Request) {
       .map((member: any) => member.user_id)
       .filter((id: string | null | undefined) => id && id !== callerUserId);
 
-    console.log('Cibles filtrées :', { deviceCount: targetDeviceIds.length, userCount: targetUserIds.length });
+    logger.log('Cibles filtrées :', { deviceCount: targetDeviceIds.length, userCount: targetUserIds.length });
 
     if (targetDeviceIds.length === 0 && targetUserIds.length === 0) {
-      console.log('Aucun autre membre à notifier');
+      logger.log('Aucun autre membre à notifier');
       return NextResponse.json({ ok: true, message: 'No other members to notify' });
     }
 
     // Récupérer les abonnements push pour ces devices OU ces users
-    console.log('Récupération des abonnements push...');
+    logger.log('Récupération des abonnements push...');
     let query = supabaseServer
       .from('push_subscriptions')
       .select('endpoint,p256dh,auth,subscription_json,device_id,user_id');
@@ -113,19 +114,19 @@ export async function POST(req: Request) {
     const { data: subscriptions, error: subsError } = await query.or(conditions.join(','));
 
     if (subsError) {
-      console.error('Erreur lors de la récupération des abonnements push:', subsError);
+      logger.error('Erreur lors de la récupération des abonnements push:', subsError);
       throw new Error(subsError.message);
     }
 
-    console.log('Abonnements push trouvés:', subscriptions?.length ?? 0);
+    logger.log('Abonnements push trouvés:', subscriptions?.length ?? 0);
 
     if (!subscriptions || subscriptions.length === 0) {
-      console.log('Aucun abonnement push à notifier');
+      logger.log('Aucun abonnement push à notifier');
       return NextResponse.json({ ok: true, message: 'No push subscriptions to notify' });
     }
 
     // Envoyer les notifications push
-    console.log('Envoi des notifications push...');
+    logger.log('Envoi des notifications push...');
     let sent = 0;
     let failed = 0;
     const staleEndpoints: string[] = [];
@@ -138,13 +139,13 @@ export async function POST(req: Request) {
         const auth = sub.auth || sub.subscription_json?.keys?.auth;
 
         if (!endpoint || !p256dh || !auth) {
-          console.log('Abonnement incomplet ignoré pour device:', sub.device_id);
+          logger.log('Abonnement incomplet ignoré pour device:', sub.device_id);
           failed += 1;
           return;
         }
 
         try {
-          console.log('Envoi de la notification à:', sub.device_id);
+          logger.log('Envoi de la notification à:', sub.device_id);
           await sendWebPush(
             { endpoint, keys: { p256dh, auth } },
             {
@@ -163,7 +164,7 @@ export async function POST(req: Request) {
           if (status === 404 || status === 410) {
             staleEndpoints.push(endpoint);
           }
-          console.error('Erreur envoi push à', sub.device_id, ':', error?.message || error);
+          logger.error('Erreur envoi push à', sub.device_id, ':', error?.message || error);
         }
       })
     );
@@ -178,7 +179,7 @@ export async function POST(req: Request) {
       if (!removeError) removed = staleEndpoints.length;
     }
 
-    console.log(`Notifications envoyées: ${sent}, échouées: ${failed}, nettoyées: ${removed}`);
+    logger.log(`Notifications envoyées: ${sent}, échouées: ${failed}, nettoyées: ${removed}`);
 
     return NextResponse.json({
       ok: true,
@@ -188,7 +189,7 @@ export async function POST(req: Request) {
       removed,
     });
   } catch (error: any) {
-    console.error('Erreur lors de l\'envoi des notifications d\'appel de groupe:', error);
+    logger.error('Erreur lors de l\'envoi des notifications d\'appel de groupe:', error);
     return NextResponse.json(
       { ok: false, error: error?.message || 'Failed to send notifications' },
       { status: 500 }

@@ -1,5 +1,7 @@
 'use client';
 
+import logger from '@/lib/logger';
+
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -677,21 +679,21 @@ function readFromJson(data: any, book: BibleBook, chapter: number) {
     }
 
     if (!bookData) {
-      console.warn(`Livre ${book.name} non trouvé dans les données JSON`);
+      logger.warn(`Livre ${book.name} non trouvé dans les données JSON`);
       return [];
     }
 
     // Trouver le chapitre spécifique
     const chapters = bookData.chapters || [];
     if (!Array.isArray(chapters) || chapters.length === 0) {
-      console.warn(`Aucun chapitre trouvé pour ${book.name}`);
+      logger.warn(`Aucun chapitre trouvé pour ${book.name}`);
       return [];
     }
 
     const chapterData = resolveChapterEntry(chapters, chapter);
 
     if (!chapterData) {
-      console.warn(`Chapitre ${chapter} non trouvé pour ${book.name}`);
+      logger.warn(`Chapitre ${chapter} non trouvé pour ${book.name}`);
       return [];
     }
 
@@ -722,7 +724,7 @@ function readFromJson(data: any, book: BibleBook, chapter: number) {
     const chapterData = resolveChapterEntry(chapters, chapter);
 
     if (!chapterData) {
-      console.warn(`Chapitre ${chapter} non trouvé dans les données JSON`);
+      logger.warn(`Chapitre ${chapter} non trouvé dans les données JSON`);
       return [];
     }
 

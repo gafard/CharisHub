@@ -14,6 +14,7 @@ import React, { createContext, useContext, useEffect, useRef, useState, useCallb
 import { supabase } from '../lib/supabase';
 import * as cloudSync from '../lib/cloudSync';
 import type { SyncStatus, SyncProgress, FullUserData, ExportData } from '../lib/cloudSync';
+import logger from '../lib/logger';
 
 // ============================================================
 // Types
@@ -300,7 +301,7 @@ export function CloudSyncProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!supabase) return;
 
-    console.log('[CloudSync] Starting initial sync...');
+    logger.log('[CloudSync] Starting initial sync...');
     
     // Délai de 3s pour laisser l'app se charger
     const timer = setTimeout(() => {
@@ -316,7 +317,7 @@ export function CloudSyncProvider({ children }: { children: ReactNode }) {
 
     syncTimerRef.current = setInterval(() => {
       if (!isSyncingRef.current) {
-        console.log('[CloudSync] Auto backup triggered');
+        logger.log('[CloudSync] Auto backup triggered');
         syncToCloud();
       }
     }, 5 * 60 * 1000); // 5 minutes
