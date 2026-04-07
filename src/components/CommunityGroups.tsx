@@ -1846,103 +1846,278 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
             </div>
           </section>
 
-          <section className="mx-auto max-w-7xl px-6 py-16 sm:px-12 sm:py-20">
-            <div className="mb-8 flex items-center justify-between gap-4">
-              <div>
-                <div className="text-[11px] font-black uppercase tracking-[0.16em] text-[#98a2b3]">
-                  Espaces disponibles
+          <section className="mx-auto max-w-7xl px-6 py-10 sm:px-12">
+            {/* Toolbar de pilotage */}
+            <div className="mb-10 rounded-[32px] border border-[#ebeef3] bg-white p-4 shadow-[0_14px_36px_rgba(16,24,40,0.06)] sm:p-5">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex flex-1 flex-col gap-4 lg:flex-row lg:items-center">
+                  <div className="relative w-full lg:max-w-md">
+                    <input
+                      type="text"
+                      placeholder="Rechercher un groupe, une session ou une formation..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="h-12 w-full rounded-2xl border border-[#e6e8ec] bg-[#fcfcfd] px-11 text-sm font-medium text-[#101828] outline-none transition focus:border-[#c89f2d] focus:ring-4 focus:ring-[#c89f2d]/5"
+                    />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#98a2b3]" size={16} />
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setListMode('all')}
+                      className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.14em] transition ${
+                        listMode === 'all'
+                          ? 'bg-[#161c35] text-white shadow-[0_10px_24px_rgba(22,28,53,0.14)]'
+                          : 'border border-[#e6e8ec] bg-white text-[#667085] hover:text-[#101828]'
+                      }`}
+                    >
+                      Tous
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setListMode('joined')}
+                      className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.14em] transition ${
+                        listMode === 'joined'
+                          ? 'bg-[#161c35] text-white shadow-[0_10px_24px_rgba(22,28,53,0.14)]'
+                          : 'border border-[#e6e8ec] bg-white text-[#667085] hover:text-[#101828]'
+                      }`}
+                    >
+                      Mes groupes
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setListMode('discover')}
+                      className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.14em] transition ${
+                        listMode === 'discover'
+                          ? 'bg-[#161c35] text-white shadow-[0_10px_24px_rgba(22,28,53,0.14)]'
+                          : 'border border-[#e6e8ec] bg-white text-[#667085] hover:text-[#101828]'
+                      }`}
+                    >
+                      Découvrir
+                    </button>
+                  </div>
                 </div>
-                <h2 className="mt-2 text-2xl font-black tracking-tight text-[#101828]">
-                  Groupes, sessions et formations
-                </h2>
+
+                <div className="flex items-center justify-between gap-3 lg:justify-end">
+                  <div className="text-sm font-bold text-[#667085]">
+                    {listMode === 'all' && `${visibleGroups.length} espace(s)`}
+                    {listMode === 'joined' && `${visibleGroups.length} groupe(s) rejoint(s)`}
+                    {listMode === 'discover' && `${visibleGroups.length} à découvrir`}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (ensureAuth()) setShowCreateForm(true);
+                    }}
+                    className="inline-flex h-12 items-center gap-2 rounded-full bg-[#c89f2d] px-6 text-sm font-black text-white shadow-[0_14px_32px_rgba(200,159,45,0.22)] transition hover:-translate-y-[1px]"
+                  >
+                    <PlusCircle size={18} />
+                    Créer
+                  </button>
+                </div>
               </div>
             </div>
 
+            {/* Formulaire de création premium */}
             {showCreateForm && (
-              <div className="mb-12 rounded-[32px] border border-dashed border-[#e8ebf1] bg-white p-8">
-                <div className="mb-6 flex items-center justify-between">
-                  <h3 className="text-2xl font-black">Créer un groupe ou une formation</h3>
-                  <button onClick={() => setShowCreateForm(false)} className="opacity-50 hover:opacity-100">
-                    <X size={24} />
-                  </button>
+              <div className="mb-12 overflow-hidden rounded-[36px] border border-[#ebeef3] bg-white shadow-[0_24px_60px_rgba(16,24,40,0.08)]">
+                <div className="border-b border-[#eef1f5] bg-[linear-gradient(180deg,#fffdf8,white)] px-6 py-6 sm:px-8">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className="text-[11px] font-black uppercase tracking-[0.18em] text-[#c89f2d]">
+                        Nouvel espace
+                      </div>
+                      <h3 className="mt-2 text-2xl font-black tracking-tight text-[#101828]">
+                        Créer un groupe ou une formation
+                      </h3>
+                      <p className="mt-2 max-w-2xl text-sm leading-7 text-[#667085]">
+                        Lance un espace pour enseigner, organiser des appels, accompagner un groupe
+                        ou proposer une formation chrétienne gratuite ou payante.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowCreateForm(false)}
+                      className="grid h-11 w-11 place-items-center rounded-2xl border border-[#e7eaf0] bg-white text-[#667085] transition hover:text-[#101828]"
+                    >
+                      <X size={20} />
+                    </button>
+                  </div>
                 </div>
-                
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-                  <label className="flex flex-col gap-2">
-                    <span className="text-xs font-bold uppercase tracking-widest opacity-50">Nom</span>
-                    <input
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="h-12 rounded-2xl bg-gray-50 px-4 text-sm font-bold outline-none ring-offset-2 focus:ring-2 focus:ring-[#c89f2d]"
-                    />
-                  </label>
-                  <label className="flex flex-col gap-2">
-                    <span className="text-xs font-bold uppercase tracking-widest opacity-50">Type</span>
-                    <select
-                      value={groupType}
-                      onChange={(e) => setGroupType(e.target.value as CommunityGroupType)}
-                      className="h-12 rounded-2xl bg-gray-50 px-4 text-sm font-bold outline-none"
-                    >
-                      {GROUP_TYPES.map(t => <option key={t} value={t}>{renderTypeLabel(t)}</option>)}
-                    </select>
-                  </label>
-                  <label className="flex flex-col gap-2">
-                    <span className="text-xs font-bold uppercase tracking-widest opacity-50">Accès</span>
-                    <select
-                      value={isPaid ? 'paid' : 'free'}
-                      onChange={(e) => setIsPaid(e.target.value === 'paid')}
-                      className="h-12 rounded-2xl bg-gray-50 px-4 text-sm font-bold outline-none"
-                    >
-                      <option value="free">Gratuit</option>
-                      <option value="paid">Formation Payante</option>
-                    </select>
-                  </label>
-                  {isPaid && (
+
+                <div className="px-6 py-6 sm:px-8 sm:py-8">
+                  <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
                     <label className="flex flex-col gap-2">
-                      <span className="text-xs font-bold uppercase tracking-widest opacity-50">Prix (FCFA)</span>
+                      <span className="text-[11px] font-black uppercase tracking-[0.14em] text-[#98a2b3]">
+                        Nom de l'espace
+                      </span>
                       <input
-                        type="number"
-                        placeholder="Ex: 5000"
-                        value={price || ''}
-                        onChange={(e) => setPrice(Number(e.target.value))}
-                        className="h-12 rounded-2xl bg-gray-50 px-4 text-sm font-bold outline-none ring-offset-2 focus:ring-2 focus:ring-[#c89f2d]"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Ex: Formation sur l'identité en Christ"
+                        className="h-13 rounded-2xl border border-[#e6e8ec] bg-[#fcfcfd] px-4 text-sm font-semibold text-[#101828] outline-none transition focus:border-[#c89f2d] focus:ring-4 focus:ring-[#c89f2d]/5"
                       />
                     </label>
-                  )}
-                  <label className="flex flex-col gap-2 lg:col-span-2">
-                    <span className="text-xs font-bold uppercase tracking-widest opacity-50">Description</span>
-                    <input
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      placeholder="Décris l’objectif du groupe, de la session ou de la formation"
-                      className="h-12 rounded-2xl bg-gray-50 px-4 text-sm font-bold outline-none"
-                    />
-                  </label>
-                  <div className="flex items-end">
-                    <button
-                      onClick={onCreate}
-                      disabled={createState === 'saving'}
-                      className="h-12 w-full rounded-2xl bg-[#c89f2d] text-sm font-black text-white hover:opacity-90 disabled:opacity-50"
-                    >
-                      {createState === 'saving' ? 'Création...' : 'Créer'}
-                    </button>
+
+                    <label className="flex flex-col gap-2">
+                      <span className="text-[11px] font-black uppercase tracking-[0.14em] text-[#98a2b3]">
+                        Type
+                      </span>
+                      <select
+                        value={groupType}
+                        onChange={(e) => setGroupType(e.target.value as CommunityGroupType)}
+                        className="h-13 rounded-2xl border border-[#e6e8ec] bg-[#fcfcfd] px-4 text-sm font-semibold text-[#101828] outline-none transition focus:border-[#c89f2d] focus:ring-4 focus:ring-[#c89f2d]/5"
+                      >
+                        {GROUP_TYPES.map((type) => (
+                          <option key={type} value={type}>
+                            {renderTypeLabel(type)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <label className="flex flex-col gap-2 lg:col-span-2">
+                      <span className="text-[11px] font-black uppercase tracking-[0.14em] text-[#98a2b3]">
+                        Description
+                      </span>
+                      <textarea
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        placeholder="Décris l'objectif du groupe, le public visé, le type de rencontres ou la formation proposée..."
+                        rows={4}
+                        className="rounded-2xl border border-[#e6e8ec] bg-[#fcfcfd] px-4 py-3 text-sm font-medium leading-7 text-[#101828] outline-none transition focus:border-[#c89f2d] focus:ring-4 focus:ring-[#c89f2d]/5"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-3">
+                    <label className="flex flex-col gap-2">
+                      <span className="text-[11px] font-black uppercase tracking-[0.14em] text-[#98a2b3]">
+                        Accès
+                      </span>
+                      <select
+                        value={isPaid ? 'paid' : 'free'}
+                        onChange={(e) => setIsPaid(e.target.value === 'paid')}
+                        className="h-13 rounded-2xl border border-[#e6e8ec] bg-[#fcfcfd] px-4 text-sm font-semibold text-[#101828] outline-none transition focus:border-[#c89f2d] focus:ring-4 focus:ring-[#c89f2d]/5"
+                      >
+                        <option value="free">Gratuit</option>
+                        <option value="paid">Payant</option>
+                      </select>
+                    </label>
+
+                    {isPaid ? (
+                      <label className="flex flex-col gap-2">
+                        <span className="text-[11px] font-black uppercase tracking-[0.14em] text-[#98a2b3]">
+                          Prix
+                        </span>
+                        <input
+                          type="number"
+                          value={price || ''}
+                          onChange={(e) => setPrice(Number(e.target.value))}
+                          placeholder="Ex: 5000"
+                          className="h-13 rounded-2xl border border-[#e6e8ec] bg-[#fcfcfd] px-4 text-sm font-semibold text-[#101828] outline-none transition focus:border-[#c89f2d] focus:ring-4 focus:ring-[#c89f2d]/5"
+                        />
+                      </label>
+                    ) : (
+                      <div className="rounded-2xl border border-[#e6e8ec] bg-[#fcfcfd] px-4 py-3">
+                        <div className="text-[11px] font-black uppercase tracking-[0.14em] text-[#98a2b3]">
+                          Tarification
+                        </div>
+                        <div className="mt-1 text-sm font-bold text-[#101828]">Accès libre</div>
+                      </div>
+                    )}
+
+                    <label className="flex flex-col gap-2">
+                      <span className="text-[11px] font-black uppercase tracking-[0.14em] text-[#98a2b3]">
+                        Prochaine rencontre
+                      </span>
+                      <input
+                        type="datetime-local"
+                        value={nextCallAt}
+                        onChange={(e) => setNextCallAt(e.target.value)}
+                        className="h-13 rounded-2xl border border-[#e6e8ec] bg-[#fcfcfd] px-4 text-sm font-semibold text-[#101828] outline-none transition focus:border-[#c89f2d] focus:ring-4 focus:ring-[#c89f2d]/5"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="mt-8 flex flex-col gap-3 border-t border-[#eef1f5] pt-6 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="max-w-xl text-sm leading-7 text-[#667085]">
+                      Une fois créé, tu pourras gérer les membres, planifier les appels, partager le lien
+                      et organiser le programme de tes sessions.
+                    </p>
+
+                    <div className="flex gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setShowCreateForm(false)}
+                        className="h-12 rounded-full border border-[#e6e8ec] bg-white px-6 text-sm font-bold text-[#475467] transition hover:text-[#101828]"
+                      >
+                        Annuler
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={onCreate}
+                        disabled={createState === 'saving'}
+                        className="inline-flex h-12 items-center gap-2 rounded-full bg-[#161c35] px-7 text-sm font-black text-white shadow-[0_16px_34px_rgba(22,28,53,0.16)] transition hover:-translate-y-[1px] disabled:opacity-60"
+                      >
+                        {createState === 'saving' ? (
+                          <>
+                            <Loader2 size={16} className="animate-spin" />
+                            Création...
+                          </>
+                        ) : (
+                          <>
+                            <PlusCircle size={16} />
+                            Créer l'espace
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             )}
 
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-              {status === 'loading' && (
-                [1,2,3].map(i => <div key={i} className="h-[320px] animate-pulse rounded-[32px] bg-gray-100" />)
-              )}
-              
-              {status === 'ready' && groups.length === 0 && (
-                <div className="col-span-full py-20 text-center opacity-40">
-                  <p className="text-xl font-bold">Aucun groupe ou formation n’est disponible pour le moment.</p>
+            {/* Grille des groupes */}
+            <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <div className="text-[11px] font-black uppercase tracking-[0.16em] text-[#98a2b3]">
+                  Espaces disponibles
+                </div>
+                <h2 className="mt-2 text-2xl font-black tracking-tight text-[#101828]">
+                  Groupes, appels et formations
+                </h2>
+              </div>
+
+              <div className="text-sm font-semibold text-[#667085]">
+                {visibleGroups.length} résultat(s)
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
+              {status === 'loading' &&
+                [1, 2, 3].map((i) => (
+                  <div key={i} className="h-[320px] animate-pulse rounded-[32px] bg-gray-100" />
+                ))}
+
+              {status === 'ready' && visibleGroups.length === 0 && (
+                <div className="col-span-full rounded-[32px] border border-dashed border-[#dfe3ea] bg-[#fcfcfd] py-20 text-center">
+                  <p className="text-xl font-black text-[#101828]">
+                    Aucun espace ne correspond à votre recherche.
+                  </p>
+                  <p className="mt-3 text-sm font-medium text-[#667085]">
+                    Essaie un autre mot-clé ou crée un nouveau groupe.
+                  </p>
                 </div>
               )}
 
-              {filteredGroups.map((group, i) => (
+              {visibleGroups.map((group, i) => (
                 <GroupCard
                   key={group.id}
                   group={group}
