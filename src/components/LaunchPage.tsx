@@ -6,10 +6,12 @@ import { motion } from 'framer-motion';
 import { ArrowRight, BookOpen, Settings, Sparkles, Users } from 'lucide-react';
 import { useCommunityIdentity } from '../lib/useCommunityIdentity';
 import { fetchGroups } from './communityApi';
+import AuthModal from './AuthModal';
 
 export default function LaunchPage() {
   const [mounted, setMounted] = useState(false);
   const [myGroupId, setMyGroupId] = useState<string | null>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const router = useRouter();
   const { identity } = useCommunityIdentity();
 
@@ -18,6 +20,19 @@ export default function LaunchPage() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (mounted) {
+      const hasSeenLaunch = sessionStorage.getItem('charishub_launch_seen') === 'true';
+      if (hasSeenLaunch && isRegistered) {
+        if (myGroupId) {
+          router.replace(`/groups?group=${myGroupId}`);
+        } else {
+          router.replace('/bible');
+        }
+      }
+    }
+  }, [mounted, isRegistered, myGroupId, router]);
 
   useEffect(() => {
     if (mounted && identity?.deviceId) {
@@ -38,15 +53,15 @@ export default function LaunchPage() {
   };
 
   const handleMainAction = () => {
-    sessionStorage.setItem('charishub_launch_seen', 'true');
     if (isRegistered) {
+      sessionStorage.setItem('charishub_launch_seen', 'true');
       if (myGroupId) {
         router.push(`/groups?group=${myGroupId}`);
       } else {
         router.push('/groups');
       }
     } else {
-      router.push('/settings');
+      setIsAuthModalOpen(true);
     }
   };
 
@@ -67,7 +82,7 @@ export default function LaunchPage() {
         <div className="pointer-events-none absolute inset-x-0 top-0 h-[360px] bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.09),transparent_62%)]" />
         <div className="pointer-events-none absolute inset-x-[14%] bottom-0 h-[420px] rounded-full bg-[radial-gradient(circle_at_center,rgba(255,182,72,0.14),rgba(255,255,255,0))] blur-3xl" />
 
-        <header className="relative z-10 flex items-center justify-between gap-4 px-5 py-5 sm:px-8 lg:px-10">
+        <header className="relative z-20 flex items-center justify-between gap-4 px-5 py-5 sm:px-8 lg:px-10">
           <button
             type="button"
             onClick={handleMainAction}
@@ -154,7 +169,7 @@ export default function LaunchPage() {
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.32, duration: 0.62 }}
-              className="mt-8 flex flex-col items-center gap-3 sm:flex-row"
+              className="relative z-20 mt-8 flex flex-col items-center gap-3 sm:flex-row"
             >
               <button
                 type="button"
@@ -182,17 +197,22 @@ export default function LaunchPage() {
             initial={{ opacity: 0, y: 28 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.42, duration: 0.75 }}
-            className="relative -mt-12 w-[120%] max-w-none overflow-hidden lg:-mt-16 lg:w-[115%] max-lg:-ml-[10%]"
+            className="pointer-events-none relative -mt-12 w-[120%] max-w-none overflow-hidden lg:-mt-16 lg:w-[115%] max-lg:-ml-[10%]"
           >
             <img
               src="/images/People_Background.png"
               alt="Communauté CharisHub"
-              className="relative z-10 w-full object-cover object-top"
+              className="relative z-0 w-full object-cover object-top"
               loading="eager"
             />
           </motion.div>
         </div>
       </motion.div>
+      <AuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)} 
+        initialMode="register" 
+      />
     </div>
   );
 }
