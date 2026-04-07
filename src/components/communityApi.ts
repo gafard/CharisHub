@@ -1906,7 +1906,7 @@ export async function fetchGroups(limit = 40, deviceId?: string, userId?: string
         const groupIds = remoteGroups.map((group) => group.id);
         let { data: membersData, error: membersError } = await supabase
           .from('charishub_group_members')
-          .select('group_id, device_id, status')
+          .select('group_id, device_id, user_id, status')
           .in('group_id', groupIds);
 
         if (membersError && isMissingColumnError(membersError, 'status')) {

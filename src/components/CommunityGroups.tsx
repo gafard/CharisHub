@@ -1213,6 +1213,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
     setStatus('loading');
     try {
       const list = await fetchGroups(60, actor.deviceId || undefined, actor.userId || undefined);
+      setGroups(list);
       if (list.length) {
         // Validation logic for current selection
         const hasCurrent = !!selectedGroupId && list.some((item) => item.id === selectedGroupId);
@@ -1229,7 +1230,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
       setStatus('error');
       setFeedback(t('community.groups.loadError'));
     }
-  }, [actor.deviceId, selectedGroupId, t, updateGroupQuery]);
+  }, [actor.deviceId, actor.userId, selectedGroupId, t, updateGroupQuery]);
 
   useEffect(() => {
     setMounted(true);
@@ -1467,14 +1468,16 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
       setNextCallAt('');
       setIsPaid(false);
       setPrice(0);
-      await loadGroups();
       setShowCreateForm(false);
-      setFeedback(t('community.groups.created'));
+      
+      await loadGroups();
+      
       if (created?.id) {
         setSelectedGroupId(created.id);
         updateGroupQuery(created.id);
       }
-      await loadGroups();
+      
+      setFeedback(t('community.groups.created'));
     } catch (error: any) {
       setFeedback(error?.message || t('community.groups.createError'));
     } finally {
