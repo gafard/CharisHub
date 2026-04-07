@@ -946,7 +946,7 @@ export default function BibleReader({
   initialVerse
 }: { 
   embedded?: boolean;
-  onSyncBible?: (ref: string, content: string) => void;
+  onSyncBible?: (ref: string, content: string, metadata?: { bookId: string; chapter: number; verse: number }) => void;
   initialBookId?: string;
   initialChapter?: number;
   initialVerse?: number;
@@ -2582,7 +2582,7 @@ export default function BibleReader({
       case 'share':
         setShareVerseTarget({ ref, text: verse.text });
         if (onSyncBible) {
-          onSyncBible(ref, verse.text);
+          onSyncBible(ref, verse.text, { bookId: book.id, chapter, verse: verse.number });
         }
         break;
       case 'huios': {
@@ -3329,6 +3329,10 @@ export default function BibleReader({
         bookId={book.id}
         chapter={chapter}
         verse={selectedVerse?.number || 1}
+        onStrongSelect={(strong) => {
+          setCurrentStrongNumber(strong);
+          setShowStrongViewer(true);
+        }}
       />
       <AdvancedStudyTools
         isOpen={showAdvancedStudyTools}

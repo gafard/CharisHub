@@ -25,6 +25,8 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import BibleReader from './BibleReader';
+import InterlinearViewer from './InterlinearViewer';
+import BibleStrongViewer from './BibleStrongViewer';
 import { getWebRtcIceServers } from '../lib/webrtc';
 import { useI18n } from '../contexts/I18nContext';
 import VerseOverlay from './bible/VerseOverlay';
@@ -102,7 +104,7 @@ type SignalPayload =
 type UiSyncPayload =
   | { type: 'hand'; peerId: string; active: boolean }
   | { type: 'screen-share'; peerId: string; active: boolean }
-  | { type: 'bible.sync'; peerId: string; reference: string | null; content: string | null }
+  | { type: 'bible.sync'; peerId: string; reference: string | null; content: string | null; metadata?: { bookId: string; chapter: number; verse: number } }
   | { type: 'speaker.authorizations'; peerIds: string[] }
   | { type: 'call.ended'; peerId: string; callId?: string | null };
 
@@ -427,6 +429,10 @@ export default function CommunityGroupCall({
   const [screenSharePeerId, setScreenSharePeerId] = useState<string | null>(null);
   const [isHandRaised, setIsHandRaised] = useState(false);
   const [authorizedSpeakers, setAuthorizedSpeakers] = useState<Set<string>>(new Set());
+  const [sharedBibleMetadata, setSharedBibleMetadata] = useState<{ bookId: string; chapter: number; verse: number } | undefined>(undefined);
+  const [showInterlinear, setShowInterlinear] = useState(false);
+  const [showStrongViewer, setShowStrongViewer] = useState(false);
+  const [currentStrongNumber, setCurrentStrongNumber] = useState<string | null>(null);
 
   // === NOUVELLES FONCTIONNALITÉS ===
   // 1. Chronomètre d'appel
@@ -1353,10 +1359,13 @@ export default function CommunityGroupCall({
             return;
           }
 
-          if (payload.type === 'bible.sync' && payload.peerId !== deviceId) {
+          if (payload.type === 'bible.sync') {
             suppressBibleSyncBroadcastRef.current = true;
             setSharedBibleRef(payload.reference);
             setSharedBibleContent(payload.content);
+            if (payload.metadata) {
+              setSharedBibleMetadata(payload.metadata);
+            }
             return;
           }
 
@@ -1589,12 +1598,13 @@ export default function CommunityGroupCall({
         peerId: deviceId,
         reference: sharedBibleRef,
         content: sharedBibleContent,
+        metadata: sharedBibleMetadata,
       });
       void syncDatabasePresence();
     }, 250);
 
     return () => window.clearTimeout(timer);
-  }, [deviceId, joined, sendBroadcast, sharedBibleContent, sharedBibleRef, syncDatabasePresence]);
+  }, [deviceId, joined, sendBroadcast, sharedBibleContent, sharedBibleRef, sharedBibleMetadata, syncDatabasePresence]);
 
   useEffect(() => {
     if (!autoJoinRequested || joined || busy || autoJoinAttemptedRef.current) return;
@@ -1710,7 +1720,21 @@ export default function CommunityGroupCall({
                        onStopRecording={onStopRecording}
                      />
                      <div className="flex-1 min-h-0 flex flex-col relative w-full h-full">
-                        <BibleReader embedded={true} onSyncBible={(r, c) => { setSharedBibleRef(r); setSharedBibleContent(c); }} />
+                        <BibleReader 
+                          embedded={true} 
+                          onSyncBible={(r, c, m) => { 
+                            setSharedBibleRef(r); 
+                            setSharedBibleContent(c);
+                            if (m) setSharedBibleMetadata(m);
+                            void sendBroadcast<UiSyncPayload>('ui-sync', {
+                              type: 'bible.sync',
+                              peerId: deviceId,
+                              reference: r,
+                              content: c,
+                              metadata: m,
+                            });
+                          }} 
+                        />
                      </div>
                   </div>
                ) : (
@@ -1738,7 +1762,19 @@ export default function CommunityGroupCall({
                  <VerseOverlay
                    reference={sharedBibleRef}
                    content={sharedBibleContent}
-                   isOwner={isCallOwner || !resolvedCallId}
+                   onClose={() => {
+                     setSharedBibleRef(null);
+                     setSharedBibleContent(null);
+                     setSharedBibleMetadata(undefined);
+                     void sendBroadcast<UiSyncPayload>('ui-sync', {
+                       type: 'bible.sync',
+                       peerId: deviceId,
+                       reference: null,
+                       content: null,
+                     });
+                   }}
+                   onOpenInterlinear={sharedBibleMetadata ? () => setShowInterlinear(true) : undefined}
+                   isOwner={isCallOwner}
                  />
                ) : null}
              </div>
@@ -2039,6 +2075,23 @@ export default function CommunityGroupCall({
         </div>
       )}
 
+      {/* Étude approfondie - accès individuel */}
+      <InterlinearViewer
+        isOpen={showInterlinear}
+        onClose={() => setShowInterlinear(false)}
+        bookId={sharedBibleMetadata?.bookId || 'MAT'}
+        chapter={sharedBibleMetadata?.chapter || 1}
+        verse={sharedBibleMetadata?.verse || 1}
+        onStrongSelect={(strong) => {
+          setCurrentStrongNumber(strong);
+          setShowStrongViewer(true);
+        }}
+      />
+      <BibleStrongViewer
+        isOpen={showStrongViewer}
+        onClose={() => setShowStrongViewer(false)}
+        strongNumber={currentStrongNumber || undefined}
+      />
     </section>
   );
 }

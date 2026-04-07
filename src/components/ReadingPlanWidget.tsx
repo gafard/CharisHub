@@ -162,7 +162,7 @@ export default function ReadingPlanWidget({
     return (
         <>
             <motion.div
-                className="relative mx-auto w-full max-w-[800px] overflow-hidden rounded-[32px] border border-[rgba(255,255,255,0.08)] bg-[#0c0c0e] p-5 text-white shadow-[0_24px_80px_rgba(0,0,0,0.3)] sm:p-6"
+                className="relative mx-auto w-full max-w-[800px] overflow-hidden rounded-[28px] border border-[#e8ebf1] bg-[linear-gradient(180deg,#ffffff_0%,#fbf9f5_58%,#f6f4f0_100%)] p-5 text-[#161c35] shadow-[0_24px_80px_rgba(22,28,53,0.08)] sm:p-6"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
@@ -173,43 +173,43 @@ export default function ReadingPlanWidget({
                     style={{
                         background: `
                             radial-gradient(circle at 0% 0%, ${activePlan ? teaserPresentation.theme.accentSoft : 'rgba(200,159,45,0.08)'} 0%, transparent 40%),
-                            radial-gradient(circle at 100% 100%, rgba(255,255,255,0.02) 0%, transparent 30%),
-                            linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%)
+                            radial-gradient(circle at 100% 100%, rgba(200,159,45,0.04) 0%, transparent 30%),
+                            linear-gradient(180deg, rgba(255,255,255,0.6) 0%, transparent 100%)
                         `,
                     }}
                 />
 
                 {/* Texture de grain subtile */}
-                <div className="pointer-events-none absolute inset-0 opacity-[0.03] mix-blend-overlay bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]" />
+                <div className="pointer-events-none absolute inset-0 opacity-[0.02] mix-blend-multiply" style={{ backgroundImage: 'radial-gradient(#161c35 0.8px, transparent 1px)', backgroundSize: '24px 24px', backgroundPosition: 'center center' }} />
 
                 <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-6">
                     <div className="flex flex-1 items-center gap-5">
                         {/* Icône principale avec halo */}
-                        <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-[20px] border border-white/10 bg-white/5 shadow-inner sm:h-16 sm:w-16 sm:rounded-[22px]">
+                        <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-[20px] border border-[#e8ebf1] bg-[linear-gradient(180deg,rgba(255,255,255,0.8),rgba(246,244,240,0.6))] shadow-inner sm:h-16 sm:w-16 sm:rounded-[22px]">
                             <div
                                 className="absolute inset-0 rounded-[inherit] blur-2xl"
-                                style={{ background: activePlan ? teaserPresentation.theme.accentSoft : 'rgba(200,159,45,0.2)' }}
+                                style={{ background: activePlan ? teaserPresentation.theme.accentSoft : 'rgba(200,159,45,0.15)' }}
                             />
-                            <div className="relative z-10 flex items-center justify-center text-[#fff7ec]">
+                            <div className="relative z-10 flex items-center justify-center text-[#161c35]">
                                 <PlanSymbol symbolId={teaserPresentation.art.symbolId} size={24} />
                             </div>
                         </div>
 
                         <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-2.5 text-[10px] font-black uppercase tracking-[0.25em] text-[rgba(255,240,222,0.45)]">
+                            <div className="flex flex-wrap items-center gap-2.5 text-[10px] font-black uppercase tracking-[0.25em] text-[#161c35]/40">
                                 {activePlan && <Sparkles size={10} className="text-[#c89f2d]" />}
                                 <span>{eyebrow}</span>
                             </div>
 
-                            <h3 className="mt-1.5 font-display text-[20px] font-black leading-tight text-[#fffaf2] sm:text-[23px] tracking-tight">
+                            <h3 className="mt-1.5 font-display text-[20px] font-black leading-tight text-[#161c35] sm:text-[23px] tracking-tight">
                                 {title}
                             </h3>
 
-                            <div className="mt-2 flex items-center gap-3 text-[13px] text-[rgba(255,241,220,0.6)]">
+                            <div className="mt-2 flex items-center gap-3 text-[13px] text-[#161c35]/60">
                                 <span className="truncate">{subtitle}</span>
                                 {detail && (
                                     <>
-                                        <span className="h-1 w-1 rounded-full bg-white/20" />
+                                        <span className="h-1 w-1 rounded-full bg-[#161c35]/20" />
                                         <span className="truncate font-medium text-[#c89f2d]">{detail}</span>
                                     </>
                                 )}
@@ -218,7 +218,7 @@ export default function ReadingPlanWidget({
                             {/* Barre de progression si actif */}
                             {activePlan && (
                                 <div className="mt-4 flex items-center gap-3">
-                                    <div className="h-1 flex-1 overflow-hidden rounded-full bg-white/5">
+                                    <div className="h-1 flex-1 overflow-hidden rounded-full bg-[#161c35]/5">
                                         <motion.div
                                             className="h-full bg-[#c89f2d]"
                                             initial={{ width: 0 }}
@@ -226,13 +226,13 @@ export default function ReadingPlanWidget({
                                             transition={{ duration: 1, ease: 'circOut' }}
                                         />
                                     </div>
-                                    <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest">{Math.round((activePlan.completedDays.length / activePlan.plan.days.length) * 100)}%</span>
+                                    <span className="text-[10px] font-bold text-[#161c35]/30 uppercase tracking-widest">{Math.round((activePlan.completedDays.length / activePlan.plan.days.length) * 100)}%</span>
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-between gap-4 border-t border-white/5 pt-4 md:border-t-0 md:pt-0">
+                    <div className="flex items-center justify-between gap-4 border-t border-[#e8ebf1]/60 pt-4 md:border-t-0 md:pt-0">
                         <div className={`${activePlan ? 'hidden' : 'block'} lg:block`}>
                            <CompactPlanStack entries={teaserEntries} primaryPlanId={activePlan?.plan.id ?? ''} />
                         </div>
@@ -240,7 +240,7 @@ export default function ReadingPlanWidget({
                         <motion.button
                             type="button"
                             onClick={() => router.push(primaryHref)}
-                            className="inline-flex shrink-0 items-center gap-2.5 rounded-full bg-gradient-to-br from-[#fffdfa] to-[#f4f2ee] px-6 py-3 text-[12px] font-black uppercase tracking-[0.18em] text-[#160d0a] shadow-[0_10px_30px_rgba(0,0,0,0.2)]"
+                            className="inline-flex shrink-0 items-center gap-2.5 rounded-full bg-[#161c35] px-6 py-3 text-[12px] font-black uppercase tracking-[0.18em] text-white shadow-[0_10px_30px_rgba(22,28,53,0.15)]"
                             whileHover={{ y: -4, scale: 1.02 }}
                             whileTap={{ scale: 0.97 }}
                         >
