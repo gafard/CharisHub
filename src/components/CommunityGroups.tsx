@@ -236,10 +236,26 @@ function GroupCard({
   t: TranslateFn;
 }) {
   const themes = [
-    { bg: 'bg-[#d0e3ff]', text: 'text-[#1d4ed8]', accent: 'border-[#1d4ed8]/20' }, // Blue
-    { bg: 'bg-[#dcfce7]', text: 'text-[#15803d]', accent: 'border-[#15803d]/20' }, // Green
-    { bg: 'bg-[#fee2e2]', text: 'text-[#b91c1c]', accent: 'border-[#b91c1c]/20' }, // Red/Rose
+    {
+      soft: 'bg-[#eef4ff]',
+      accent: 'bg-[#dbeafe]',
+      text: 'text-[#1d4ed8]',
+      border: 'border-[#bfdbfe]',
+    },
+    {
+      soft: 'bg-[#eefbf3]',
+      accent: 'bg-[#dcfce7]',
+      text: 'text-[#15803d]',
+      border: 'border-[#bbf7d0]',
+    },
+    {
+      soft: 'bg-[#fff4ec]',
+      accent: 'bg-[#ffedd5]',
+      text: 'text-[#c2410c]',
+      border: 'border-[#fed7aa]',
+    },
   ];
+
   const theme = themes[index % themes.length];
 
   return (
@@ -247,45 +263,88 @@ function GroupCard({
       <button
         type="button"
         onClick={onOpen}
-        className={[
-          'relative flex h-full w-full flex-col overflow-hidden rounded-[32px] p-8 text-left transition-all hover:scale-[1.02] active:scale-[0.98]',
-          theme.bg,
-        ].join(' ')}
+        className="relative flex h-full w-full flex-col overflow-hidden rounded-[32px] border border-[#e7e9ee] bg-white p-6 text-left shadow-[0_16px_40px_rgba(16,24,40,0.06)] transition-all hover:-translate-y-1 hover:shadow-[0_22px_50px_rgba(16,24,40,0.1)] active:scale-[0.99]"
       >
-        <div className="flex flex-1 flex-col">
-          <h4 className={[
-            'text-3xl font-black leading-tight tracking-tight font-display mb-3',
-            theme.text
-          ].join(' ')}>
-            {group.name}
-          </h4>
-          <p className="line-clamp-3 text-sm font-medium leading-relaxed opacity-70">
-            {group.description || "Un espace pour organiser des appels, enseigner, prier et grandir ensemble dans la Parole."}
-          </p>
-        </div>
+        <div className={`absolute inset-x-0 top-0 h-24 ${theme.soft}`} />
+        <div className="relative flex h-full flex-col">
+          <div className="flex items-start justify-between gap-3">
+            <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${theme.border} ${theme.accent} ${theme.text}`}>
+              <span className="h-2 w-2 rounded-full bg-current opacity-80" />
+              {group.group_type === 'prayer'
+                ? 'Prière'
+                : group.group_type === 'study'
+                  ? 'Étude biblique'
+                  : group.group_type === 'support'
+                    ? 'Accompagnement'
+                    : group.group_type === 'formation'
+                      ? 'Formation'
+                      : 'Communauté'}
+            </div>
 
-        <div className="mt-12 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {group.membershipStatus === 'pending' ? (
-              <span className="rounded-full bg-white/30 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md">
-                Demande envoyée ⏳
+            {group.is_paid ? (
+              <span className="rounded-full bg-[#fff7e8] px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#b54708]">
+                Premium · {group.price} FCFA
               </span>
             ) : (
-              <>
-                <AvatarPile count={group.members_count || 0} label={group.name} />
-                <span className="text-xs font-bold opacity-60">{group.members_count || 0} membres</span>
-              </>
+              <span className="rounded-full bg-[#ecfdf3] px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#027a48]">
+                Gratuit
+              </span>
             )}
           </div>
-          <div className={[
-            'flex h-10 w-10 items-center justify-center rounded-full bg-white/40 backdrop-blur-sm transition-colors group-hover:bg-white/60',
-            theme.text
-          ].join(' ')}>
-            <span className="text-xl font-black">{group.membershipStatus === 'pending' ? '...' : '↗'}</span>
+
+          <div className="mt-6">
+            <h4 className="text-2xl font-black leading-tight tracking-tight text-[#101828]">
+              {group.name}
+            </h4>
+            <p className="mt-3 line-clamp-3 text-sm leading-7 text-[#667085]">
+              {group.description || 'Un espace pour organiser des appels, enseigner, prier et grandir ensemble dans la Parole.'}
+            </p>
+          </div>
+
+          <div className="mt-6 grid grid-cols-2 gap-3">
+            <div className="rounded-2xl border border-[#eaecf0] bg-[#fcfcfd] px-3 py-3">
+              <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#98a2b3]">
+                Membres
+              </div>
+              <div className="mt-1 text-sm font-black text-[#101828]">
+                {group.members_count || 0}
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-[#eaecf0] bg-[#fcfcfd] px-3 py-3">
+              <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#98a2b3]">
+                Accès
+              </div>
+              <div className="mt-1 text-sm font-black text-[#101828]">
+                {group.is_paid ? 'Formation' : 'Libre'}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-auto pt-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {group.membershipStatus === 'pending' ? (
+                  <span className="rounded-full bg-[#fff7e8] px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#b54708]">
+                    Demande en attente
+                  </span>
+                ) : (
+                  <>
+                    <AvatarPile count={group.members_count || 0} label={group.name} />
+                    <span className="text-xs font-bold text-[#667085]">
+                      {group.members_count || 0} membres
+                    </span>
+                  </>
+                )}
+              </div>
+
+              <div className="inline-flex items-center gap-2 rounded-full bg-[#111827] px-4 py-2 text-[11px] font-black uppercase tracking-[0.14em] text-white shadow-[0_10px_24px_rgba(17,24,39,0.14)]">
+                Ouvrir
+                <span className="text-sm">↗</span>
+              </div>
+            </div>
           </div>
         </div>
-        
-        <div className="absolute -bottom-6 -right-6 h-32 w-32 opacity-10 blur-2xl bg-current" />
       </button>
 
       {isCreator && onDelete && (
@@ -296,10 +355,10 @@ function GroupCard({
             e.stopPropagation();
             onDelete();
           }}
-          className="absolute right-4 top-4 z-10 grid h-10 w-10 place-items-center rounded-2xl bg-white/50 text-rose-600 backdrop-blur-md transition-all hover:bg-rose-500 hover:text-white"
+          className="absolute right-4 top-4 z-10 grid h-10 w-10 place-items-center rounded-2xl border border-white/60 bg-white/80 text-rose-600 shadow-lg backdrop-blur-md transition hover:bg-rose-500 hover:text-white"
           title="Supprimer le groupe"
         >
-          <Trash2 size={18} />
+          <Trash2 size={16} />
         </button>
       )}
     </div>
@@ -1694,74 +1753,105 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
         </div>
       ) : (
         <>
-          {/* Level 1: Hero Section */}
-          <section className="relative bg-[#FCF9F3] px-6 py-12 sm:px-12 sm:py-20 lg:py-24 overflow-hidden">
-            {/* Desktop : Photo à droite, révélée par un dégradé gauche→droite */}
-            <div className="absolute right-0 top-0 bottom-0 z-0 hidden w-[60%] lg:block lg:w-[55%]">
+          <section className="relative overflow-hidden bg-[#fcf8f1] px-6 py-12 sm:px-12 sm:py-20 lg:py-24">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(200,159,45,0.10),transparent_38%)]" />
+
+            <div className="absolute right-0 top-0 bottom-0 z-0 hidden w-[58%] lg:block">
               <img
                 src="/images/community_hero.png"
                 alt=""
-                className="w-full h-full object-cover object-center opacity-90"
+                className="h-full w-full object-cover object-center opacity-95"
                 aria-hidden="true"
               />
             </div>
-            {/* Desktop : Dégradé de fondu */}
-            <div className="absolute inset-y-0 right-0 z-[1] hidden w-[70%] bg-gradient-to-r from-[#FCF9F3] via-[#FCF9F3]/20 via-[55%] to-transparent lg:block lg:w-[65%]" />
+
+            <div className="absolute inset-y-0 right-0 z-[1] hidden w-[65%] bg-gradient-to-r from-[#fcf8f1] via-[#fcf8f1]/45 to-transparent lg:block" />
 
             <div className="relative z-10 mx-auto max-w-7xl">
-              <div className="text-center lg:text-left max-w-3xl mx-auto lg:mx-0">
-                <div className="mb-6 flex items-center justify-center gap-2 lg:justify-start">
-                  <div className="flex -space-x-2">
-                    {[1, 2, 3, 4, 5].map((i) => (
-                      <div key={i} className="h-8 w-8 rounded-full border-2 border-white bg-gray-200">
-                        <img src={`https://i.pravatar.cc/150?u=${i}`} alt="User" className="h-full w-full rounded-full" />
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex items-center gap-1 px-3">
-                    <div className="flex text-amber-500">
-                      {[1, 2, 3, 4, 5].map((i) => <span key={i}>★</span>)}
-                    </div>
-                    <span className="text-[10px] font-black uppercase tracking-widest opacity-50">1,000+ Huios réunis</span>
-                  </div>
+              <div className="max-w-3xl text-center lg:text-left">
+                <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#eadfca] bg-white/90 px-4 py-2 text-[11px] font-black uppercase tracking-[0.18em] text-[#b88919] shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
+                  Plateforme chrétienne
                 </div>
 
-                <h1 className="text-4xl font-black leading-[1.1] tracking-tight text-[#161c35] sm:text-6xl lg:text-7xl font-display">
-                  <span className="block text-sm font-black uppercase tracking-[0.18em] text-[#c89f2d] mb-2">Plateforme chrétienne</span>
-                  Crée tes groupes, lance tes appels, transmets ton <span className="text-[#c89f2d]">enseignement.</span>
+                <h1 className="text-4xl font-black leading-[1.05] tracking-tight text-[#161c35] sm:text-6xl lg:text-7xl font-display">
+                  Crée tes groupes,
+                  <br />
+                  lance tes appels,
+                  <br />
+                  transmets ton enseignement.
                 </h1>
 
-                <p className="mt-8 max-w-xl text-lg font-medium leading-relaxed text-[#4b556f] lg:text-xl">
-                  Réunissez des croyants, organisez des appels en direct, animez des groupes d’étude et proposez des formations chrétiennes gratuites ou payantes dans un environnement dédié.
+                <p className="mt-8 max-w-2xl text-lg font-medium leading-relaxed text-[#4b556f] lg:text-xl">
+                  Réunissez des croyants, organisez des appels en direct, animez des groupes d’étude
+                  et proposez des formations chrétiennes gratuites ou payantes dans un environnement dédié.
                 </p>
 
-                <div className="mt-10 flex flex-wrap items-center justify-center gap-4 lg:justify-start">
-
+                <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:flex-wrap lg:justify-start">
                   <button
                     onClick={() => {
                       if (ensureAuth()) setShowCreateForm(true);
                     }}
-                    className="h-14 rounded-full bg-[#161c35] px-8 text-sm font-black text-white transition-transform hover:scale-105 active:scale-95"
+                    className="h-14 rounded-full bg-[#161c35] px-8 text-sm font-black text-white shadow-[0_166px_34px_rgba(22,28,53,0.16)] transition hover:-translate-y-[1px]"
                   >
                     Créer un groupe ou une formation
                   </button>
+
                   <div className="relative">
                     <input
                       type="text"
                       placeholder="Rechercher un groupe, une session ou une formation..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="h-14 w-full min-w-[240px] rounded-full border border-[#e8ebf1] bg-white px-12 text-sm font-medium outline-none transition-all focus:border-[#c89f2d] focus:ring-4 focus:ring-[#c89f2d]/5"
+                      className="h-14 w-full min-w-[260px] rounded-full border border-[#e8ebf1] bg-white px-12 text-sm font-medium text-[#101828] outline-none transition-all focus:border-[#c89f2d] focus:ring-4 focus:ring-[#c89f2d]/5"
                     />
-                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 opacity-30" size={18} />
+                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-[#98a2b3]" size={18} />
+                  </div>
+                </div>
+
+                <div className="mt-10 grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3">
+                  <div className="rounded-2xl border border-[#ece7db] bg-white/90 px-4 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.04)]">
+                    <div className="text-[10px] font-black uppercase tracking-[0.14em] text-[#c89f2d]">
+                      Appels en direct
+                    </div>
+                    <p className="mt-2 text-sm font-medium text-[#667085]">
+                      Lance des sessions de groupe et enseigne en temps réel.
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-[#ece7db] bg-white/90 px-4 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.04)]">
+                    <div className="text-[10px] font-black uppercase tracking-[0.14em] text-[#c89f2d]">
+                      Étude biblique
+                    </div>
+                    <p className="mt-2 text-sm font-medium text-[#667085]">
+                      Prépare des rencontres autour de la Parole et de la prière.
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-[#ece7db] bg-white/90 px-4 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.04)]">
+                    <div className="text-[10px] font-black uppercase tracking-[0.14em] text-[#c89f2d]">
+                      Formations
+                    </div>
+                    <p className="mt-2 text-sm font-medium text-[#667085]">
+                      Propose des parcours gratuits ou payants dans un cadre chrétien.
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
           </section>
 
-          {/* Level 2: Groups Grid (The feature card style) */}
           <section className="mx-auto max-w-7xl px-6 py-16 sm:px-12 sm:py-20">
+            <div className="mb-8 flex items-center justify-between gap-4">
+              <div>
+                <div className="text-[11px] font-black uppercase tracking-[0.16em] text-[#98a2b3]">
+                  Espaces disponibles
+                </div>
+                <h2 className="mt-2 text-2xl font-black tracking-tight text-[#101828]">
+                  Groupes, sessions et formations
+                </h2>
+              </div>
+            </div>
+
             {showCreateForm && (
               <div className="mb-12 rounded-[32px] border border-dashed border-[#e8ebf1] bg-white p-8">
                 <div className="mb-6 flex items-center justify-between">
