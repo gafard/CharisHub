@@ -1409,132 +1409,61 @@ export async function fetchPostById(postId: string) {
 export async function createPost(payload: {
   author_name: string;
   author_device_id: string;
-  user_id?: string | null;
+  user_id: string; // Désormais obligatoire pour l'écriture
   content: string;
   media_url?: string | null;
   media_type?: string | null;
   kind?: CommunityKind;
   group_id?: string | null;
 }) {
+  if (!payload.user_id) {
+    throw new Error('Authentification requise pour publier.');
+  }
+
   const cleanContent = payload.content?.trim() || '';
+  
   if (payload.kind === 'announcement') {
     const canPublish = await canPublishAnnouncement();
     if (!canPublish) {
       throw new Error('Seuls les administrateurs peuvent publier des annonces.');
     }
   }
-  if (!supabase) return localCreatePost(payload);
+
+  if (!supabase) throw new Error('Service indisponible (Hors-ligne)');
 
   try {
-    const isCategorized = !!payload.kind && payload.kind !== 'general';
-    const isGrouped = !!payload.group_id;
-    const baseVariants: Array<{ includeKind: boolean; content: string }> = isCategorized
-      ? [
-        { includeKind: true, content: cleanContent },
-        { includeKind: false, content: addKindPrefix(cleanContent, payload.kind) },
-      ]
-      : [{ includeKind: false, content: cleanContent }];
-    const groupVariants: Array<{ includeGroupColumn: boolean }> = isGrouped
-      ? [{ includeGroupColumn: true }, { includeGroupColumn: false }]
-      : [{ includeGroupColumn: false }];
-    const actorVariants: Array<{ includeAuthorDevice: boolean; includeGuest: boolean }> = [
-      { includeAuthorDevice: true, includeGuest: false },
-      { includeAuthorDevice: true, includeGuest: true },
-      { includeAuthorDevice: false, includeGuest: true },
-    ];
-    const hasMediaUrl = !!payload.media_url;
-    const hasMediaType = !!payload.media_type;
-    const mediaVariants: Array<{ includeMediaUrl: boolean; includeMediaType: boolean }> = hasMediaUrl
-      ? [
-        { includeMediaUrl: true, includeMediaType: hasMediaType },
-        { includeMediaUrl: true, includeMediaType: false },
-        { includeMediaUrl: false, includeMediaType: false },
-      ]
-      : [{ includeMediaUrl: false, includeMediaType: false }];
-    const variants = baseVariants.flatMap((base) =>
-      groupVariants.flatMap((group) =>
-        actorVariants.flatMap((actor) =>
-          mediaVariants.map((media) => ({ ...base, ...group, ...actor, ...media }))
-        )
-      )
-    );
+    const insertPayload: Record<string, any> = {
+      author_name: payload.author_name,
+      author_device_id: payload.author_device_id, // On le garde pour compatibilité RLS legacy si besoin, mais user_id prime
+      user_id: payload.user_id,
+      content: cleanContent,
+      media_url: payload.media_url || null,
+      media_type: payload.media_type || null,
+      kind: payload.kind || 'general',
+      group_id: payload.group_id ? cleanUuid(payload.group_id) : null,
+    };
 
-    let lastError: any = null;
+    const { data, error } = await supabase
+      .from('charishub_posts')
+      .insert(insertPayload)
+      .select('*')
+      .single();
 
-    for (const variant of variants) {
-      let contentForInsert = variant.content;
-      if (payload.group_id && !variant.includeGroupColumn) {
-        contentForInsert = appendInlineGroup(contentForInsert, payload.group_id);
-      }
-      if (!variant.includeMediaUrl) {
-        contentForInsert = appendInlineMedia(contentForInsert, payload.media_url ?? null);
-      }
-      const insertPayload: Record<string, any> = {
-        author_name: payload.author_name,
-        content: contentForInsert,
-        user_id: payload.user_id || null,
-      };
+    if (error) throw error;
+    if (!data) throw new Error('Erreur lors de la création du post.');
 
-      if (variant.includeMediaUrl) insertPayload.media_url = payload.media_url;
-      if (variant.includeMediaType) insertPayload.media_type = payload.media_type;
-      if (variant.includeAuthorDevice) insertPayload.author_device_id = payload.author_device_id;
-      if (variant.includeGuest) insertPayload.guest_id = payload.author_device_id;
-      if (variant.includeGroupColumn && payload.group_id) insertPayload.group_id = cleanUuid(payload.group_id);
-
-      if (variant.includeKind && payload.kind && payload.kind !== 'general') {
-        insertPayload.kind = payload.kind;
-      }
-
-      const attempt = await supabase.from('charishub_posts').insert(insertPayload).select('*').single();
-      if (!attempt.error && attempt.data) {
-        const created = normalizePost(attempt.data);
-        void triggerCommunityPostPush(created, payload.author_device_id);
-        return created;
-      }
-
-      lastError = attempt.error;
-      const missingGuest = variant.includeGuest && isMissingColumnError(attempt.error, 'guest_id');
-      const missingAuthorDevice =
-        variant.includeAuthorDevice && isMissingColumnError(attempt.error, 'author_device_id');
-      const missingKind = variant.includeKind && isMissingKindColumnError(attempt.error);
-      const missingMediaType =
-        variant.includeMediaType && isMissingColumnError(attempt.error, 'media_type');
-      const missingMediaUrl = variant.includeMediaUrl && isMissingColumnError(attempt.error, 'media_url');
-      const missingGroup = variant.includeGroupColumn && isMissingColumnError(attempt.error, 'group_id');
-      const nullGuest = !variant.includeGuest && isNullViolationForColumn(attempt.error, 'guest_id');
-      const nullAuthor =
-        !variant.includeAuthorDevice && isNullViolationForColumn(attempt.error, 'author_device_id');
-      const expectedSchemaGap =
-        missingGuest ||
-        missingAuthorDevice ||
-        missingKind ||
-        missingMediaType ||
-        missingMediaUrl ||
-        missingGroup ||
-        nullGuest ||
-        nullAuthor;
-      if (!expectedSchemaGap) throw attempt.error;
-    }
-
-    throw lastError;
+    const created = normalizePost(data);
+    void triggerCommunityPostPush(created, payload.author_device_id);
+    return created;
   } catch (error: any) {
-    const errorCode = String(error?.code || '');
-    if (errorCode === '23503' && payload.group_id) {
-       console.warn('[createPost] Foreign key violation for group_id. Falling back to local storage.');
-       return localCreatePost(payload);
-    }
-    if (isNetworkError(error)) {
-       return localCreatePost(payload);
-    }
-    // All other errors (missing table, permissions, etc.) — fallback to local
-    console.warn('[createPost] Remote error, falling back to local:', error?.message);
-    return localCreatePost(payload);
+    console.error('[createPost] Error:', error.message);
+    throw error;
   }
 }
 
 export async function updatePost(
   postId: string,
-  actorDeviceId: string,
+  userId: string, // Désormais obligatoire
   payload: {
     content?: string;
     media_url?: string | null;
@@ -1542,7 +1471,7 @@ export async function updatePost(
   }
 ) {
   if (!postId) throw new Error('Publication introuvable.');
-  if (!actorDeviceId) throw new Error('Auteur introuvable.');
+  if (!userId) throw new Error('Authentification requise.');
 
   const cleanContent = payload.content?.trim();
   const updatePayload: Record<string, any> = {};
@@ -1551,39 +1480,25 @@ export async function updatePost(
   if (payload.media_type !== undefined) updatePayload.media_type = payload.media_type;
 
   if (Object.keys(updatePayload).length === 0) {
-    throw new Error('Aucune modification detectee.');
+    throw new Error('Aucune modification détectée.');
   }
 
-  if (!supabase) {
-    return localUpdatePost(postId, actorDeviceId, updatePayload);
-  }
-
-  const session = (await supabase.auth.getSession()).data.session;
-  const authId = session?.user?.id;
+  if (!supabase) throw new Error('Service indisponible.');
 
   try {
-    let attempt = await supabase
+    const { data, error } = await supabase
       .from('charishub_posts')
       .update(updatePayload)
       .eq('id', postId)
-      .or(`user_id.eq.${authId},author_device_id.eq.${actorDeviceId}`)
+      .eq('user_id', userId)
       .select('*')
       .single();
 
-    if (attempt.error && isMissingColumnError(attempt.error, 'author_device_id')) {
-      attempt = await supabase
-        .from('charishub_posts')
-        .update(updatePayload)
-        .eq('id', postId)
-        .eq('guest_id', actorDeviceId)
-        .select('*')
-        .single();
-    }
-
-    if (attempt.error) throw attempt.error;
-    return normalizePost(attempt.data);
+    if (error) throw error;
+    if (!data) throw new Error('Modification non autorisée ou post inexistant.');
+    return normalizePost(data);
   } catch (error: any) {
-    throw new Error(error?.message || 'Erreur lors de la mise a jour du message.');
+    throw new Error(error?.message || 'Erreur lors de la mise à jour du message.');
   }
 }
 
@@ -1684,59 +1599,39 @@ export async function addComment(payload: {
   post_id: string;
   author_name: string;
   author_device_id: string;
-  user_id?: string | null;
+  user_id: string; // Obligatoire
   content: string;
 }) {
-  if (!supabase) return localAddComment(payload);
+  if (!payload.user_id) throw new Error('Authentification requise pour commenter.');
+  if (!supabase) throw new Error('Service indisponible.');
 
   try {
-    const variants: Array<{ includeAuthorDevice: boolean; includeGuest: boolean }> = [
-      { includeAuthorDevice: true, includeGuest: false },
-      { includeAuthorDevice: true, includeGuest: true },
-      { includeAuthorDevice: false, includeGuest: true },
-    ];
-    let lastError: any = null;
+    const insertPayload = {
+      post_id: payload.post_id,
+      author_name: payload.author_name,
+      author_device_id: payload.author_device_id,
+      user_id: payload.user_id,
+      content: payload.content,
+    };
 
-    for (const variant of variants) {
-      const insertPayload: Record<string, any> = {
-        post_id: payload.post_id,
-        author_name: payload.author_name,
-        content: payload.content,
-        user_id: payload.user_id || null,
-      };
-      if (variant.includeAuthorDevice) insertPayload.author_device_id = payload.author_device_id;
-      if (variant.includeGuest) insertPayload.guest_id = payload.author_device_id;
+    const { data, error } = await supabase
+      .from('charishub_comments')
+      .insert(insertPayload)
+      .select('*')
+      .single();
 
-      const attempt = await supabase
-        .from('charishub_comments')
-        .insert(insertPayload)
-        .select('*')
-        .single();
-      if (!attempt.error && attempt.data) {
-        void triggerCommentPush({
-          postId: payload.post_id,
-          commenterName: payload.author_name,
-          commenterDeviceId: payload.author_device_id,
-          commentContent: payload.content,
-        });
-        return normalizeComment(attempt.data);
-      }
+    if (error) throw error;
+    if (!data) throw new Error('Erreur lors de l’envoi du commentaire.');
 
-      lastError = attempt.error;
-      const missingAuthor =
-        variant.includeAuthorDevice && isMissingColumnError(attempt.error, 'author_device_id');
-      const missingGuest = variant.includeGuest && isMissingColumnError(attempt.error, 'guest_id');
-      const nullAuthor =
-        !variant.includeAuthorDevice && isNullViolationForColumn(attempt.error, 'author_device_id');
-      const nullGuest = !variant.includeGuest && isNullViolationForColumn(attempt.error, 'guest_id');
-      if (!(missingAuthor || missingGuest || nullAuthor || nullGuest)) throw attempt.error;
-    }
-
-    throw lastError;
+    void triggerCommentPush({
+      postId: payload.post_id,
+      commenterName: payload.author_name,
+      commenterDeviceId: payload.author_device_id,
+      commentContent: payload.content,
+    });
+    
+    return normalizeComment(data);
   } catch (error: any) {
-    if (isMissingTableError(error, 'charishub_comments')) {
-      return localAddComment(payload);
-    }
     throw new Error(error?.message || 'Erreur lors de l’envoi du commentaire.');
   }
 }
@@ -1817,65 +1712,42 @@ export async function reportPost(payload: {
   throw new Error(lastError?.message || 'Erreur lors du signalement.');
 }
 
-export async function deletePost(postId: string, actorDeviceId: string): Promise<DeletePostResult> {
-  if (!supabase) return localDeletePost(postId, actorDeviceId);
+export async function deletePost(postId: string, userId: string): Promise<DeletePostResult> {
+  if (!supabase) throw new Error('Service indisponible.');
+  if (!userId) throw new Error('Authentification requise.');
 
-  const session = (await supabase.auth.getSession()).data.session;
-  const authId = session?.user?.id;
-
-  let removePost = await supabase
+  const { error } = await supabase
     .from('charishub_posts')
     .delete()
     .eq('id', postId)
-    .or(`user_id.eq.${authId},author_device_id.eq.${actorDeviceId}`);
-  if (!removePost.error) return { ok: true };
+    .eq('user_id', userId);
 
-  if (isMissingColumnError(removePost.error, 'author_device_id')) {
-    removePost = await supabase
-      .from('charishub_posts')
-      .delete()
-      .eq('id', postId)
-      .eq('guest_id', actorDeviceId);
-    if (!removePost.error) return { ok: true };
+  if (error) {
+    if (error.code === '23503') {
+      // Suppression manuelle des dépendances si cascade non configurée
+      await supabase.from('charishub_comments').delete().eq('post_id', postId);
+      const retry = await supabase.from('charishub_posts').delete().eq('id', postId).eq('user_id', userId);
+      if (retry.error) throw retry.error;
+      return { ok: true };
+    }
+    throw error;
   }
 
-  // Some schemas do not cascade deletes automatically.
-  if (removePost.error.code === '23503') {
-    const removeComments = await supabase.from('charishub_comments').delete().eq('post_id', postId);
-    if (removeComments.error) {
-      throw new Error(removeComments.error.message || 'Erreur suppression commentaires.');
-    }
-
-    let retry = await supabase
-      .from('charishub_posts')
-      .delete()
-      .eq('id', postId)
-      .eq('author_device_id', actorDeviceId);
-    if (isMissingColumnError(retry.error, 'author_device_id')) {
-      retry = await supabase
-        .from('charishub_posts')
-        .delete()
-        .eq('id', postId)
-        .eq('guest_id', actorDeviceId);
-    }
-    if (retry.error) throw new Error(retry.error.message || 'Erreur suppression publication.');
-    return { ok: true };
-  }
-
-  throw new Error(removePost.error.message || 'Erreur suppression publication.');
+  return { ok: true };
 }
 
 export async function createStory(payload: {
   author_name: string;
   author_device_id: string;
-  user_id?: string | null;
+  user_id: string; // Obligatoire
   verse_reference: string;
   verse_text: string;
   image_data_url?: string;
   kind?: CommunityStoryKind;
   config?: CommunityStoryConfig;
 }) {
-  if (!supabase) return localCreateStory(payload);
+  if (!payload.user_id) throw new Error('Authentification requise.');
+  if (!supabase) throw new Error('Service indisponible.');
 
   try {
     let imageUrl: string | null = null;
@@ -1906,7 +1778,7 @@ export async function createStory(payload: {
 
     if (autoImageDataUrl) {
       const fileName = `story_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.png`;
-      const filePath = `community-stories/${payload.author_device_id}/${fileName}`;
+      const filePath = `community-stories/${payload.user_id}/${fileName}`;
       try {
         let blob = dataUrlToBlob(autoImageDataUrl);
         if (!blob) {
@@ -1915,73 +1787,46 @@ export async function createStory(payload: {
           blob = await response.blob();
         }
 
-        // Try current bucket first, then legacy "stories" bucket.
-        let uploaded = false;
-        for (const bucket of ['community-media', 'stories']) {
-          const { error: uploadError } = await supabase.storage
-            .from(bucket)
-            .upload(filePath, blob, {
-              cacheControl: '3600',
-              contentType: 'image/png',
-              upsert: false,
-            });
+        const { error: uploadError } = await supabase.storage
+          .from('community-media')
+          .upload(filePath, blob, {
+            cacheControl: '3600',
+            contentType: 'image/png',
+            upsert: false,
+          });
 
-          if (!uploadError) {
-            const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
-            imageUrl = data?.publicUrl || null;
-            uploaded = !!imageUrl;
-            if (uploaded) break;
-          }
+        if (!uploadError) {
+          const { data } = supabase.storage.from('community-media').getPublicUrl(filePath);
+          imageUrl = data?.publicUrl || null;
+        } else {
+          imageUrl = autoImageDataUrl;
         }
-
-        // Last-resort fallback: keep a displayable image even when storage is misconfigured.
-        if (!uploaded) imageUrl = autoImageDataUrl;
       } catch {
         imageUrl = autoImageDataUrl;
       }
     }
 
-    const insertPayload: Record<string, any> = {
+    const insertPayload = {
       author_name: payload.author_name,
       author_device_id: payload.author_device_id,
-      user_id: payload.user_id || null,
+      user_id: payload.user_id,
       verse_reference: payload.verse_reference,
       verse_text: payload.verse_text,
       image_url: imageUrl,
+      kind: payload.kind || 'verse',
+      config: payload.config || {},
     };
 
-    if (payload.kind) insertPayload.kind = payload.kind;
-    if (payload.config) insertPayload.config = payload.config;
+    const { data, error } = await supabase
+      .from('community_stories')
+      .insert(insertPayload)
+      .select('*')
+      .single();
 
-    let lastError: any = null;
-    for (let attempt = 0; attempt < 3; attempt++) {
-      const response = await supabase
-        .from('community_stories')
-        .insert(insertPayload)
-        .select('*')
-        .single();
-
-      if (!response.error) return response.data;
-      lastError = response.error;
-
-      if (isMissingColumnError(response.error, 'kind')) {
-        delete insertPayload.kind;
-      } else if (isMissingColumnError(response.error, 'config')) {
-        delete insertPayload.config;
-      } else {
-        break;
-      }
-    }
-    throw lastError;
+    if (error) throw error;
+    return data;
   } catch (error: any) {
-    if (isMissingTableError(error, 'community_stories')) {
-      return localCreateStory(payload);
-    }
-    const message = String(error?.message || '').toLowerCase();
-    if (message.includes('failed to fetch') || message.includes('network')) {
-      return localCreateStory(payload);
-    }
-    throw new Error(error?.message || 'Erreur lors de la creation de la story.');
+    throw new Error(error?.message || 'Erreur lors de la création de la story.');
   }
 }
 
@@ -2151,6 +1996,7 @@ export async function fetchGroupMembers(groupId: string, limit = 80): Promise<Co
 
 export async function moderateGroupMember(
   groupId: string,
+  memberUserId: string | null | undefined,
   memberDeviceId: string,
   action: 'approve' | 'reject'
 ) {
@@ -2158,12 +2004,17 @@ export async function moderateGroupMember(
 
   const session = (await supabase.auth.getSession()).data.session;
   const authId = session?.user?.id;
+  if (!authId) throw new Error('Authentification requise pour modérer.');
+
+  const filter = memberUserId 
+    ? `user_id.eq.${memberUserId}` 
+    : `device_id.eq.${memberDeviceId}`;
 
   if (action === 'reject') {
     await supabase.from('charishub_group_members')
       .delete()
       .eq('group_id', groupId)
-      .or(`user_id.eq.${authId},device_id.eq.${memberDeviceId}`);
+      .or(filter);
     return;
   }
 
@@ -2171,7 +2022,7 @@ export async function moderateGroupMember(
     .from('charishub_group_members')
     .update({ status: 'approved' })
     .eq('group_id', groupId)
-    .or(`user_id.eq.${authId},device_id.eq.${memberDeviceId}`);
+    .or(filter);
 }
 
 export async function createGroup(payload: {
@@ -2186,270 +2037,107 @@ export async function createGroup(payload: {
   is_paid?: boolean;
   price?: number;
   pass_code?: string;
-  user_id?: string | null;
+  user_id: string;
 }) {
+  if (!payload.user_id) throw new Error('Authentification requise.');
   const name = (payload.name || '').trim();
-  if (name.length < 3) throw new Error('Le nom du groupe doit contenir au moins 3 caracteres.');
+  if (name.length < 3) throw new Error('Le nom du groupe doit contenir au moins 3 caractères.');
 
   const created_by_name = payload.created_by_name || 'Invite';
 
-  if (!supabase) {
-    return localCreateGroup({ 
-      ...payload, 
-      name, 
-      created_by_name,
-      user_id: payload.user_id || null
-    });
-  }
-
-  const insertPayload: Record<string, any> = {
-    name,
-    description: (payload.description || '').trim(),
-    group_type: payload.group_type || 'general',
-    created_by_name,
-    created_by_device_id: payload.created_by_device_id,
-    user_id: payload.user_id || null,
-    created_by: payload.created_by_device_id, // Common variant
-    author_device_id: payload.created_by_device_id, // Another common variant
-    call_link: payload.call_link || null,
-    next_call_at: payload.next_call_at || null,
-    is_paid: payload.is_paid || false,
-    price: payload.price || 0,
-    pass_code: payload.pass_code || '',
-  };
-
-  let created: CommunityGroup | null = null;
-  let lastError: any = null;
-
-
-  // Attempt to insert with different schema variants
-  for (let attempt = 0; attempt < 8; attempt += 1) {
-    try {
-      const response = await supabase.from('charishub_groups').insert(insertPayload).select('*').single();
-      if (!response.error && response.data) {
-        created = normalizeGroup(response.data, { membersCount: 1, joined: true });
-        break;
-      }
-      lastError = response.error;
-      
-      if (isMissingTableError(response.error, 'charishub_groups') || isNetworkError(response.error)) {
-        console.warn('[createGroup] Network or Schema error, falling back to local storage.');
-        return localCreateGroup({ ...payload, name, created_by_name });
-      }
-
-      let patched = false;
-      const maybeColumns = [
-        'description',
-        'group_type',
-        'created_by_name',
-        'created_by_device_id',
-        'created_by',
-        'author_device_id',
-        'call_provider',
-        'call_link',
-        'next_call_at',
-      ];
-      for (const column of maybeColumns) {
-        if (column in insertPayload && isMissingColumnError(response.error, column)) {
-          delete insertPayload[column];
-          patched = true;
-        }
-      }
-      if (!patched) break;
-    } catch (err: any) {
-      console.error('[createGroup] Attempt Error:', err);
-      if (isNetworkError(err)) {
-        return localCreateGroup({ ...payload, name, created_by_name });
-      }
-      throw err;
-    }
-  }
-
-  if (!created) {
-    if (lastError) {
-      if (lastError.code === '23505') {
-        // Already exists on server! This is okay, just fetch it
-        const { data } = await supabase.from('charishub_groups').select('*').eq('id', cleanUuid(insertPayload.id || '')).single();
-        if (data) return normalizeGroup(data, { joined: true });
-      }
-      throw new Error(lastError.message || 'Erreur lors de la creation du groupe.');
-    }
-    return localCreateGroup({ ...payload, name, created_by_name });
-  }
+  if (!supabase) throw new Error('Service indisponible.');
 
   try {
-    const joinVariants: Array<Record<string, any>> = [
-      {
-        group_id: created.id,
-        device_id: payload.created_by_device_id,
-        user_id: payload.user_id || null,
-        display_name: payload.created_by_name || 'Invite',
-        status: 'approved',
-        role: 'admin',
-      },
-      {
-        group_id: created.id,
-        user_id: payload.user_id || null,
-        device_id: payload.created_by_device_id,
-        display_name: payload.created_by_name || 'Invite',
-        status: 'approved',
-      },
-      {
-        group_id: created.id,
-        user_id: payload.user_id || null,
-        device_id: payload.created_by_device_id,
-        status: 'approved',
-      },
-      {
-        group_id: created.id,
-        guest_id: payload.created_by_device_id,
-        display_name: payload.created_by_name || 'Invite',
-        status: 'approved',
-      },
-    ];
+    const insertPayload = {
+      name,
+      description: payload.description || '',
+      group_type: payload.group_type || 'study',
+      created_by_name,
+      created_by_device_id: payload.created_by_device_id,
+      user_id: payload.user_id,
+      call_provider: payload.call_provider || null,
+      call_link: payload.call_link || null,
+      next_call_at: payload.next_call_at || null,
+      is_paid: payload.is_paid || false,
+      price: payload.price || 0,
+      pass_code: payload.pass_code || '',
+    };
 
-    for (const variant of joinVariants) {
-      const joinResult = await supabase.from('charishub_group_members').insert(variant);
-      if (!joinResult.error) break;
-      const duplicate = String(joinResult.error.code || '') === '23505';
-      if (duplicate) break;
-      const missingExpectedColumn =
-        (variant.device_id && isMissingColumnError(joinResult.error, 'device_id')) ||
-        (variant.guest_id && isMissingColumnError(joinResult.error, 'guest_id')) ||
-        (variant.display_name && isMissingColumnError(joinResult.error, 'display_name')) ||
-        (variant.status && isMissingColumnError(joinResult.error, 'status'));
-      if (missingExpectedColumn) continue;
-      if (isMissingTableError(joinResult.error, 'charishub_group_members')) break;
-      break;
-    }
-  } catch {
-    // keep group created even if membership insert fails
+    const { data, error } = await supabase
+      .from('charishub_groups')
+      .insert(insertPayload)
+      .select('*')
+      .single();
+
+    if (error) throw error;
+    if (!data) throw new Error('Erreur lors de la création du groupe.');
+
+    const group = normalizeGroup(data);
+
+    // Auto-join
+    await joinGroup(group.id, payload.created_by_device_id, created_by_name, payload.user_id);
+
+    return group;
+  } catch (error: any) {
+    throw new Error(error?.message || 'Erreur lors de la création du groupe.');
   }
-
-  return created;
 }
 
-export async function deleteGroup(groupId: string, actorDeviceId: string) {
-  if (!supabase) return localDeleteGroup(groupId, actorDeviceId);
+export async function deleteGroup(groupId: string, userId: string) {
+  if (!supabase) throw new Error('Service indisponible.');
+  if (!userId) throw new Error('Authentification requise.');
 
   const cleanedId = cleanUuid(groupId);
   
-  // 1. Ownership check (optional but safe)
   try {
-    const { data: group } = await supabase
+    const { error } = await supabase
       .from('charishub_groups')
-      .select('created_by_device_id')
+      .delete()
       .eq('id', cleanedId)
-      .single();
-    
-    if (group && group.created_by_device_id && group.created_by_device_id !== actorDeviceId) {
-      throw new Error('Seul le createur peut supprimer ce groupe.');
-    }
-  } catch (e) {
-    // Continue anyway if check fails, PK delete will handle it
-  }
+      .eq('user_id', userId);
 
-  // 2. Manual Cascade Delete
-  try {
-    await supabase.from('charishub_posts').delete().eq('group_id', cleanedId);
-    await supabase.from('charishub_group_members').delete().eq('group_id', cleanedId);
-    // Optional / Future tables
-    await supabase.from('charishub_group_challenges').delete().eq('group_id', cleanedId).maybeSingle();
-  } catch (err) {
-    console.warn('[deleteGroup] Cascade error:', err);
+    if (error) throw error;
+    return { ok: true };
+  } catch (error: any) {
+    throw new Error(error?.message || 'Erreur lors de la suppression du groupe.');
   }
+}
 
-  // 3. Final Group Delete
-  const session = (await supabase.auth.getSession()).data.session;
-  const authId = session?.user?.id;
+export async function joinGroup(groupId: string, deviceId: string, displayName: string, userId: string) {
+  if (!groupId || !userId) throw new Error('Paramètres manquants pour rejoindre.');
+  if (!supabase) throw new Error('Service indisponible.');
+
+  const insertPayload = { 
+    group_id: groupId, 
+    device_id: deviceId, 
+    user_id: userId, 
+    display_name: displayName || 'Utilisateur', 
+    status: 'approved' // Par défaut approuvé pour l'instant
+  };
+
+  const { error } = await supabase.from('charishub_group_members').insert(insertPayload);
+  if (error) {
+    if (error.code === '23505') return; // Déjà membre
+    throw error;
+  }
+}
+
+export async function leaveGroup(groupId: string, userId: string) {
+  if (!groupId || !userId) return;
+  if (!supabase) throw new Error('Service indisponible.');
 
   const { error } = await supabase
-    .from('charishub_groups')
+    .from('charishub_group_members')
     .delete()
-    .eq('id', cleanedId)
-    .or(`user_id.eq.${authId},created_by_device_id.eq.${actorDeviceId}`);
+    .eq('group_id', groupId)
+    .eq('user_id', userId);
 
   if (error) throw error;
-
-  // 4. CRITICAL: Clean up Local Storage too!
-  // Otherwise it will reappear in fetchGroups merge
-  localDeleteGroup(groupId, actorDeviceId);
-
-  return { ok: true };
-}
-
-export async function joinGroup(groupId: string, deviceId: string, displayName: string, userId?: string | null) {
-  if (!groupId || !deviceId) return;
-  if (!supabase) {
-    localJoinGroup(groupId, deviceId, displayName);
-    return;
-  }
-
-  const variants: Array<Record<string, any>> = [
-    { group_id: groupId, device_id: deviceId, user_id: userId || null, display_name: displayName || 'Invite', status: 'pending' },
-    { group_id: groupId, device_id: deviceId, status: 'pending' },
-  ];
-
-  for (const variant of variants) {
-    const result = await supabase.from('charishub_group_members').insert(variant);
-    if (!result.error) return;
-    const duplicate = String(result.error.code || '') === '23505';
-    if (duplicate) return;
-    const missingExpectedColumn =
-      (variant.device_id && isMissingColumnError(result.error, 'device_id')) ||
-      (variant.guest_id && isMissingColumnError(result.error, 'guest_id')) ||
-      (variant.display_name && isMissingColumnError(result.error, 'display_name')) ||
-      (variant.status && isMissingColumnError(result.error, 'status'));
-    if (missingExpectedColumn) continue;
-    if (isMissingTableError(result.error, 'charishub_group_members')) {
-      localJoinGroup(groupId, deviceId, displayName);
-      return;
-    }
-    throw new Error(result.error.message || 'Erreur pour rejoindre le groupe.');
-  }
-
-  localJoinGroup(groupId, deviceId, displayName);
-}
-
-export async function leaveGroup(groupId: string, deviceId: string) {
-  if (!groupId || !deviceId) return;
-  if (!supabase) {
-    localLeaveGroup(groupId, deviceId);
-    return;
-  }
-
-  let lastError: any = null;
-  const deleteVariants = [
-    { column: 'device_id' as const, value: deviceId },
-    { column: 'guest_id' as const, value: deviceId },
-  ];
-
-  const session = (await supabase.auth.getSession()).data.session;
-  const authId = session?.user?.id;
-
-  for (const variant of deleteVariants) {
-    const result = await supabase
-      .from('charishub_group_members')
-      .delete()
-      .eq('group_id', groupId)
-      .or(`user_id.eq.${authId},${variant.column}.eq.${variant.value}`);
-
-    if (!result.error) return;
-    lastError = result.error;
-    if (isMissingColumnError(result.error, variant.column)) continue;
-    if (isMissingTableError(result.error, 'charishub_group_members')) {
-      localLeaveGroup(groupId, deviceId);
-      return;
-    }
-  }
-
-  if (lastError) throw new Error(lastError.message || 'Erreur pour quitter le groupe.');
-  localLeaveGroup(groupId, deviceId);
 }
 
 export async function updateGroup(
   groupId: string,
-  actorDeviceId: string,
+  userId: string,
   payload: {
     call_provider?: CommunityCallProvider | null;
     call_link?: string | null;
@@ -2459,47 +2147,19 @@ export async function updateGroup(
     session_tasks?: string[];
   }
 ) {
-  if (!groupId) return null;
-  if (!supabase) return localUpdateGroup(groupId, payload);
+  if (!groupId || !userId) return null;
+  if (!supabase) throw new Error('Service indisponible.');
 
-  let lastError: any = null;
-  const session = (await supabase.auth.getSession()).data.session;
-  const authId = session?.user?.id;
+  const { data, error } = await supabase
+    .from('charishub_groups')
+    .update(payload)
+    .eq('id', cleanUuid(groupId))
+    .eq('user_id', userId)
+    .select('*')
+    .single();
 
-  for (let attempt = 0; attempt < 8; attempt += 1) {
-    const updatePayload: Record<string, any> = { ...payload, updated_at: new Date().toISOString() };
-    
-    let query = supabase
-      .from('charishub_groups')
-      .update(updatePayload)
-      .eq('id', cleanUuid(groupId));
-
-    if (authId) {
-      query = query.eq('user_id', authId);
-    } else {
-      query = query.eq('created_by_device_id', actorDeviceId);
-    }
-
-    const result = await query.select('*').single();
-    if (!result.error && result.data) return normalizeGroup(result.data);
-
-    lastError = result.error;
-    if (isMissingTableError(result.error, 'community_groups')) {
-      return localUpdateGroup(groupId, payload);
-    }
-
-    let patched = false;
-    for (const column of ['call_provider', 'call_link', 'next_call_at', 'description', 'admin_ids']) {
-      if (column in updatePayload && isMissingColumnError(result.error, column)) {
-        delete updatePayload[column];
-        patched = true;
-      }
-    }
-    if (!patched) break;
-  }
-
-  if (lastError) throw new Error(lastError.message || 'Erreur lors de la mise a jour du groupe.');
-  return localUpdateGroup(groupId, payload);
+  if (error) throw error;
+  return data ? normalizeGroup(data) : null;
 }
 
 const CALL_EVENT_TYPES = new Set<CommunityGroupCallEventType>([

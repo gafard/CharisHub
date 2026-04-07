@@ -814,11 +814,10 @@ export default function CommunityGroupChat({
 
   const confirmDeleteMessage = useCallback(
     async (messageId: string) => {
-      if (!actor.deviceId) return;
-
+      if (!actor.userId) throw new Error('Authentification requise.');
       setMessageBusy((prev) => ({ ...prev, [messageId]: true }));
       try {
-        await deletePost(messageId, actor.deviceId);
+        await deletePost(messageId, actor.userId);
         if (replyToMessageId === messageId) setReplyToMessageId(null);
         if (editingMessageId === messageId) {
           setText('');
@@ -852,7 +851,9 @@ export default function CommunityGroupChat({
           markEdited: true,
         });
 
-        await updatePost(editingMessageId, actor.deviceId, { content: nextContent });
+        if (!actor.userId) throw new Error('Authentification requise.');
+
+        await updatePost(editingMessageId, actor.userId, { content: nextContent });
         setFeedback('Message modifié.');
         setText('');
         setEditingMessageId(null);
@@ -883,6 +884,8 @@ export default function CommunityGroupChat({
       const finalContent = buildChatContent(textValue || fallbackLabel, {
         replyToId: replyToMessageId,
       });
+
+      if (!actor.userId) throw new Error('Authentification requise pour publier.');
 
       await createPost({
         author_name: actor.displayName,

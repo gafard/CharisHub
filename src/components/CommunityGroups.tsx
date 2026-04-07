@@ -21,6 +21,7 @@ import {
   joinGroup,
   leaveGroup,
   updateGroup,
+  deleteGroup,
   fetchGroupCallPresence,
   syncCommunityData,
   type CommunityGroup,
@@ -413,7 +414,7 @@ function GroupDetailTabs({
   selectedGroup: CommunityGroup;
   groupMembers: CommunityGroupMember[];
   membersStatus: 'idle' | 'loading' | 'ready' | 'error';
-  actor: { deviceId: string; displayName: string };
+  actor: { deviceId: string; displayName: string; userId?: string | null };
   actionState: Record<string, boolean>;
   savingGroupState: boolean;
   detailDescription: string;
@@ -438,9 +439,9 @@ function GroupDetailTabs({
   formatWhen: (value?: string | null) => string;
   initials: (name: string) => string;
   renderTypeLabel: (value: CommunityGroupType) => string;
-  isGroupAdmin: (group: CommunityGroup, deviceId: string) => boolean;
+  isGroupAdmin: (group: CommunityGroup, userId: string | null | undefined, deviceId: string) => boolean;
   currentUserStatus: CommunityGroupMemberStatus | null;
-  onModerate: (deviceId: string, action: 'approve' | 'reject') => void;
+  onModerate: (userId: string | null | undefined, deviceId: string, action: 'approve' | 'reject') => void;
   callParticipants: any[];
   passCodeInput: string;
   setPassCodeInput: (val: string) => void;
@@ -454,8 +455,8 @@ function GroupDetailTabs({
 }) {
   const [activeTab, setActiveTab] = useState<'salon' | 'programme' | 'members' | 'about'>('salon');
 
-  const isAdmin = isGroupAdmin(selectedGroup, actor.deviceId);
-  const isCreator = selectedGroup.created_by_device_id === actor.deviceId;
+  const isAdmin = isGroupAdmin(selectedGroup, actor.userId, actor.deviceId);
+  const isCreator = (selectedGroup.user_id && selectedGroup.user_id === actor.userId) || (selectedGroup.created_by_device_id === actor.deviceId);
   const hasLiveCall = callParticipants.length > 0 || !!activeCallId;
 
   return (
@@ -499,6 +500,70 @@ function GroupDetailTabs({
             <Link2 size={14} />
             Partager l'espace
           </button>
+        </div>
+      </div>
+
+      {/* 2. Bandeau Session / Live */}
+      <div className="overflow-hidden rounded-[32px] border border-[#e9eaeb] bg-white shadow-[0_12px_30px_rgba(16,24,40,0.04)]">
+        <div className="flex flex-col lg:flex-row lg:items-stretch">
+          <div className="flex-1 p-6 sm:p-8">
+            <div className="flex items-center gap-3">
+              {hasLiveCall ? (
+                <div className="flex items-center gap-2 rounded-full bg-rose-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-rose-600">
+                  <span className="h-2 w-2 animate-pulse rounded-full bg-rose-500" />
+                  Session en direct
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 rounded-full bg-slate-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
+                  Prochaine session
+                </div>
+              )}
+            </div>
+
+            <h2 className="mt-4 text-2xl font-black tracking-tight text-[#101828]">
+              {hasLiveCall ? "Rejoignez l'enseignement en cours" : (selectedGroup.next_call_at ? formatWhen(selectedGroup.next_call_at) : 'Aucun rendez-vous planifié')}
+            </h2>
+
+            <p className="mt-2 text-sm leading-6 text-[#667085]">
+              {hasLiveCall
+                ? "Plusieurs membres sont déjà connectés. Entrez dans la salle pour participer à la session biblique."
+                : "Consultez le déroulé de la session dans l'onglet Programme pour vous préparer."
+              }
+            </p>
+          </div>
+
+          <div className="flex flex-col justify-center border-t border-[#f2f4f7] bg-[#fcfcfd] p-6 lg:w-[280px] lg:border-l lg:border-t-0 sm:p-8">
+            {isAdmin ? (
+              <button
+                type="button"
+                onClick={() => void onStartGroupCall()}
+                disabled={callBusy}
+                className="w-full rounded-2xl bg-[#161c35] px-6 py-4 text-sm font-black text-white shadow-[0_12px_24px_rgba(22,28,53,0.15)] transition hover:translate-y-[-1px] disabled:opacity-60"
+              >
+                {callBusy ? <Loader2 size={16} className="animate-spin" /> : (hasLiveCall ? "Ouvrir la salle" : "Lancer la session")}
+              </button>
+            ) : (
+              selectedGroup.joined ? (
+                hasLiveCall ? (
+                  <button
+                    type="button"
+                    onClick={onOpenCallRoom}
+                    className="w-full rounded-2xl bg-rose-600 px-6 py-4 text-sm font-black text-white shadow-[0_12px_24px_rgba(244,63,94,0.15)] transition hover:translate-y-[-1px]"
+                  >
+                    Entrer dans la session
+                  </button>
+                ) : (
+                  <div className="text-center text-xs font-bold text-[#98a2b3]">
+                    En attente du lancement
+                  </div>
+                )
+              ) : (
+                <div className="text-center text-xs font-bold text-[#c89f2d]">
+                  Rejoins l'espace pour participer
+                </div>
+              )
+            )}
+          </div>
         </div>
       </div>
 
@@ -697,13 +762,13 @@ function GroupDetailTabs({
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="truncate text-xs font-bold text-[#101828]">{member.display_name}</div>
-                        {selectedGroup.admin_ids?.includes(member.device_id) && (
+                        {selectedGroup.admin_ids?.some(id => id === member.user_id || id === member.device_id) && (
                           <div className="text-[9px] font-black text-[#c89f2d] uppercase">Administrateur</div>
                         )}
                       </div>
                       {isAdmin && member.status === 'pending' && member.device_id !== actor.deviceId && (
                         <button 
-                          onClick={() => onModerate(member.device_id, 'approve')}
+                          onClick={() => onModerate(member.user_id, member.device_id, 'approve')}
                           className="h-6 w-6 rounded-md bg-emerald-50 text-emerald-600 grid place-items-center hover:bg-emerald-100"
                         >
                           ✓
@@ -968,12 +1033,12 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
   const currentCallId = queryCallId || currentCallSession?.id || '';
 
   const onModerate = useCallback(
-    async (memberDeviceId: string, action: 'approve' | 'reject') => {
+    async (memberUserId: string | null | undefined, memberDeviceId: string, action: 'approve' | 'reject') => {
       if (!selectedGroup) return;
       try {
-        await moderateGroupMember(selectedGroup.id, memberDeviceId, action);
+        await moderateGroupMember(selectedGroup.id, memberUserId, memberDeviceId, action);
         await loadGroupMembers(selectedGroup.id);
-        const list = await fetchGroups(60, actor.deviceId || undefined);
+        const list = await fetchGroups(60, actor.userId || undefined);
         setGroups(list);
         setFeedback(action === 'approve' ? 'Membre approuvé' : 'Membre refusé');
       } catch (e) {
@@ -981,11 +1046,16 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
         setFeedback('Échec de la modération');
       }
     },
-    [selectedGroup, loadGroupMembers, actor.deviceId]
+    [selectedGroup, loadGroupMembers, actor.userId]
   );
 
-  const isGroupAdmin = useCallback((group: CommunityGroup, deviceId: string) => {
-    return group.created_by_device_id === deviceId || !!(group.admin_ids && group.admin_ids.includes(deviceId));
+  const isGroupAdmin = useCallback((group: CommunityGroup, userId: string | null | undefined, deviceId: string) => {
+    if (userId && group.user_id === userId) return true;
+    if (group.created_by_device_id === deviceId) return true;
+    return !!(group.admin_ids && (
+      (userId && group.admin_ids.includes(userId)) || 
+      group.admin_ids.includes(deviceId)
+    ));
   }, []);
 
   useEffect(() => {
@@ -1362,6 +1432,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
     setCreateState('saving');
     try {
       const passCode = isPaid ? 'CHARIS-' + Math.random().toString(36).substring(2, 7).toUpperCase() : '';
+      if (!actor.userId) throw new Error('Authentification requise.');
       const created = await createGroup({
         name: trimmedName,
         description: description.trim(),
@@ -1402,7 +1473,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
 
   const onJoin = async (groupId: string, code?: string) => {
     if (!ensureAuth()) return;
-    if (!actor.deviceId) return;
+    if (!actor.userId) return;
     const group = groups.find(g => g.id === groupId);
     
     if (group?.is_paid && (!code || code.trim().toUpperCase() !== group.pass_code?.trim().toUpperCase())) {
@@ -1414,6 +1485,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
       return;
     }
 
+    if (!actor.userId) return;
     setActionState((prev) => ({ ...prev, [groupId]: true }));
     try {
       await joinGroup(groupId, actor.deviceId, actor.displayName, actor.userId);
@@ -1429,10 +1501,10 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
   };
 
   const onLeave = async (groupId: string) => {
-    if (!actor.deviceId) return;
+    if (!actor.userId) return;
     setActionState((prev) => ({ ...prev, [groupId]: true }));
     try {
-      await leaveGroup(groupId, actor.deviceId);
+      await leaveGroup(groupId, actor.userId);
       await loadGroups();
       if (groupId === selectedGroupId) {
         await loadGroupMembers(groupId);
@@ -1446,9 +1518,10 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
 
   const onSaveGroupSettings = async () => {
     if (!selectedGroup) return;
+    if (!actor.userId) return;
     setSavingGroupState(true);
     try {
-      await updateGroup(selectedGroup.id, actor.deviceId, {
+      await updateGroup(selectedGroup.id, actor.userId, {
         description: detailDescription.trim(),
         call_provider: detailCallProvider,
         call_link: detailCallLink.trim() || null,
@@ -1480,39 +1553,37 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
     }
   };
 
-  const onPromoteAdmin = async (memberDeviceId: string) => {
-    if (!selectedGroup || !actor.deviceId || !isGroupAdmin(selectedGroup, actor.deviceId)) return;
-    setActionState((prev) => ({ ...prev, [`promote-${memberDeviceId}`]: true }));
+  const onPromoteAdmin = async (memberUserId: string) => {
+    if (!selectedGroup || !actor.userId || !isGroupAdmin(selectedGroup, actor.userId, actor.deviceId)) return;
+    setActionState((prev) => ({ ...prev, [`promote-${memberUserId}`]: true }));
     try {
-      const newAdminIds = [...(selectedGroup.admin_ids || []), memberDeviceId];
-      await updateGroup(selectedGroup.id, actor.deviceId, { admin_ids: newAdminIds });
+      const newAdminIds = [...(selectedGroup.admin_ids || []), memberUserId];
+      await updateGroup(selectedGroup.id, actor.userId, { admin_ids: newAdminIds });
       setFeedback(t('community.groups.adminPromoted'));
       await loadGroups(); // Refresh groups to get updated admin_ids
       await loadGroupMembers(selectedGroup.id); // Refresh members list
     } catch {
       setFeedback(t('community.groups.actionError'));
     } finally {
-      setActionState((prev) => ({ ...prev, [`promote-${memberDeviceId}`]: false }));
+      setActionState((prev) => ({ ...prev, [`promote-${memberUserId}`]: false }));
     }
   };
 
   const onDeleteGroup = async (groupId: string) => {
-    if (!actor.deviceId) return;
+    if (!actor.userId) return;
     setActionState((prev) => ({ ...prev, [groupId]: true }));
     try {
-      const { deleteGroup } = await import('./communityApi');
-      await deleteGroup(groupId, actor.deviceId);
-      setFeedback(t('community.groups.deleted') || 'Groupe supprime.');
+      await deleteGroup(groupId, actor.userId);
+      setFeedback(t('community.groups.deleted'));
       setSelectedGroupId('');
       updateGroupQuery('');
       await loadGroups();
-    } catch (error: any) {
-      setFeedback(error?.message || t('community.groups.actionError'));
+    } catch {
+      setFeedback(t('community.groups.actionError'));
     } finally {
       setActionState((prev) => ({ ...prev, [groupId]: false }));
     }
   };
-
 
   const onShareGroup = async (groupId: string) => {
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
