@@ -1083,7 +1083,7 @@ export async function triggerGroupCallPush(payload: {
         channelNames.map(
           (channelName) =>
             new Promise<void>((resolve) => {
-              const channel = supabase.channel(`outgoing:${channelName}:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`);
+              const channel = supabase.channel(channelName);
               channel.subscribe(async (status: string) => {
                 if (status === 'SUBSCRIBED') {
                   try {
@@ -1102,14 +1102,12 @@ export async function triggerGroupCallPush(payload: {
                       },
                     });
                   } finally {
-                    supabase.removeChannel(channel);
                     resolve();
                   }
                   return;
                 }
 
                 if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-                  supabase.removeChannel(channel);
                   resolve();
                 }
               });

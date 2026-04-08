@@ -113,8 +113,13 @@ export default function GlobalCallManager() {
 
         const setupListeners = async () => {
             try {
-                logger.log('[GlobalCallManager] Fetching groups for device:', deviceId);
-                const groups = await fetchGroups(40, deviceId);
+                // Cleanup previous channels to avoid duplicate listeners
+                channels.forEach(ch => client.removeChannel(ch));
+                channels.length = 0;
+
+                const userId = identity?.userId || null;
+                logger.log('[GlobalCallManager] Fetching groups for device:', deviceId, 'user:', userId);
+                const groups = await fetchGroups(40, deviceId, userId);
                 if (!active) return;
                 logger.log('[GlobalCallManager] Groups fetched:', groups.length, groups.map(g => g.id));
 
@@ -123,7 +128,6 @@ export default function GlobalCallManager() {
                 }
 
                 // Only subscribe to groups where the user is effectively a member.
-                // Subscribing to every public group can trigger CHANNEL_ERROR for non-members.
                 const joinedGroups = groups.filter(
                     (group) => group.joined || group.created_by_device_id === deviceId
                 );
@@ -206,8 +210,14 @@ export default function GlobalCallManager() {
 
         setupListeners();
 
+        // Refresh periodically (every 2 minutes) or when tab regains focus
+        const refreshInterval = setInterval(setupListeners, 120000);
+        window.addEventListener('focus', setupListeners);
+
         return () => {
             active = false;
+            clearInterval(refreshInterval);
+            window.removeEventListener('focus', setupListeners);
             channels.forEach(ch => {
                 client.removeChannel(ch);
             });
