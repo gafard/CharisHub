@@ -67,10 +67,12 @@ export async function POST(req: Request) {
     // Créer les invitations pour chaque membre (sauf initiateur)
     logger.log('[start-call] step=filter-other-members');
     const approvedMembers = (groupMembers ?? []).filter((member: any) => !member.status || member.status === 'approved');
-    const otherMembers = approvedMembers.filter((m: any) => 
-      (m.device_id && m.device_id !== userId) && // legacy check if device_id happened to be the userId
-      (m.user_id && m.user_id !== userId)
-    );
+    const otherMembers = approvedMembers.filter((m: any) => {
+      // Exclure l'initiateur de l'appel (par device_id OU user_id)
+      if (m.device_id && m.device_id === userId) return false;
+      if (m.user_id && m.user_id === userId) return false;
+      return true;
+    });
     logger.log('[start-call] step=create-invites');
     const invitePromises = otherMembers.map(member =>
       client.from('charishub_group_call_invites').upsert({
@@ -150,7 +152,12 @@ async function sendPushNotificationsToOfflineMembers(
     // Send to ALL members except initiator (no offline-only filter)
     const memberDeviceIds = groupMembers
       .filter((m: any) => !m.status || m.status === 'approved')
-      .filter((m: any) => (m.user_id && m.user_id !== initiatorId) || (m.device_id && m.device_id !== initiatorId))
+      .filter((m: any) => {
+        // Exclure l'initiateur (par deviceId OU userId)
+        if (m.user_id && m.user_id === initiatorId) return false;
+        if (m.device_id && m.device_id === initiatorId) return false;
+        return true;
+      })
       .map((m: any) => m.device_id)
       .filter(id => !!id);
 

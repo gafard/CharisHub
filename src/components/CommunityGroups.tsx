@@ -1145,7 +1145,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
       if (shouldAnnounce) {
         call = await startGroupCallSession({
           groupId: selectedGroup.id,
-          userId: actor.deviceId,
+          userId: actor.userId || actor.deviceId,
           userName: actor.displayName,
         });
         if (call) {

@@ -14,16 +14,8 @@ import { sendNotification } from './notifications';
 type IncomingCallPayload = {
     callId: string;
     groupId: string;
-    startedBy: string; // Device ID
+    startedBy: string;
     startedByUserName: string;
-    groupName?: string;
-    startedAt?: string;
-};
-
-type InviteEventPayload = {
-    callId?: string;
-    startedBy?: string;
-    startedByUserName?: string;
     groupName?: string;
     startedAt?: string;
 };
@@ -32,63 +24,52 @@ export default function GlobalCallManager() {
     const router = useRouter();
     const { identity } = useCommunityIdentity();
     const deviceId = identity?.deviceId;
+    const userId = identity?.userId;
     const [incomingCall, setIncomingCall] = useState<IncomingCallPayload | null>(null);
 
-    // Référence pour l'audio de sonnerie (fichier audio standard)
-    const ringtoneAudioRef = useRef<HTMLAudioElement | null>(null);
+    const ringtoneAudioRef = useRef<HTMLAudioElement | AudioContext | null>(null);
     const ringingIntervalRef = useRef<number | null>(null);
     const recentInviteRef = useRef<Record<string, number>>({});
 
+    // ── STOP RINGING ──
     const stopRinging = useCallback(() => {
         if (ringingIntervalRef.current) {
             clearInterval(ringingIntervalRef.current);
             ringingIntervalRef.current = null;
         }
         if (ringtoneAudioRef.current) {
-            // Vérifier si c'est un HTMLAudioElement ou un AudioContext
             const audio = ringtoneAudioRef.current as any;
-            if (audio.pause) {
-                // C'est un HTMLAudioElement
+            if (typeof audio.pause === 'function') {
                 audio.pause();
                 audio.currentTime = 0;
-            } else if (audio.close) {
-                // C'est un AudioContext (fallback Web Audio)
+            } else if (typeof audio.close === 'function') {
                 audio.close().catch(() => {});
             }
             ringtoneAudioRef.current = null;
         }
     }, []);
 
-    // Jouer un motif de sonnerie téléphonique classique (Web Audio fallback)
     const playRingtonePattern = useCallback((ctx: AudioContext) => {
         const playTone = () => {
-            if (!ringtoneAudioRef.current) return;
-            
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
-
             osc.connect(gain);
             gain.connect(ctx.destination);
-
             osc.type = 'sine';
-            // Motif de sonnerie téléphonique : 440Hz + 480Hz
             osc.frequency.setValueAtTime(440, ctx.currentTime);
-            osc.frequency.setValueAtTime(480, ctx.currentTime + 0.1);
-
+            osc.frequency.setValueAtTime(480, ctx.currentTime + 0.15);
             gain.gain.setValueAtTime(0, ctx.currentTime);
             gain.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 0.05);
-            gain.gain.setValueAtTime(0.15, ctx.currentTime + 0.25);
+            gain.gain.setValueAtTime(0.15, ctx.currentTime + 0.3);
             gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.5);
-
             osc.start(ctx.currentTime);
             osc.stop(ctx.currentTime + 0.5);
         };
-
         playTone();
         ringingIntervalRef.current = window.setInterval(playTone, 1500);
     }, []);
 
-    // Fallback : sonnerie avec Web Audio API (nécessite interaction utilisateur)
+    // ── START RINGING ──
     const startRingingWithWebAudio = useCallback(() => {
         if (ringtoneAudioRef.current) return;
 
@@ -100,21 +81,8 @@ export default function GlobalCallManager() {
             
             // Vérifier si le contexte est suspended (bloqué par le navigateur)
             if (ctx.state === 'suspended') {
-                console.warn('[GlobalCallManager] Web Audio suspendu. En attente d\'interaction utilisateur...');
-                
-                const resumeAndRing = () => {
-                    ctx.resume().then(() => {
-                        playRingtonePattern(ctx);
-                        ringtoneAudioRef.current = ctx as any;
-                    }).catch(() => {});
-                    
-                    window.removeEventListener('click', resumeAndRing);
-                    window.removeEventListener('touchstart', resumeAndRing);
-                };
-                
-                window.addEventListener('click', resumeAndRing, { once: true });
-                window.addEventListener('touchstart', resumeAndRing, { once: true });
-                return;
+                logger.warn('[GlobalCallManager] Web Audio suspendu. Tentative de reprise...');
+                ctx.resume().catch(() => {});
             }
 
             playRingtonePattern(ctx);
@@ -127,76 +95,111 @@ export default function GlobalCallManager() {
         }
     }, [stopRinging, playRingtonePattern]);
 
-    // Démarrer la sonnerie avec un fichier audio standard
+    // ── GLOABL UNLOCK ──
+    // Resumer l'AudioContext au premier clic utilisateur (nécessaire pour les navigateurs)
+    useEffect(() => {
+        const resumeAudio = () => {
+            // Créer un contexte temporaire juste pour le "réveiller"
+            const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+            if (ctx.state === 'suspended') {
+                ctx.resume().catch(() => {});
+            }
+            logger.log('[GlobalCallManager] AudioContext unlocked by user interaction');
+            window.removeEventListener('click', resumeAudio);
+            window.removeEventListener('touchstart', resumeAudio);
+            window.removeEventListener('keydown', resumeAudio);
+        };
+        window.addEventListener('click', resumeAudio);
+        window.addEventListener('touchstart', resumeAudio);
+        window.addEventListener('keydown', resumeAudio);
+        return () => {
+            window.removeEventListener('click', resumeAudio);
+            window.removeEventListener('touchstart', resumeAudio);
+            window.removeEventListener('keydown', resumeAudio);
+        };
+    }, []);
+
     const startRinging = useCallback(() => {
-        if (ringtoneAudioRef.current) return; // Déjà en train de sonner
+        if (ringtoneAudioRef.current) return;
 
         try {
-            // Utiliser un fichier audio standard (plus fiable que Web Audio API)
+            // Essayer d'abord avec un fichier audio (plus fiable)
             const audio = new Audio('/sounds/ringtone.wav');
             audio.loop = true;
-            audio.volume = 0.7;
-            
-            // Gérer les erreurs de lecture
+            audio.volume = 0.8;
+
             audio.onerror = () => {
-                console.warn('[GlobalCallManager] ringtone.wav non trouvé, utilisation du fallback Web Audio');
-                // Fallback : utiliser Web Audio API si le fichier n'existe pas
-                startRingingWithWebAudio();
+                logger.warn('[GlobalCallManager] ringtone.wav non trouvé, fallback Web Audio');
+                // Fallback Web Audio API
+                try {
+                    const Ctor = window.AudioContext || (window as any).webkitAudioContext;
+                    if (!Ctor) return;
+                    const ctx = new Ctor();
+                    ringtoneAudioRef.current = ctx;
+
+                    const playTone = () => {
+                        if (!ringtoneAudioRef.current) return;
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(440, ctx.currentTime);
+                        osc.frequency.setValueAtTime(480, ctx.currentTime + 0.15);
+                        gain.gain.setValueAtTime(0, ctx.currentTime);
+                        gain.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 0.05);
+                        gain.gain.setValueAtTime(0.15, ctx.currentTime + 0.3);
+                        gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.5);
+                        osc.start(ctx.currentTime);
+                        osc.stop(ctx.currentTime + 0.5);
+                    };
+                    playTone();
+                    ringingIntervalRef.current = window.setInterval(playTone, 1500);
+                    setTimeout(stopRinging, 30000);
+                } catch (e2) {
+                    logger.error('[GlobalCallManager] Web Audio fallback failed:', e2);
+                }
             };
 
-            // Essayer de jouer le son
             const playPromise = audio.play();
-            
-            if (playPromise !== undefined) {
-                playPromise.catch((error) => {
-                    // Si l'autoplay est bloqué, on réessaiera au prochain clic utilisateur
-                    console.warn('[GlobalCallManager] Sonnerie bloquée (autoplay policy). Interaction utilisateur requise.');
-                    
-                    // Ajouter un listener one-shot pour jouer au prochain clic
-                    const playOnInteraction = () => {
-                        if (ringtoneAudioRef.current && incomingCall) {
-                            ringtoneAudioRef.current.play().catch(() => {});
-                        }
-                        window.removeEventListener('click', playOnInteraction);
-                        window.removeEventListener('touchstart', playOnInteraction);
+            if (playPromise) {
+                playPromise.catch(() => {
+                    logger.warn('[GlobalCallManager] Autoplay blocked, waiting for interaction');
+                    const resume = () => {
+                        audio.play().catch(() => {});
+                        window.removeEventListener('click', resume);
+                        window.removeEventListener('touchstart', resume);
                     };
-                    
-                    window.addEventListener('click', playOnInteraction, { once: true });
-                    window.addEventListener('touchstart', playOnInteraction, { once: true });
+                    window.addEventListener('click', resume, { once: true });
+                    window.addEventListener('touchstart', resume, { once: true });
                 });
             }
-
             ringtoneAudioRef.current = audio;
-
-            // Auto-stop après 30s pour ne pas sonner indéfiniment
             setTimeout(() => {
-                if (ringtoneAudioRef.current === audio) {
-                    stopRinging();
-                }
+                if (ringtoneAudioRef.current === audio) stopRinging();
             }, 30000);
         } catch (e) {
-            console.error('[GlobalCallManager] Erreur sonnerie:', e);
+            logger.error('[GlobalCallManager] Erreur sonnerie:', e);
         }
-    }, [stopRinging, incomingCall, startRingingWithWebAudio]);
+    }, [stopRinging]);
 
+    // ── REACT TO incomingCall STATE ──
     useEffect(() => {
         if (incomingCall) {
             document.body.classList.add('group-call-incoming-active');
             releaseAudioFocus();
-            // Start ringing immediately if context was already resumed
             startRinging();
         } else {
             document.body.classList.remove('group-call-incoming-active');
             stopRinging();
         }
-
         return () => {
             document.body.classList.remove('group-call-incoming-active');
             stopRinging();
         };
     }, [incomingCall, startRinging, stopRinging]);
 
-    // 1. Écouter les invitations sur TOUS les groupes de l'utilisateur
+    // ── LISTEN FOR CALL INVITES ON ALL JOINED GROUPS ──
     useEffect(() => {
         if (!deviceId || !supabase) return;
         const client = supabase;
@@ -206,81 +209,89 @@ export default function GlobalCallManager() {
 
         const setupListeners = async () => {
             try {
-                // Cleanup previous channels to avoid duplicate listeners
+                // Cleanup previous channels
                 channels.forEach(ch => client.removeChannel(ch));
                 channels.length = 0;
 
-                const userId = identity?.userId || null;
                 logger.log('[GlobalCallManager] Fetching groups for device:', deviceId, 'user:', userId);
                 const groups = await fetchGroups(40, deviceId, userId);
                 if (!active) return;
-                logger.log('[GlobalCallManager] Groups fetched:', groups.length, groups.map(g => g.id));
+                logger.log('[GlobalCallManager] Groups fetched:', groups.length);
 
                 if (groups.length === 0) {
-                    logger.warn('[GlobalCallManager] No groups found. User will not receive calls.');
-                }
-
-                // Only subscribe to groups where the user is effectively a member.
-                const joinedGroups = groups.filter(
-                    (group) => group.joined || group.created_by_device_id === deviceId
-                );
-                if (joinedGroups.length === 0) {
-                    logger.log('[GlobalCallManager] No joined groups. Skipping call listeners.');
+                    logger.warn('[GlobalCallManager] No groups found.');
                     return;
                 }
 
-                joinedGroups.forEach(group => {
+                // S'abonner à TOUS les groupes visibles, pas seulement les "joined"
+                // Un utilisateur qui voit un groupe devrait pouvoir recevoir les appels
+                const targetGroups = groups.filter(
+                    (g) => g.joined || g.created_by_device_id === deviceId || 
+                           (userId && g.created_by_device_id === userId)
+                );
+
+                if (targetGroups.length === 0) {
+                    logger.log('[GlobalCallManager] No target groups. Listening on ALL visible groups as fallback.');
+                }
+
+                const groupsToListen = targetGroups.length > 0 ? targetGroups : groups;
+
+                groupsToListen.forEach(group => {
+                    // Utiliser un nom de canal unique pour l'écouteur (avec un suffixe)
+                    // pour éviter le conflit avec le canal de l'émetteur
                     const channelNames = [`group-call:${group.id}`, `group:${group.id}`];
 
                     channelNames.forEach((channelName) => {
-                        logger.log('[GlobalCallManager] Subscribing to channel:', channelName);
+                        logger.log('[GlobalCallManager] Subscribing to:', channelName);
                         const channel = client.channel(channelName);
-                        
-                        // Update global status for diagnostics
+
+                        // Diagnostics
                         if (typeof window !== 'undefined') {
-                            const statusObj = (window as any).__callSystemStatus || { channels: {} };
-                            statusObj.channels[channelName] = 'subscribing';
-                            (window as any).__callSystemStatus = statusObj;
+                            const st = (window as any).__callSystemStatus || { channels: {}, deviceId, userId };
+                            st.channels[channelName] = 'subscribing';
+                            st.deviceId = deviceId;
+                            st.userId = userId;
+                            (window as any).__callSystemStatus = st;
                         }
-                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+
                         // @ts-ignore
-                        channel.on('broadcast', { event: 'call.invite' }, ({ payload }) => {
-                            const raw = (payload ?? {}) as InviteEventPayload;
+                        channel.on('broadcast', { event: 'call.invite' }, ({ payload: raw }) => {
+                            if (!raw) return;
                             const callId = String(raw.callId || group.id);
                             const startedBy = String(raw.startedBy || '');
 
                             if (!startedBy) return;
-                            if (startedBy === deviceId) {
-                                logger.log('[GlobalCallManager] Ignoring own call');
+                            // Ignorer ses propres appels (par deviceId OU userId)
+                            if (startedBy === deviceId) return;
+                            if (userId && raw.callerUserId === userId) {
+                                logger.log('[GlobalCallManager] Ignoring own call (by userId)');
                                 return;
                             }
 
-                            const dedupeKey = `${callId}:${startedBy}`;
+                            // Anti-doublon
+                            const key = `${callId}:${startedBy}`;
                             const now = Date.now();
-                            const lastSeen = recentInviteRef.current[dedupeKey] || 0;
-                            if (now - lastSeen < 1800) {
-                                return;
-                            }
-                            recentInviteRef.current[dedupeKey] = now;
+                            if (now - (recentInviteRef.current[key] || 0) < 5000) return;
+                            recentInviteRef.current[key] = now;
 
-                            logger.log('[GlobalCallManager] 📞 EVENT RECEIVED:', raw);
-                            logger.log('[GlobalCallManager] 🔔 RINGER TRIGGERED for call:', callId);
-                            setIncomingCall((prev) => {
-                                if (prev?.callId === callId) return prev;
-                                return {
-                                    callId,
-                                    groupId: group.id,
-                                    startedBy,
-                                    startedByUserName: String(raw.startedByUserName || 'Un membre'),
-                                    groupName: String(raw.groupName || group.name || 'Groupe'),
-                                    startedAt: String(raw.startedAt || new Date().toISOString()),
-                                };
+                            logger.log('[GlobalCallManager] 📞 INCOMING CALL:', raw);
+
+                            setIncomingCall({
+                                callId,
+                                groupId: group.id,
+                                startedBy,
+                                // Accepter TOUS les noms de champs possibles
+                                startedByUserName: String(
+                                    raw.callerName || raw.startedByUserName || 
+                                    raw.callerDisplayName || 'Un membre'
+                                ),
+                                groupName: String(raw.groupName || group.name || 'Groupe'),
+                                startedAt: String(raw.startedAt || new Date().toISOString()),
                             });
-                            // La sonnerie est déclenchée par l'useEffect réagissant à incomingCall
-                            
+
                             void sendNotification({
-                                title: `Appel de groupe: ${String(raw.groupName || group.name || 'Communaute')}`,
-                                body: `${String(raw.startedByUserName || 'Un membre')} vous invite a rejoindre l'appel`,
+                                title: `📞 Appel: ${String(raw.groupName || group.name || 'Groupe')}`,
+                                body: `${String(raw.callerName || raw.startedByUserName || 'Un membre')} vous invite`,
                                 tag: `group-call-${callId}`,
                                 url: `/groups?group=${encodeURIComponent(group.id)}&call=${encodeURIComponent(callId)}&autoJoin=true`,
                                 icon: '/globe.svg',
@@ -288,53 +299,38 @@ export default function GlobalCallManager() {
                         });
 
                         channel.subscribe((status: string) => {
-                            logger.log(`[GlobalCallManager] 📡 Channel ${channelName} status:`, status);
-                            
-                            // Update global status for diagnostics
+                            logger.log(`[GlobalCallManager] 📡 ${channelName}: ${status}`);
                             if (typeof window !== 'undefined') {
-                                const statusObj = (window as any).__callSystemStatus || { channels: {} };
-                                statusObj.channels[channelName] = status;
-                                (window as any).__callSystemStatus = statusObj;
-                            }
-
-                            if (status === 'SUBSCRIBED') {
-                                logger.log(`[GlobalCallManager] ✅ Ready on ${channelName}`);
-                            } else if (status === 'CHANNEL_ERROR') {
-                                logger.warn(
-                                    `[GlobalCallManager] ⚠️ Realtime unavailable for ${channelName} (permission or network)`
-                                );
-                            } else if (status === 'TIMED_OUT') {
-                                logger.warn(`[GlobalCallManager] ⚠️ Timeout subscribing to ${channelName}`);
+                                const st = (window as any).__callSystemStatus || { channels: {} };
+                                st.channels[channelName] = status;
+                                (window as any).__callSystemStatus = st;
                             }
                         });
                         channels.push(channel);
                     });
                 });
 
-                logger.log(`[GlobalCallManager] Écoute des appels sur ${joinedGroups.length} groupes rejoints`);
+                logger.log(`[GlobalCallManager] ✅ Listening on ${groupsToListen.length} groups`);
             } catch (e) {
-                console.error('[GlobalCallManager] Erreur setup:', e);
+                console.error('[GlobalCallManager] Setup error:', e);
             }
         };
 
         setupListeners();
 
-        // Refresh periodically (every 2 minutes) or when tab regains focus
+        // Rafraîchir toutes les 2 minutes et au retour de l'onglet
         const refreshInterval = setInterval(setupListeners, 120000);
-        window.addEventListener('focus', setupListeners);
+        const onFocus = () => setupListeners();
+        window.addEventListener('focus', onFocus);
 
         return () => {
             active = false;
             clearInterval(refreshInterval);
-            window.removeEventListener('focus', setupListeners);
-            channels.forEach(ch => {
-                client.removeChannel(ch);
-            });
+            window.removeEventListener('focus', onFocus);
+            channels.forEach(ch => client.removeChannel(ch));
             stopRinging();
         };
-    }, [deviceId, startRinging, stopRinging]);
-
-    // 3. Actions UI handled by IncomingGroupCallModal
+    }, [deviceId, userId, startRinging, stopRinging]);
 
     if (!incomingCall) return null;
 

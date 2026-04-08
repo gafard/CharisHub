@@ -32,7 +32,7 @@ self.addEventListener('push', function (event) {
       badge,
       tag,
       data: { url },
-      vibrate: [200, 100, 200],
+      vibrate: tag?.includes('call') ? [500, 200, 500, 200, 1000] : [200, 100, 200],
       requireInteraction: tag?.includes('call'), // Calls don't auto-dismiss
       actions: tag?.includes('call') ? [
         { action: 'join', title: 'Rejoindre' },
