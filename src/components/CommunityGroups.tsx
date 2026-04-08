@@ -997,13 +997,13 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
   );
 
   const loadGroupMembers = useCallback(
-    async (groupId: string) => {
+    async (groupId: string, silent = false) => {
       if (!groupId) {
         setGroupMembers([]);
         setMembersStatus('idle');
         return;
       }
-      setMembersStatus('loading');
+      if (!silent) setMembersStatus('loading');
       try {
         const members = await fetchGroupMembers(groupId, 120);
         setGroupMembers(members);
@@ -1196,8 +1196,8 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
     router.replace(url, { scroll: false });
   }, [autoJoinRequested, pathname, queryGroupId, router, searchParams, selectedGroup]);
 
-  const loadGroups = useCallback(async () => {
-    setStatus('loading');
+  const loadGroups = useCallback(async (silent = false) => {
+    if (!silent) setStatus('loading');
     try {
       const list = await fetchGroups(60, actor.deviceId || undefined, actor.userId || undefined);
       setGroups(list);
@@ -1212,7 +1212,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
       } else if (selectedGroupId) {
         setSelectedGroupId('');
       }
-      setStatus('ready');
+      if (!silent || status === 'loading') setStatus('ready');
     } catch {
       setStatus('error');
       setFeedback(t('community.groups.loadError'));
@@ -1311,10 +1311,10 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
     let timer: number | null = null;
     let pollTimer: number | null = null;
 
-    const refreshNow = () => {
-      void loadGroups();
+    const refreshNow = (silent = true) => {
+      void loadGroups(silent);
       if (selectedGroupId) {
-        void loadGroupMembers(selectedGroupId);
+        void loadGroupMembers(selectedGroupId, silent);
       }
     };
 
@@ -1326,13 +1326,13 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
     };
 
     const onVisibility = () => {
-      if (document.visibilityState === 'visible') refreshNow();
+      if (document.visibilityState === 'visible') refreshNow(true);
     };
-    window.addEventListener('focus', refreshNow);
+    window.addEventListener('focus', () => refreshNow(true));
     document.addEventListener('visibilitychange', onVisibility);
     pollTimer = window.setInterval(() => {
       if (document.visibilityState !== 'visible') return;
-      refreshNow();
+      refreshNow(true);
     }, 12000);
 
     const realtimeClient = supabase;
@@ -1351,7 +1351,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
     return () => {
       if (timer) window.clearTimeout(timer);
       if (pollTimer) window.clearInterval(pollTimer);
-      window.removeEventListener('focus', refreshNow);
+      window.removeEventListener('focus', () => refreshNow(true));
       document.removeEventListener('visibilitychange', onVisibility);
       if (realtimeClient && channel) {
         realtimeClient.removeChannel(channel);

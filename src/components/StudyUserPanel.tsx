@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useI18n } from '../contexts/I18nContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { useCommunityIdentity } from '../lib/useCommunityIdentity';
@@ -123,6 +124,41 @@ export default function StudyUserPanel({
 
   return (
     <section className="space-y-4">
+      {/* 👑 PORTAIL DASHBOARD (MON INTIMITÉ) */}
+      <Link 
+        href="/dashboard"
+        className="group relative block overflow-hidden rounded-[32px] border border-amber-200/50 bg-gradient-to-br from-amber-50 to-white p-6 shadow-[0_18px_48px_rgba(200,159,45,0.12)] transition-all hover:scale-[1.01] hover:shadow-[0_24px_56px_rgba(200,159,45,0.18)] active:scale-[0.99]"
+      >
+        <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-amber-200/20 blur-3xl transition-all group-hover:bg-amber-300/30" />
+        
+        <div className="relative flex items-center justify-between">
+          <div className="flex items-center gap-5">
+            <div className="flex h-16 w-16 items-center justify-center rounded-[24px] bg-gradient-to-br from-amber-400 to-amber-600 shadow-lg shadow-amber-200/50">
+              <Heart className="h-8 w-8 text-white animate-pulse" />
+            </div>
+            
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-600">
+                  Espace Sacré
+                </span>
+                <Sparkles className="h-3 w-3 text-amber-500 animate-spin-slow" />
+              </div>
+              <h2 className="mt-1 text-2xl font-black tracking-tight text-[#161c35]">
+                Mon Intimité
+              </h2>
+              <p className="text-xs font-bold text-amber-700/60 transition-colors group-hover:text-amber-700/80">
+                Mémoire de Ses bontés et pépites d'identité
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 transition-all group-hover:bg-amber-600 group-hover:text-white">
+            <ArrowRight size={20} />
+          </div>
+        </div>
+      </Link>
+
       {/* COMPTE */}
       <div className="overflow-hidden rounded-[32px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]/95 shadow-[0_18px_40px_rgba(16,24,40,0.06)]">
         <div className="relative p-5 sm:p-6">

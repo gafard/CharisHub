@@ -1334,6 +1334,34 @@ export async function fetchPosts(limit = 30, kind?: CommunityKind, groupId?: str
       return (data ?? []).map(normalizePost);
     }
 
+    // FALLBACK 1: Missing column 'media_type' or 'media_url' (Unified media fallback)
+    if (isMissingColumnError(error, 'media_type') || isMissingColumnError(error, 'media_url')) {
+      const { data: fallback, error: fbError } = await supabase
+        .from('charishub_posts')
+        .select(`
+          id, created_at, updated_at, author_name, author_device_id, 
+          user_id, content, group_id, likes_count, 
+          comments_count, kind, visibility
+        `)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      
+      if (!fbError && fallback) {
+        return (fallback ?? []).map(normalizePost);
+      }
+
+      // ULTIMATE FALLBACK: Very minimal set
+      if (fbError) {
+        const { data: minimal, error: minError } = await supabase
+          .from('charishub_posts')
+          .select(`id, created_at, author_name, content`)
+          .order('created_at', { ascending: false })
+          .limit(limit);
+        if (!minError && minimal) return (minimal ?? []).map(normalizePost);
+      }
+    }
+
+    // FALLBACK 2: Missing column 'visibility'
     if (isMissingColumnError(error, 'visibility')) {
       const fallback = await supabase
         .from('charishub_posts')
@@ -1431,14 +1459,21 @@ export async function fetchPostById(postId: string) {
       .eq('id', postId)
       .eq('visibility', 'public')
       .maybeSingle();
-    if (error && isMissingColumnError(error, 'visibility')) {
-      const fallback = await supabase
+
+    if (error && (
+      isMissingColumnError(error, 'visibility') || 
+      isMissingColumnError(error, 'media_type') || 
+      isMissingColumnError(error, 'media_url')
+    )) {
+      const { data: fallback, error: fbError } = await supabase
         .from('charishub_posts')
-        .select('*')
+        .select(`
+          id, created_at, author_name, content, author_device_id
+        `)
         .eq('id', postId)
         .maybeSingle();
-      data = fallback.data;
-      error = fallback.error;
+      data = fallback;
+      error = fbError;
     }
     if (error) throw error;
     if (data && !isPublicVisibilityRow(data)) return null;
