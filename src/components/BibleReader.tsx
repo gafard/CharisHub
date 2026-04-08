@@ -3366,6 +3366,14 @@ export default function BibleReader({
           onClose={() => setShareVerseTarget(null)}
         />
       )}
+
+      <HuiosVisionModal
+        isOpen={huiosModalOpen}
+        onClose={() => setHuiosModalOpen(false)}
+        content={huiosAnalysis}
+        loading={huiosLoading}
+        reference={activeVerseReference}
+      />
     </section>
   );
 }
