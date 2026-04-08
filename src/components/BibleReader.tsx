@@ -3068,7 +3068,14 @@ export default function BibleReader({
         onHuios={() => {
           if (!selectedVerse) return;
           setStudyBarOpen(false);
-          onVerseAction(selectedVerse, 'huios');
+          setActiveVerseReference(`${book.name} ${chapter}:${selectedVerse.number}`);
+          setHuiosModalOpen(true);
+          setHuiosLoading(true);
+          graceService.analyzeVerse(selectedVerse.text, `${book.name} ${chapter}:${selectedVerse.number}`)
+            .then(res => {
+              setHuiosAnalysis(res.content);
+              setHuiosLoading(false);
+            });
         }}
       />
       <BibleStudyRadar
