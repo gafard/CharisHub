@@ -359,20 +359,7 @@ function GroupCard({
         </div>
       </button>
 
-      {isCreator && onDelete && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onDelete();
-          }}
-          className="absolute right-4 top-4 z-10 grid h-10 w-10 place-items-center rounded-2xl border border-white/60 bg-white/80 text-rose-600 shadow-lg backdrop-blur-md transition hover:bg-rose-500 hover:text-white"
-          title={t('community.groups.deleteGroup')}
-        >
-          <Trash2 size={16} />
-        </button>
-      )}
+      {/* Bouton de suppression retiré de la vue directe selon la demande utilisateur */}
     </div>
   );
 }

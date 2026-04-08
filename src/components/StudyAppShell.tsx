@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState, type ReactNode } from 'react';
+import { useState, type ReactNode, useEffect } from 'react';
 import { BookOpen, Home, Settings, Users, LogIn, User as UserIcon, TrendingUp } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthModal from './AuthModal';
@@ -13,12 +13,6 @@ const NAV_ITEMS = [
     label: 'Parole',
     icon: BookOpen,
     match: (pathname: string) => pathname.startsWith('/bible'),
-  },
-  {
-    href: '/dashboard',
-    label: 'Parcours',
-    icon: TrendingUp,
-    match: (pathname: string) => pathname.startsWith('/dashboard'),
   },
   {
     href: '/groups',
@@ -38,6 +32,17 @@ export default function StudyAppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { user, profile, loading } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  // Nettoyage ponctuel du stockage local des groupes (migration vers Supabase ou suppression de tests)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const purgeKey = 'charishub_purge_local_groups_v1';
+      if (!window.localStorage.getItem(purgeKey)) {
+        window.localStorage.removeItem('formation_biblique_local_groups_v1');
+        window.localStorage.setItem(purgeKey, 'done');
+        console.log('[CharisHub] Purge du stockage local effectuée.');
+      }
+    }
+  }, []);
 
   return (
     <div className="relative min-h-screen bg-[#FCF9F3] text-[#1a2142]">

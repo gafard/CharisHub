@@ -15,8 +15,12 @@ import {
   UserRound,
   Wifi,
   WifiOff,
+  Heart,
+  Sparkles,
+  ArrowRight,
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useI18n } from '../contexts/I18nContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { useCommunityIdentity } from '../lib/useCommunityIdentity';
