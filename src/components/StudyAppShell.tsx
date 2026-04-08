@@ -9,6 +9,12 @@ import AuthModal from './AuthModal';
 
 const NAV_ITEMS = [
   {
+    href: '/',
+    label: 'Accueil',
+    icon: Home,
+    match: (pathname: string) => pathname === '/',
+  },
+  {
     href: '/bible',
     label: 'Parole',
     icon: BookOpen,
@@ -112,8 +118,9 @@ export default function StudyAppShell({ children }: { children: ReactNode }) {
 
       <main className="relative mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-12">{children}</main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[#e8ebf1] bg-white/90 px-3 py-3 pb-safe backdrop-blur-xl md:hidden">
-        <div className="mx-auto grid max-w-xl grid-cols-4 gap-1">
+      {/* Mobile Bottom Nav - Refined Design */}
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[#e8ebf1]/50 bg-white/80 px-2 py-2 pb-safe backdrop-blur-2xl md:hidden">
+        <div className="mx-auto grid max-w-lg grid-cols-4 gap-1">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const active = item.match(pathname);
@@ -122,14 +129,30 @@ export default function StudyAppShell({ children }: { children: ReactNode }) {
                 key={item.href}
                 href={item.href}
                 className={[
-                  'flex flex-col items-center justify-center rounded-2xl px-2 py-2 text-[11px] font-semibold transition-all',
+                  'relative flex flex-col items-center justify-center rounded-2xl px-1 py-2 text-[10px] font-bold transition-all duration-300 active:scale-90',
                   active
                     ? 'text-[#b78616]'
-                    : 'text-[color:var(--foreground)]/40 hover:text-[color:var(--foreground)] hover:bg-[#fffdf9]',
+                    : 'text-[#1a2142]/40 hover:text-[#1a2142]/60',
                 ].join(' ')}
               >
-                <Icon size={16} />
-                <span className="mt-1">{item.label}</span>
+                <div className={`relative mb-1 flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 ${active ? 'bg-amber-100/50 shadow-sm' : ''}`}>
+                  <Icon size={active ? 22 : 20} strokeWidth={active ? 2.5 : 2} />
+                  {active && (
+                    <motion.div 
+                      layoutId="active-nav-bg"
+                      className="absolute inset-0 rounded-xl bg-amber-200/20"
+                    />
+                  )}
+                </div>
+                <span className={`transition-all duration-300 ${active ? 'scale-105 font-black tracking-tight' : 'font-bold'}`}>
+                  {item.label}
+                </span>
+                {active && (
+                  <motion.div 
+                    layoutId="active-nav-dot"
+                    className="absolute -bottom-1 h-1 w-1 rounded-full bg-amber-500" 
+                  />
+                )}
               </Link>
             );
           })}
