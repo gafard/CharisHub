@@ -46,6 +46,8 @@ function save(data: StreakData): void {
     localStorage.setItem(STREAK_KEY, JSON.stringify(data));
 }
 
+import { syncLocalToCloud, exportAllLocalData } from './cloudSync';
+
 /**
  * Call this when the user reads a Bible chapter.
  * Safe to call multiple times per day — it only increments the streak once per day.
@@ -59,22 +61,46 @@ export function recordReading(): StreakData {
     if (data.lastReadDate === today) {
         data.totalChapters += 1;
         save(data);
-        return data;
+    } else {
+        // Read yesterday — streak continues!
+        if (data.lastReadDate === yesterday) {
+            data.current += 1;
+        }
+        // First read ever or missed a day — restart streak
+        else {
+            data.current = 1;
+        }
+
+        data.lastReadDate = today;
+        data.totalChapters += 1;
+        data.best = Math.max(data.best, data.current);
+        save(data);
+    }
+    
+    // Synchroniser vers le cloud en arrière-plan
+    try {
+        const fullData = exportAllLocalData();
+        const cloudStreak = {
+            current_streak: data.current,
+            best_streak: data.best,
+            last_read_date: data.lastReadDate,
+            total_chapters: data.totalChapters
+        };
+        void syncLocalToCloud({ 
+            highlights: Object.entries(fullData.highlights).map(([id, h]: any) => ({ ...h, id })),
+            notes: Object.entries(fullData.notes).map(([id, n]: any) => ({ note: n, id })),
+            bookmarks: fullData.bookmarks.map(id => ({ id })),
+            pepites: fullData.pepites.map(p => ({ ...p, pepite_type: p.type })),
+            readingProgress: [],
+            reflections: [],
+            streak: cloudStreak,
+            prayerSessions: fullData.prayerSessions.map(s => ({ ...s, id: s.id || Math.random().toString() })),
+            prayerJournal: fullData.prayerJournal
+        } as any);
+    } catch (e) {
+        // Ignorer les erreurs de sync silencieusement
     }
 
-    // Read yesterday — streak continues!
-    if (data.lastReadDate === yesterday) {
-        data.current += 1;
-    }
-    // First read ever or missed a day — restart streak
-    else {
-        data.current = 1;
-    }
-
-    data.lastReadDate = today;
-    data.totalChapters += 1;
-    data.best = Math.max(data.best, data.current);
-    save(data);
     return data;
 }
 

@@ -55,6 +55,8 @@ function save(sessions: PrayerFlowSession[]) {
     localStorage.setItem(STORE_KEY, JSON.stringify(trimmed));
 }
 
+import { syncLocalToCloud, exportAllLocalData } from './cloudSync';
+
 export function savePrayerFlowSession(
     session: Omit<PrayerFlowSession, 'id' | 'date'>
 ): PrayerFlowSession {
@@ -66,6 +68,37 @@ export function savePrayerFlowSession(
     const sessions = load();
     sessions.unshift(entry);
     save(sessions);
+    
+    // Synchroniser vers le cloud en arrière-plan
+    try {
+        const fullData = exportAllLocalData();
+        void syncLocalToCloud({
+            highlights: Object.entries(fullData.highlights).map(([id, h]: any) => ({ ...h, id })),
+            notes: Object.entries(fullData.notes).map(([id, n]: any) => ({ note: n, id })),
+            bookmarks: fullData.bookmarks.map(id => ({ id })),
+            pepites: fullData.pepites.map(p => ({ ...p, pepite_type: p.type })),
+            readingProgress: [],
+            reflections: [],
+            streak: {
+                current_streak: fullData.readingStreak.current,
+                best_streak: fullData.readingStreak.best,
+                last_read_date: fullData.readingStreak.lastReadDate,
+                total_chapters: fullData.readingStreak.totalChapters
+            },
+            prayerSessions: sessions.map(s => ({
+                id: s.id,
+                session_date: s.date,
+                plan_id: s.planId,
+                day_index: s.dayIndex,
+                reading_summary: getSessionReadingSummary(s),
+                total_duration_sec: s.totalDurationSec
+            })),
+            prayerJournal: fullData.prayerJournal
+        } as any);
+    } catch (e) {
+        // Ignore
+    }
+
     return entry;
 }
 

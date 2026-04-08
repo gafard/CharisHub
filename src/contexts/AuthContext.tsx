@@ -4,7 +4,7 @@ import logger from '@/lib/logger';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { claimLegacyData } from '@/lib/cloudSync';
+import { claimLegacyData, performInitialSync } from '@/lib/cloudSync';
 import { Session, User, AuthChangeEvent } from '@supabase/supabase-js';
 
 const AUTH_INIT_TIMEOUT_MS = 3500;
@@ -107,6 +107,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         await fetchProfile(nextUser.id);
         await migrateLocalDataToAccount(nextUser.id);
+        // Lancer la synchronisation initiale pour récupérer les données d'autres appareils
+        void performInitialSync();
       } catch (err) {
         logger.error('[Auth] Error while hydrating user context:', err);
       }

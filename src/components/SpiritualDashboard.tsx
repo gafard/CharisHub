@@ -1,3 +1,7 @@
+'use client';
+
+import React, { useEffect, useMemo, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Flame, BookOpen, Heart, Star, TrendingUp, Clock,
   Calendar, Award, Zap, MessageCircle, Users, Sparkles,
@@ -6,6 +10,9 @@ import {
 import { getStreak, type StreakData } from '@/lib/bibleStreak';
 import { getAllSessions, type PrayerFlowSession } from '@/lib/prayerFlowStore';
 import { pepitesStore, type Pepite } from '@/lib/pepitesStore';
+import { useAuth } from '@/contexts/AuthContext';
+import { performInitialSync } from '@/lib/cloudSync';
+import { RefreshCw, Check, Cloud } from 'lucide-react';
 
 // ============================================================
 // Types & Data
@@ -335,25 +342,60 @@ function StreakFlame({ streak }: { streak: StreakData }) {
 // ============================================================
 
 export default function SpiritualDashboard() {
+  const { user } = useAuth();
   const [streak, setStreak] = useState<StreakData>({ current: 0, best: 0, lastReadDate: '', totalChapters: 0 });
   const [sessions, setSessions] = useState<PrayerFlowSession[]>([]);
   const [pepites, setPepites] = useState<Pepite[]>([]);
   const [localData, setLocalData] = useState({ highlights: 0, notes: 0, bookmarks: 0, readingDays: [] as string[] });
   const [mounted, setMounted] = useState(false);
   const [dailyVerse, setDailyVerse] = useState<DailyVerse>(DAILY_VERSES[0]);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [lastSyncDate, setLastSyncDate] = useState<string | null>(null);
 
-  useEffect(() => {
+  const refreshLocalState = () => {
     setStreak(getStreak());
     setSessions(getAllSessions());
     setPepites(pepitesStore.load());
     setLocalData(collectLocalData());
+  };
+
+  useEffect(() => {
+    refreshLocalState();
     
     // Pick daily verse based on date
     const dayOfYear = Math.floor((new Date().getTime() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
     setDailyVerse(DAILY_VERSES[dayOfYear % DAILY_VERSES.length]);
     
+    // Load last sync date
+    const syncMetaRaw = localStorage.getItem('user_sync_metadata');
+    if (syncMetaRaw) {
+      try {
+        const meta = JSON.parse(syncMetaRaw);
+        if (meta.last_sync_at) setLastSyncDate(new Date(meta.last_sync_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+      } catch (e) {}
+    }
+
     setMounted(true);
-  }, []);
+
+    // Auto sync on mount if logged in
+    if (user) {
+      handleSync();
+    }
+  }, [user]);
+
+  const handleSync = async () => {
+    if (!user || isSyncing) return;
+    setIsSyncing(true);
+    try {
+      const result = await performInitialSync();
+      if (result.success) {
+        refreshLocalState();
+        setLastSyncDate(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+      }
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   const weekDays = useMemo(() => buildWeekData(sessions, streak), [sessions, streak]);
   const badges = useMemo(() => computeBadges(streak, sessions, pepites, localData), [streak, sessions, pepites, localData]);
@@ -376,6 +418,25 @@ export default function SpiritualDashboard() {
         <div className="absolute left-[10%] top-[5%] h-[400px] w-[400px] rounded-full bg-blue-500/5 blur-[120px]" />
         <div className="absolute right-[5%] bottom-[10%] h-[350px] w-[350px] rounded-full bg-amber-500/5 blur-[100px]" />
       </div>
+
+      {/* Cloud Sync Status */}
+      {user && (
+        <div className="flex justify-end pr-2">
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={handleSync}
+            disabled={isSyncing}
+            className="flex items-center gap-2 rounded-full bg-white/40 px-3 py-1.5 backdrop-blur-md border border-white/50 text-[10px] font-black tracking-wider text-[#141b37]/60 hover:bg-white/60 transition-colors"
+          >
+            {isSyncing ? (
+              <RefreshCw size={12} className="animate-spin text-amber-500" />
+            ) : (
+              <Cloud size={12} className="text-blue-500" />
+            )}
+            {isSyncing ? 'Synchronisation...' : lastSyncDate ? `Synchronisé à ${lastSyncDate}` : 'Synchroniser'}
+          </motion.button>
+        </div>
+      )}
 
       <div className="relative z-10 space-y-8">
         {/* Header Section */}
