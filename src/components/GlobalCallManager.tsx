@@ -34,8 +34,8 @@ export default function GlobalCallManager() {
     const deviceId = identity?.deviceId;
     const [incomingCall, setIncomingCall] = useState<IncomingCallPayload | null>(null);
 
-    // Référence pour l'oscillateur audio (sonnerie)
-    const audioContextRef = useRef<AudioContext | null>(null);
+    // Référence pour l'audio de sonnerie (fichier audio standard)
+    const ringtoneAudioRef = useRef<HTMLAudioElement | null>(null);
     const ringingIntervalRef = useRef<number | null>(null);
     const recentInviteRef = useRef<Record<string, number>>({});
 
@@ -44,11 +44,140 @@ export default function GlobalCallManager() {
             clearInterval(ringingIntervalRef.current);
             ringingIntervalRef.current = null;
         }
-        if (audioContextRef.current) {
-            audioContextRef.current.close().catch(() => { });
-            audioContextRef.current = null;
+        if (ringtoneAudioRef.current) {
+            // Vérifier si c'est un HTMLAudioElement ou un AudioContext
+            const audio = ringtoneAudioRef.current as any;
+            if (audio.pause) {
+                // C'est un HTMLAudioElement
+                audio.pause();
+                audio.currentTime = 0;
+            } else if (audio.close) {
+                // C'est un AudioContext (fallback Web Audio)
+                audio.close().catch(() => {});
+            }
+            ringtoneAudioRef.current = null;
         }
     }, []);
+
+    // Jouer un motif de sonnerie téléphonique classique (Web Audio fallback)
+    const playRingtonePattern = useCallback((ctx: AudioContext) => {
+        const playTone = () => {
+            if (!ringtoneAudioRef.current) return;
+            
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc.type = 'sine';
+            // Motif de sonnerie téléphonique : 440Hz + 480Hz
+            osc.frequency.setValueAtTime(440, ctx.currentTime);
+            osc.frequency.setValueAtTime(480, ctx.currentTime + 0.1);
+
+            gain.gain.setValueAtTime(0, ctx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 0.05);
+            gain.gain.setValueAtTime(0.15, ctx.currentTime + 0.25);
+            gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.5);
+
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.5);
+        };
+
+        playTone();
+        ringingIntervalRef.current = window.setInterval(playTone, 1500);
+    }, []);
+
+    // Fallback : sonnerie avec Web Audio API (nécessite interaction utilisateur)
+    const startRingingWithWebAudio = useCallback(() => {
+        if (ringtoneAudioRef.current) return;
+
+        try {
+            const AudioContextCtor = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+            if (!AudioContextCtor) return;
+            
+            const ctx = new AudioContextCtor();
+            
+            // Vérifier si le contexte est suspended (bloqué par le navigateur)
+            if (ctx.state === 'suspended') {
+                console.warn('[GlobalCallManager] Web Audio suspendu. En attente d\'interaction utilisateur...');
+                
+                const resumeAndRing = () => {
+                    ctx.resume().then(() => {
+                        playRingtonePattern(ctx);
+                        ringtoneAudioRef.current = ctx as any;
+                    }).catch(() => {});
+                    
+                    window.removeEventListener('click', resumeAndRing);
+                    window.removeEventListener('touchstart', resumeAndRing);
+                };
+                
+                window.addEventListener('click', resumeAndRing, { once: true });
+                window.addEventListener('touchstart', resumeAndRing, { once: true });
+                return;
+            }
+
+            playRingtonePattern(ctx);
+            ringtoneAudioRef.current = ctx as any;
+
+            // Auto-stop après 30s
+            setTimeout(stopRinging, 30000);
+        } catch (e) {
+            console.error('[GlobalCallManager] Erreur Web Audio fallback:', e);
+        }
+    }, [stopRinging, playRingtonePattern]);
+
+    // Démarrer la sonnerie avec un fichier audio standard
+    const startRinging = useCallback(() => {
+        if (ringtoneAudioRef.current) return; // Déjà en train de sonner
+
+        try {
+            // Utiliser un fichier audio standard (plus fiable que Web Audio API)
+            const audio = new Audio('/sounds/ringtone.wav');
+            audio.loop = true;
+            audio.volume = 0.7;
+            
+            // Gérer les erreurs de lecture
+            audio.onerror = () => {
+                console.warn('[GlobalCallManager] ringtone.wav non trouvé, utilisation du fallback Web Audio');
+                // Fallback : utiliser Web Audio API si le fichier n'existe pas
+                startRingingWithWebAudio();
+            };
+
+            // Essayer de jouer le son
+            const playPromise = audio.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.catch((error) => {
+                    // Si l'autoplay est bloqué, on réessaiera au prochain clic utilisateur
+                    console.warn('[GlobalCallManager] Sonnerie bloquée (autoplay policy). Interaction utilisateur requise.');
+                    
+                    // Ajouter un listener one-shot pour jouer au prochain clic
+                    const playOnInteraction = () => {
+                        if (ringtoneAudioRef.current && incomingCall) {
+                            ringtoneAudioRef.current.play().catch(() => {});
+                        }
+                        window.removeEventListener('click', playOnInteraction);
+                        window.removeEventListener('touchstart', playOnInteraction);
+                    };
+                    
+                    window.addEventListener('click', playOnInteraction, { once: true });
+                    window.addEventListener('touchstart', playOnInteraction, { once: true });
+                });
+            }
+
+            ringtoneAudioRef.current = audio;
+
+            // Auto-stop après 30s pour ne pas sonner indéfiniment
+            setTimeout(() => {
+                if (ringtoneAudioRef.current === audio) {
+                    stopRinging();
+                }
+            }, 30000);
+        } catch (e) {
+            console.error('[GlobalCallManager] Erreur sonnerie:', e);
+        }
+    }, [stopRinging, incomingCall, startRingingWithWebAudio]);
 
     useEffect(() => {
         if (incomingCall) {
@@ -66,63 +195,6 @@ export default function GlobalCallManager() {
             stopRinging();
         };
     }, [incomingCall, startRinging, stopRinging]);
-
-    // Resumer l'AudioContext au premier clic utilisateur (nécessaire pour les navigateurs)
-    useEffect(() => {
-        const resumeAudio = () => {
-            if (audioContextRef.current?.state === 'suspended') {
-                audioContextRef.current.resume();
-            }
-            window.removeEventListener('click', resumeAudio);
-            window.removeEventListener('touchstart', resumeAudio);
-        };
-        window.addEventListener('click', resumeAudio);
-        window.addEventListener('touchstart', resumeAudio);
-        return () => {
-            window.removeEventListener('click', resumeAudio);
-            window.removeEventListener('touchstart', resumeAudio);
-        };
-    }, []);
-
-    const startRinging = useCallback(() => {
-        if (audioContextRef.current) return;
-
-        try {
-            const AudioContextCtor = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-            if (!AudioContextCtor) return;
-            const ctx = new AudioContextCtor();
-            audioContextRef.current = ctx;
-
-            const playTone = () => {
-                if (!audioContextRef.current) return;
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(440, ctx.currentTime); // La4
-                osc.frequency.setValueAtTime(554.37, ctx.currentTime + 0.1); // Do#5
-
-                gain.gain.setValueAtTime(0, ctx.currentTime);
-                gain.gain.linearRampToValueAtTime(0.1, ctx.currentTime + 0.1);
-                gain.gain.setValueAtTime(0.1, ctx.currentTime + 0.3);
-                gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.6);
-
-                osc.start(ctx.currentTime);
-                osc.stop(ctx.currentTime + 0.6);
-            };
-
-            playTone();
-            ringingIntervalRef.current = window.setInterval(playTone, 2000);
-
-            // Auto-stop après 30s
-            setTimeout(stopRinging, 30000);
-        } catch (e) {
-            console.error('Audio play failed', e);
-        }
-    }, [stopRinging]);
 
     // 1. Écouter les invitations sur TOUS les groupes de l'utilisateur
     useEffect(() => {

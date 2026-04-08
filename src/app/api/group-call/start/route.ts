@@ -94,7 +94,7 @@ export async function POST(req: Request) {
 
     // Envoyer des notifications push aux membres hors ligne du groupe
     try {
-      await sendPushNotificationsToOfflineMembers(client, groupId, userId, call.id, call.room_id);
+      await sendPushNotificationsToOfflineMembers(client, groupId, userId, call.id, call.room_id, userName);
     } catch (pushError) {
       logger.error('Push notifications failed (ignored):', pushError);
       // Ne pas échouer l'appel si les notifications push échouent
@@ -125,7 +125,8 @@ async function sendPushNotificationsToOfflineMembers(
   groupId: string,
   initiatorId: string,
   callId: string,
-  roomId: string
+  roomId: string,
+  userName?: string
 ) {
   try {
     logger.log('[start-call] step=fetch-group-members-for-push');

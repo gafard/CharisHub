@@ -1085,7 +1085,7 @@ export async function triggerGroupCallPush(payload: {
         const pushPromise = new Promise<void>((resolve) => {
           try {
             const channel = supabase.channel(channelName);
-            
+
             const sendPayload = async () => {
               try {
                 await channel.send({
@@ -1120,9 +1120,17 @@ export async function triggerGroupCallPush(payload: {
                   setTimeout(resolve, 2000);
                 }
               });
-            })
-        )
-      );
+            }
+          } catch (e) {
+            console.error(`[triggerGroupCallPush] Error on ${channelName}:`, e);
+            resolve();
+          }
+        });
+        promises.push(pushPromise);
+      });
+
+      // Attendre que tous les broadcasts soient envoyés
+      await Promise.all(promises);
     }
 
     await authFetch('/api/push/group-call-notification', {
