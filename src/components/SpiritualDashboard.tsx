@@ -1,18 +1,28 @@
-'use client';
-
-import React, { useEffect, useMemo, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   Flame, BookOpen, Heart, Star, TrendingUp, Clock,
-  Calendar, Award, Zap, MessageCircle, Users, Sparkles
+  Calendar, Award, Zap, MessageCircle, Users, Sparkles,
+  Quote, Copy, Share2, Info
 } from 'lucide-react';
 import { getStreak, type StreakData } from '@/lib/bibleStreak';
 import { getAllSessions, type PrayerFlowSession } from '@/lib/prayerFlowStore';
 import { pepitesStore, type Pepite } from '@/lib/pepitesStore';
 
 // ============================================================
-// Types
+// Types & Data
 // ============================================================
+
+type DailyVerse = {
+  text: string;
+  ref: string;
+  theme: 'blue' | 'purple' | 'amber' | 'rose';
+};
+
+const DAILY_VERSES: DailyVerse[] = [
+  { text: "Je puis tout par celui qui me fortifie.", ref: "Philippiens 4:13", theme: 'blue' },
+  { text: "L'Éternel est mon berger: je ne manquerai de rien.", ref: "Psaume 23:1", theme: 'amber' },
+  { text: "Car je connais les projets que j'ai formés sur vous, dit l'Éternel, projets de paix et non de malheur.", ref: "Jérémie 29:11", theme: 'purple' },
+  { text: "Ne t'ai-je pas donné cet ordre: Fortifie-toi et prends courage ?", ref: "Josué 1:9", theme: 'rose' },
+];
 
 type Badge = {
   id: string;
@@ -33,133 +43,156 @@ type WeekDay = {
 };
 
 // ============================================================
-// Data Collection
+// Helpers
 // ============================================================
 
-function collectLocalData() {
-  if (typeof window === 'undefined') {
+function getPastoralWord(streak: StreakData): { title: string; text: string } {
+  if (streak.current >= 7) {
     return {
-      highlights: 0,
-      notes: 0,
-      bookmarks: 0,
-      readingDays: [] as string[],
+      title: "La Puissance de la Constance",
+      text: "Ta fidélité de 7 jours est un témoignage puissant. Continue de bâtir sur cette fondation solide, le Seigneur honore ta persévérance !"
     };
   }
+  if (streak.current >= 3) {
+    return {
+      title: "Tu Prends de l'Élan",
+      text: "Quel bonheur de voir ta série s'allonger. Ces moments quotidiens avec la Parole transforment ton cœur en profondeur."
+    };
+  }
+  if (streak.current > 0) {
+    return {
+      title: "Un Pas après l'Autre",
+      text: "Tu as fait le plus dur : commencer. Garde ce feu allumé aujourd'hui, une pépite t'attend dans ta lecture."
+    };
+  }
+  return {
+    title: "Dieu t'Attendait",
+    text: "Heureux de te revoir ! Ne regarde pas en arrière, aujourd'hui est une nouvelle opportunité de puiser à la Source."
+  };
+}
 
-  const highlightsRaw = localStorage.getItem('formation_biblique_bible_highlights_v1');
-  const highlights = highlightsRaw ? Object.keys(JSON.parse(highlightsRaw)).length : 0;
-
-  const notesRaw = localStorage.getItem('formation_biblique_bible_notes_v1');
-  const verseNotesRaw = localStorage.getItem('formation_biblique_bible_verse_notes_v1');
-  const notes = (notesRaw ? Object.keys(JSON.parse(notesRaw)).length : 0)
-              + (verseNotesRaw ? Object.keys(JSON.parse(verseNotesRaw)).length : 0);
-
-  const bookmarksRaw = localStorage.getItem('bible_bookmarks');
-  const bookmarks = bookmarksRaw ? JSON.parse(bookmarksRaw).length : 0;
-
-  return { highlights, notes, bookmarks, readingDays: [] };
+// ... (fonctions collectLocalData, buildWeekData, computeBadges inchangées mais réorganisées si besoin) ...
+function collectLocalData() {
+  if (typeof window === 'undefined') {
+    return { highlights: 0, notes: 0, bookmarks: 0, readingDays: [] as string[] };
+  }
+  const hlRaw = localStorage.getItem('formation_biblique_bible_highlights_v1');
+  const hl = hlRaw ? Object.keys(JSON.parse(hlRaw)).length : 0;
+  const ntRaw = localStorage.getItem('formation_biblique_bible_notes_v1');
+  const vntRaw = localStorage.getItem('formation_biblique_bible_verse_notes_v1');
+  const nt = (ntRaw ? Object.keys(JSON.parse(ntRaw)).length : 0) + (vntRaw ? Object.keys(JSON.parse(vntRaw)).length : 0);
+  const bmRaw = localStorage.getItem('bible_bookmarks');
+  const bm = bmRaw ? JSON.parse(bmRaw).length : 0;
+  return { highlights: hl, notes: nt, bookmarks: bm, readingDays: [] };
 }
 
 function buildWeekData(sessions: PrayerFlowSession[], streak: StreakData): WeekDay[] {
   const today = new Date();
   const days: WeekDay[] = [];
   const dayLabels = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
-
   const sessionDates = new Set(sessions.map(s => s.date.slice(0, 10)));
-
   for (let i = 6; i >= 0; i--) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
     const dateStr = d.toISOString().slice(0, 10);
     const hasPrayer = sessionDates.has(dateStr);
-
-    // Check reading from streak
     const isToday = i === 0;
-    const hasReading = isToday
-      ? streak.lastReadDate === dateStr
-      : sessionDates.has(dateStr); // Approximation
-
+    const hasReading = isToday ? streak.lastReadDate === dateStr : sessionDates.has(dateStr);
     let intensity: 0 | 1 | 2 | 3 = 0;
     if (hasReading && hasPrayer) intensity = 3;
     else if (hasReading || hasPrayer) intensity = 2;
     else if (sessionDates.has(dateStr)) intensity = 1;
-
-    days.push({
-      date: dateStr,
-      label: dayLabels[d.getDay()],
-      hasReading,
-      hasPrayer,
-      intensity,
-    });
+    days.push({ date: dateStr, label: dayLabels[d.getDay()], hasReading, hasPrayer, intensity });
   }
-
   return days;
 }
 
 function computeBadges(streak: StreakData, sessions: PrayerFlowSession[], pepites: Pepite[], localData: ReturnType<typeof collectLocalData>): Badge[] {
-  const totalPrayerMin = sessions.reduce((acc, s) => acc + s.totalDurationSec, 0) / 60;
-
   return [
-    {
-      id: 'first-flame',
-      icon: <Flame size={20} />,
-      label: 'Première Flamme',
-      description: 'Lire la Bible 1 jour de suite',
-      earned: streak.current >= 1,
-      progress: Math.min(1, streak.current / 1),
-      color: '#f97316',
-    },
-    {
-      id: 'week-warrior',
-      icon: <Zap size={20} />,
-      label: 'Guerrier de la Semaine',
-      description: '7 jours de lecture consécutifs',
-      earned: streak.best >= 7,
-      progress: Math.min(1, streak.best / 7),
-      color: '#eab308',
-    },
-    {
-      id: 'prayer-warrior',
-      icon: <Heart size={20} />,
-      label: 'Guerrier de Prière',
-      description: '10 sessions de prière guidée',
-      earned: sessions.length >= 10,
-      progress: Math.min(1, sessions.length / 10),
-      color: '#ec4899',
-    },
-    {
-      id: 'deep-diver',
-      icon: <BookOpen size={20} />,
-      label: 'Explorateur Profond',
-      description: 'Lire 50 chapitres',
-      earned: streak.totalChapters >= 50,
-      progress: Math.min(1, streak.totalChapters / 50),
-      color: '#3b82f6',
-    },
-    {
-      id: 'treasure-hunter',
-      icon: <Star size={20} />,
-      label: 'Chasseur de Trésors',
-      description: 'Collecter 5 pépites',
-      earned: pepites.length >= 5,
-      progress: Math.min(1, pepites.length / 5),
-      color: '#D4AF37',
-    },
-    {
-      id: 'highlighter',
-      icon: <Sparkles size={20} />,
-      label: 'Illuminateur',
-      description: 'Surligner 20 versets',
-      earned: localData.highlights >= 20,
-      progress: Math.min(1, localData.highlights / 20),
-      color: '#8b5cf6',
-    },
+    { id: 'first-flame', icon: <Flame size={20} />, label: 'Première Flamme', description: 'Lire la Bible 1 jour de suite', earned: streak.current >= 1, progress: Math.min(1, streak.current / 1), color: '#f97316' },
+    { id: 'week-warrior', icon: <Zap size={20} />, label: 'Guerrier de la Semaine', description: '7 jours de lecture consécutifs', earned: streak.best >= 7, progress: Math.min(1, streak.best / 7), color: '#eab308' },
+    { id: 'prayer-warrior', icon: <Heart size={20} />, label: 'Guerrier de Prière', description: '10 sessions de prière guidée', earned: sessions.length >= 10, progress: Math.min(1, sessions.length / 10), color: '#ec4899' },
+    { id: 'deep-diver', icon: <BookOpen size={20} />, label: 'Explorateur Profond', description: 'Lire 50 chapitres', earned: streak.totalChapters >= 50, progress: Math.min(1, streak.totalChapters / 50), color: '#3b82f6' },
+    { id: 'treasure-hunter', icon: <Star size={20} />, label: 'Chasseur de Trésors', description: 'Collecter 5 pépites', earned: pepites.length >= 5, progress: Math.min(1, pepites.length / 5), color: '#D4AF37' },
+    { id: 'highlighter', icon: <Sparkles size={20} />, label: 'Illuminateur', description: 'Surligner 20 versets', earned: localData.highlights >= 20, progress: Math.min(1, localData.highlights / 20), color: '#8b5cf6' },
   ];
 }
 
 // ============================================================
-// Sub-Components
+// Premium Sub-Components
 // ============================================================
+
+function DailyVerseCard({ verse }: { verse: DailyVerse }) {
+  const themeStyles = {
+    blue: 'from-blue-600 to-indigo-700 shadow-blue-500/20',
+    purple: 'from-purple-600 to-violet-800 shadow-purple-500/20',
+    amber: 'from-amber-500 to-orange-600 shadow-amber-500/20',
+    rose: 'from-rose-500 to-pink-600 shadow-rose-500/20',
+  }[verse.theme];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className={`relative overflow-hidden rounded-[32px] bg-gradient-to-br ${themeStyles} p-8 text-white shadow-2xl`}
+    >
+      <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
+      <div className="absolute bottom-[-20px] left-[-20px] h-32 w-32 rounded-full bg-black/10 blur-2xl" />
+      
+      <div className="relative z-10">
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 backdrop-blur-md">
+            <Sparkles size={14} className="text-white/80" />
+            <span className="text-[10px] font-black uppercase tracking-widest">Identité du Jour</span>
+          </div>
+          <button className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-all">
+            <Share2 size={16} />
+          </button>
+        </div>
+
+        <Quote size={32} className="mb-4 opacity-30" />
+        <h3 className="text-xl md:text-2xl font-black leading-tight tracking-tight">
+          « {verse.text} »
+        </h3>
+        <p className="mt-4 text-sm font-bold text-white/70 uppercase tracking-widest">
+          {verse.ref}
+        </p>
+
+        <div className="mt-8 flex gap-3">
+          <button 
+            onClick={() => navigator.clipboard.writeText(`"${verse.text}" - ${verse.ref}`)}
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3 text-xs font-black uppercase tracking-wider text-black transition-transform active:scale-95"
+          >
+            <Copy size={16} /> Copier
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+function PastoralInsight({ streak }: { streak: StreakData }) {
+  const word = getPastoralWord(streak);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.2 }}
+      className="flex items-start gap-4 rounded-[28px] border border-white/50 bg-white/40 p-6 backdrop-blur-xl shadow-lg ring-1 ring-black/5"
+    >
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#D4FF33] text-black shadow-inner">
+        <Users size={24} />
+      </div>
+      <div>
+        <h4 className="text-sm font-black text-[#141b37] uppercase tracking-wide">{word.title}</h4>
+        <p className="mt-1 text-xs leading-relaxed text-[#141b37]/60">
+          {word.text}
+        </p>
+      </div>
+    </motion.div>
+  );
+}
 
 function StatCard({ icon, label, value, subtext, color, delay = 0 }: {
   icon: React.ReactNode;
@@ -174,9 +207,9 @@ function StatCard({ icon, label, value, subtext, color, delay = 0 }: {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.5 }}
-      className="relative overflow-hidden rounded-2xl border border-[#e8ebf1] bg-white p-5 shadow-sm"
+      className="relative overflow-hidden rounded-[28px] border border-white/60 bg-white/60 p-5 backdrop-blur-md shadow-sm ring-1 ring-black/[0.02]"
     >
-      <div className="absolute -right-3 -top-3 opacity-[0.07]" style={{ color, fontSize: 64 }}>
+      <div className="absolute -right-3 -top-3 opacity-[0.05]" style={{ color, fontSize: 64 }}>
         {icon}
       </div>
       <div
@@ -185,9 +218,9 @@ function StatCard({ icon, label, value, subtext, color, delay = 0 }: {
       >
         {icon}
       </div>
-      <div className="text-2xl font-extrabold tracking-tight text-[#141b37]">{value}</div>
-      <div className="mt-0.5 text-xs font-semibold text-[#141b37]/50">{label}</div>
-      {subtext && <div className="mt-1 text-[10px] text-[#141b37]/35">{subtext}</div>}
+      <div className="text-2xl font-black tracking-tight text-[#141b37]">{value}</div>
+      <div className="mt-0.5 text-[10px] font-black uppercase tracking-widest text-[#141b37]/40">{label}</div>
+      {subtext && <div className="mt-1 text-[9px] font-bold text-[#141b37]/30 italic">{subtext}</div>}
     </motion.div>
   );
 }
@@ -205,35 +238,30 @@ function WeekHeatmap({ days }: { days: WeekDay[] }) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3, duration: 0.5 }}
-      className="rounded-2xl border border-[#e8ebf1] bg-white p-5 shadow-sm"
+      className="rounded-[28px] border border-white/60 bg-white/50 p-6 backdrop-blur-md shadow-sm"
     >
-      <div className="mb-4 flex items-center gap-2">
-        <Calendar size={16} className="text-amber-600" />
-        <span className="text-sm font-bold text-[#141b37]">Cette semaine</span>
+      <div className="mb-5 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Calendar size={16} className="text-amber-600" />
+          <span className="text-[10px] font-black uppercase tracking-widest text-[#141b37]">Activité Hebdo</span>
+        </div>
+        <div className="flex items-center gap-1">
+           {intensityColors.map((c, i) => (
+             <div key={i} className={`h-2 w-2 rounded-full ${c}`} />
+           ))}
+        </div>
       </div>
-      <div className="grid grid-cols-7 gap-2">
+      <div className="grid grid-cols-7 gap-3">
         {days.map((day) => (
-          <div key={day.date} className="flex flex-col items-center gap-1.5">
-            <span className="text-[10px] font-semibold text-[#141b37]/40">{day.label}</span>
+          <div key={day.date} className="flex flex-col items-center gap-2">
+            <span className="text-[9px] font-black text-[#141b37]/30 uppercase">{day.label}</span>
             <div
-              className={`h-9 w-9 rounded-lg transition-all ${intensityColors[day.intensity]} ${
-                day.intensity >= 2 ? 'ring-2 ring-amber-200/50' : ''
+              className={`h-9 w-9 md:h-11 md:w-11 rounded-xl transition-all ${intensityColors[day.intensity]} ${
+                day.intensity >= 2 ? 'ring-2 ring-amber-200/50 shadow-md shadow-amber-500/10' : ''
               }`}
-              title={`${day.date}${day.hasReading ? ' 📖' : ''}${day.hasPrayer ? ' 🙏' : ''}`}
             />
-            <div className="flex gap-0.5">
-              {day.hasReading && <span className="text-[8px]">📖</span>}
-              {day.hasPrayer && <span className="text-[8px]">🙏</span>}
-            </div>
           </div>
         ))}
-      </div>
-      <div className="mt-3 flex items-center justify-end gap-2 text-[9px] text-[#141b37]/35">
-        <span>Moins</span>
-        {intensityColors.map((c, i) => (
-          <div key={i} className={`h-3 w-3 rounded-sm ${c}`} />
-        ))}
-        <span>Plus</span>
       </div>
     </motion.div>
   );
@@ -244,20 +272,16 @@ function BadgeCard({ badge, index }: { badge: Badge; index: number }) {
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay: 0.1 * index, duration: 0.4 }}
-      className={`relative flex flex-col items-center gap-2 rounded-2xl border p-4 text-center transition-all ${
+      transition={{ delay: 0.05 * index, duration: 0.4 }}
+      whileHover={{ y: -4 }}
+      className={`relative flex flex-col items-center gap-2 rounded-[24px] border p-4 text-center transition-all ${
         badge.earned
-          ? 'border-amber-200 bg-gradient-to-b from-amber-50/80 to-white shadow-sm'
-          : 'border-[#e8ebf1] bg-white/50 opacity-60'
+          ? 'border-amber-200 bg-gradient-to-b from-amber-50/50 to-white shadow-md'
+          : 'border-black/5 bg-black/[0.02] grayscale opacity-40'
       }`}
     >
-      {badge.earned && (
-        <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-[10px] text-white shadow-lg">
-          ✓
-        </div>
-      )}
       <div
-        className="flex h-12 w-12 items-center justify-center rounded-2xl"
+        className="flex h-12 w-12 items-center justify-center rounded-2xl shadow-inner"
         style={{
           backgroundColor: badge.earned ? `${badge.color}15` : '#f0f0f0',
           color: badge.earned ? badge.color : '#999',
@@ -265,10 +289,9 @@ function BadgeCard({ badge, index }: { badge: Badge; index: number }) {
       >
         {badge.icon}
       </div>
-      <span className="text-[11px] font-bold text-[#141b37]">{badge.label}</span>
-      <span className="text-[9px] text-[#141b37]/40">{badge.description}</span>
+      <span className="text-[10px] font-black uppercase tracking-tight text-[#141b37]">{badge.label}</span>
       {!badge.earned && (
-        <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-[#f0ede6]">
+        <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-[#f0ede6]">
           <div
             className="h-full rounded-full transition-all"
             style={{ width: `${badge.progress * 100}%`, backgroundColor: badge.color }}
@@ -280,43 +303,27 @@ function BadgeCard({ badge, index }: { badge: Badge; index: number }) {
 }
 
 function StreakFlame({ streak }: { streak: StreakData }) {
-  const flameSize = Math.min(80, 32 + streak.current * 4);
-
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-      className="flex flex-col items-center rounded-2xl border border-amber-200/50 bg-gradient-to-b from-amber-50 to-[#fffdf8] p-6 shadow-sm"
+      className="flex flex-col items-center justify-center rounded-[32px] border border-amber-200/50 bg-gradient-to-b from-amber-50/80 to-[#fffdf8] p-6 shadow-sm ring-1 ring-amber-100/50"
     >
-      <motion.div
-        animate={{ y: [0, -6, 0] }}
-        transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
-        className="relative"
-      >
-        <span style={{ fontSize: flameSize }} className="block drop-shadow-lg">
-          🔥
-        </span>
-        {streak.current > 0 && (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="absolute -bottom-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-amber-500 text-xs font-black text-white shadow-lg"
-          >
-            {streak.current}
-          </motion.div>
-        )}
-      </motion.div>
-      <div className="mt-4 text-center">
-        <div className="text-lg font-extrabold text-[#141b37]">
-          {streak.current === 0
-            ? 'Commence ta série !'
-            : streak.current === 1
-              ? '1 jour de suite'
-              : `${streak.current} jours de suite`}
+      <div className="relative mb-4">
+        <motion.div
+           animate={{ scale: [1, 1.1, 1] }}
+           transition={{ repeat: Infinity, duration: 4 }}
+           className="h-20 w-20 rounded-full bg-amber-500/10 blur-2xl absolute inset-0"
+        />
+        <span className="text-5xl block drop-shadow-xl relative z-10">🔥</span>
+        <div className="absolute -right-1 -top-1 flex h-7 w-7 items-center justify-center rounded-full bg-amber-500 text-[10px] font-black text-white shadow-lg ring-2 ring-white">
+          {streak.current}
         </div>
-        <div className="mt-1 text-xs text-[#141b37]/40">
-          Record : {streak.best} jour{streak.best > 1 ? 's' : ''}
+      </div>
+      <div className="text-center">
+        <div className="text-xs font-black uppercase tracking-[0.2em] text-amber-600/60 mb-1">Série Actuelle</div>
+        <div className="text-xl font-black text-[#141b37]">
+          {streak.current} JOUR{streak.current > 1 ? 'S' : ''}
         </div>
       </div>
     </motion.div>
@@ -333,12 +340,18 @@ export default function SpiritualDashboard() {
   const [pepites, setPepites] = useState<Pepite[]>([]);
   const [localData, setLocalData] = useState({ highlights: 0, notes: 0, bookmarks: 0, readingDays: [] as string[] });
   const [mounted, setMounted] = useState(false);
+  const [dailyVerse, setDailyVerse] = useState<DailyVerse>(DAILY_VERSES[0]);
 
   useEffect(() => {
     setStreak(getStreak());
     setSessions(getAllSessions());
     setPepites(pepitesStore.load());
     setLocalData(collectLocalData());
+    
+    // Pick daily verse based on date
+    const dayOfYear = Math.floor((new Date().getTime() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+    setDailyVerse(DAILY_VERSES[dayOfYear % DAILY_VERSES.length]);
+    
     setMounted(true);
   }, []);
 
@@ -347,133 +360,102 @@ export default function SpiritualDashboard() {
   const earnedCount = badges.filter(b => b.earned).length;
 
   const totalPrayerMinutes = Math.round(sessions.reduce((acc, s) => acc + s.totalDurationSec, 0) / 60);
-  const totalPrayerSteps = sessions.reduce((acc, s) => acc + s.steps.filter(st => st.completed).length, 0);
 
   if (!mounted) {
     return (
-      <div className="flex h-64 items-center justify-center text-sm text-[#141b37]/40">
-        Chargement du tableau de bord...
+      <div className="flex h-64 items-center justify-center text-[10px] font-black uppercase tracking-widest text-[#141b37]/20">
+        Chargement...
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header motivationnel */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl border border-amber-200/30 bg-gradient-to-r from-[#fdfaf3] to-[#fffdf8] p-6"
-      >
-        <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-amber-600/60">
-          Tableau de Bord
-        </div>
-        <h2 className="mt-1 text-2xl font-extrabold tracking-tight text-[#141b37]">
-          Ton parcours spirituel
-        </h2>
-        <p className="mt-2 max-w-lg text-sm leading-relaxed text-[#141b37]/50">
-          Chaque jour de lecture et de prière te rapproche du cœur de Dieu.
-          Continue de grandir, tu avances bien. 💛
-        </p>
-      </motion.div>
-
-      {/* Streak + Stats */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <StreakFlame streak={streak} />
-        <div className="grid grid-cols-2 gap-3 sm:col-span-1 lg:col-span-2">
-          <StatCard
-            icon={<BookOpen size={20} />}
-            label="Chapitres lus"
-            value={streak.totalChapters}
-            subtext="Toute l'histoire"
-            color="#3b82f6"
-            delay={0.1}
-          />
-          <StatCard
-            icon={<Clock size={20} />}
-            label="Minutes de prière"
-            value={totalPrayerMinutes}
-            subtext={`${sessions.length} session${sessions.length > 1 ? 's' : ''}`}
-            color="#ec4899"
-            delay={0.15}
-          />
-          <StatCard
-            icon={<Star size={20} />}
-            label="Pépites collectées"
-            value={pepites.length}
-            subtext="Trésors d'identité"
-            color="#D4AF37"
-            delay={0.2}
-          />
-          <StatCard
-            icon={<Sparkles size={20} />}
-            label="Versets surlignés"
-            value={localData.highlights}
-            subtext={`${localData.notes} note${localData.notes > 1 ? 's' : ''}`}
-            color="#8b5cf6"
-            delay={0.25}
-          />
-        </div>
+    <div className="relative space-y-8 pb-10">
+      {/* Background Orbs */}
+      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        <div className="absolute left-[10%] top-[5%] h-[400px] w-[400px] rounded-full bg-blue-500/5 blur-[120px]" />
+        <div className="absolute right-[5%] bottom-[10%] h-[350px] w-[350px] rounded-full bg-amber-500/5 blur-[100px]" />
       </div>
 
-      {/* Heatmap Semaine */}
-      <WeekHeatmap days={weekDays} />
-
-      {/* Badges */}
-      <div>
-        <div className="mb-3 flex items-center gap-2">
-          <Award size={16} className="text-amber-600" />
-          <span className="text-sm font-bold text-[#141b37]">
-            Jalons spirituels
-          </span>
-          <span className="ml-auto text-xs text-[#141b37]/40">
-            {earnedCount}/{badges.length} débloqués
-          </span>
-        </div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          {badges.map((badge, i) => (
-            <BadgeCard key={badge.id} badge={badge} index={i} />
-          ))}
-        </div>
-      </div>
-
-      {/* Dernière session de prière */}
-      {sessions.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="rounded-2xl border border-[#e8ebf1] bg-white p-5 shadow-sm"
-        >
-          <div className="mb-3 flex items-center gap-2">
-            <Heart size={16} className="text-pink-500" />
-            <span className="text-sm font-bold text-[#141b37]">Dernière session de prière</span>
+      <div className="relative z-10 space-y-8">
+        {/* Header Section */}
+        <section className="flex flex-col md:flex-row gap-6">
+          <div className="flex-1">
+             <DailyVerseCard verse={dailyVerse} />
           </div>
-          <div className="flex flex-wrap gap-2">
-            {sessions[0].steps.map((step, i) => (
-              <span
-                key={i}
-                className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-semibold ${
-                  step.completed
-                    ? 'bg-green-50 text-green-700'
-                    : 'bg-gray-50 text-gray-400'
-                }`}
-              >
-                {step.emoji} {step.label}
-              </span>
+          <div className="md:w-1/3 flex flex-col gap-6">
+             <StreakFlame streak={streak} />
+             <PastoralInsight streak={streak} />
+          </div>
+        </section>
+
+        {/* Quick Stats Grid */}
+        <section>
+          <div className="mb-4 flex items-center gap-2">
+            <TrendingUp size={16} className="text-[#141b37]/30" />
+            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#141b37]/40">Statistiques Glissantes</h4>
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard icon={<BookOpen size={20} />} label="Chapitres" value={streak.totalChapters} subtext="Biblio intégrale" color="#3b82f6" delay={0.1} />
+            <StatCard icon={<Clock size={20} />} label="Prière" value={`${totalPrayerMinutes}m`} subtext={`${sessions.length} sessions`} color="#ec4899" delay={0.15} />
+            <StatCard icon={<Star size={20} />} label="Pépites" value={pepites.length} subtext="Identité trouvée" color="#D4AF37" delay={0.2} />
+            <StatCard icon={<Sparkles size={20} />} label="Lumières" value={localData.highlights} subtext={`${localData.notes} réflexions`} color="#8b5cf6" delay={0.25} />
+          </div>
+        </section>
+
+        {/* Heatmap Section */}
+        <section>
+          <WeekHeatmap days={weekDays} />
+        </section>
+
+        {/* Awards Section */}
+        <section>
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Award size={18} className="text-amber-500" />
+              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#141b37]/40">Collection de Badges</h4>
+            </div>
+            <div className="rounded-full bg-black/5 px-2 py-0.5 text-[9px] font-black">
+               {earnedCount}/{badges.length}
+            </div>
+          </div>
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+            {badges.map((badge, i) => (
+              <BadgeCard key={badge.id} badge={badge} index={i} />
             ))}
           </div>
-          <div className="mt-3 text-[10px] text-[#141b37]/35">
-            {new Date(sessions[0].date).toLocaleDateString('fr-FR', {
-              weekday: 'long',
-              day: 'numeric',
-              month: 'long',
-            })}
-            {' · '}
-            {Math.round(sessions[0].totalDurationSec / 60)} min
-          </div>
-        </motion.div>
-      )}
+        </section>
+
+        {/* Recent Prayer Summary */}
+        {sessions.length > 0 && (
+          <motion.section
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="rounded-[32px] border border-white/60 bg-gradient-to-br from-white/80 to-white/40 p-6 backdrop-blur-xl shadow-inner shadow-white/50"
+          >
+            <div className="mb-4 flex items-center gap-2">
+              <MessageCircle size={16} className="text-pink-500" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#141b37]/40">Dernière Intimité</span>
+            </div>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {sessions[0].steps.filter(s => s.completed).map((step, i) => (
+                <span key={i} className="flex items-center gap-1.5 rounded-xl bg-white/50 border border-white px-3 py-1.5 text-[10px] font-bold text-[#141b37]/80">
+                  {step.emoji} {step.label}
+                </span>
+              ))}
+            </div>
+            <div className="flex items-center justify-between text-[10px] font-bold text-[#141b37]/30 italic">
+               <span>
+                 {new Date(sessions[0].date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+               </span>
+               <div className="flex items-center gap-1">
+                 <Clock size={12} /> {Math.round(sessions[0].totalDurationSec / 60)} min
+               </div>
+            </div>
+          </motion.section>
+        )}
+      </div>
     </div>
   );
 }

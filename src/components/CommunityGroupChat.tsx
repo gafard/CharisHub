@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import logger from '@/lib/logger';
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import {
   Check,
@@ -832,7 +833,6 @@ export default function CommunityGroupChat({
     },
     [actor.deviceId, editingMessageId, loadMessages, replyToMessageId]
   );
-
   const onSubmit = useCallback(async () => {
     if (!canSend) return;
     if (!groupId || !actor.deviceId) {
@@ -842,6 +842,13 @@ export default function CommunityGroupChat({
 
     setSending(true);
     try {
+      logger.log('[Chat] onSubmit starting...', { 
+        actor: !!actor.userId, 
+        groupId, 
+        textLen: text.length, 
+        hasAttachment: !!attachmentFile 
+      });
+
       if (editingMessageId) {
         const target = parsedById.get(editingMessageId);
         if (!target) throw new Error('Message introuvable.');
@@ -851,7 +858,7 @@ export default function CommunityGroupChat({
           markEdited: true,
         });
 
-        if (!actor.userId) throw new Error('Authentification requise.');
+        if (!actor.userId) throw new Error('Authentification requise (session expirée).');
 
         await updatePost(editingMessageId, actor.userId, { content: nextContent });
         setFeedback('Message modifié.');
@@ -885,8 +892,9 @@ export default function CommunityGroupChat({
         replyToId: replyToMessageId,
       });
 
-      if (!actor.userId) throw new Error('Authentification requise pour publier.');
+      if (!actor.userId) throw new Error('Veuillez vous connecter pour publier dans ce groupe.');
 
+      logger.log('[Chat] Calling createPost...');
       await createPost({
         author_name: actor.displayName,
         author_device_id: actor.deviceId,
@@ -903,7 +911,9 @@ export default function CommunityGroupChat({
       await updatePresence({ typing: false });
       await loadMessages();
     } catch (error: any) {
-      setFeedback(error?.message || 'Impossible d’envoyer le message.');
+      logger.error('[Chat] Error in onSubmit:', error);
+      const msg = error?.message || 'Impossible d’envoyer le message.';
+      setFeedback(msg.includes('user_id') ? 'Erreur de permission (Auth requise)' : msg);
     } finally {
       setSending(false);
     }

@@ -7,6 +7,8 @@ import { supabase } from '@/lib/supabase';
 import { claimLegacyData } from '@/lib/cloudSync';
 import { Session, User, AuthChangeEvent } from '@supabase/supabase-js';
 
+const AUTH_INIT_TIMEOUT_MS = 3500;
+
 export type Profile = {
   id: string;
   display_name: string | null;
@@ -39,6 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   const fetchProfile = async (userId: string) => {
+    if (!supabase) return;
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -62,6 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const createProfile = async (userId: string, displayName?: string) => {
+    if (!supabase) return;
     try {
       const { error } = await supabase
         .from('profiles')
@@ -80,57 +84,81 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    const initAuth = async () => {
-      try {
-        if (!supabase) {
-          setLoading(false);
-          return;
-        }
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
 
-        const { data: { session } } = await supabase.auth.getSession();
-        setSession(session);
-        setUser(session?.user ?? null);
-
-        if (session?.user) {
-          await fetchProfile(session.user.id);
-          // Migrer les donnees locales vers le compte
-          await migrateLocalDataToAccount(session.user.id);
-        }
-      } catch (err) {
-        logger.error('[Auth] Error during initAuth:', err);
-      } finally {
+    let isActive = true;
+    const finishLoading = () => {
+      if (isActive) {
         setLoading(false);
       }
     };
 
-    initAuth();
+    const hydrateAuthenticatedUser = async (nextUser: User | null) => {
+      if (!nextUser) {
+        if (isActive) {
+          setProfile(null);
+        }
+        return;
+      }
+
+      try {
+        await fetchProfile(nextUser.id);
+        await migrateLocalDataToAccount(nextUser.id);
+      } catch (err) {
+        logger.error('[Auth] Error while hydrating user context:', err);
+      }
+    };
+
+    const loadingGuard = window.setTimeout(() => {
+      logger.warn('[Auth] Session bootstrap timed out; releasing app shell.');
+      finishLoading();
+    }, AUTH_INIT_TIMEOUT_MS);
+
+    const initAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!isActive) return;
+        setSession(session);
+        setUser(session?.user ?? null);
+        finishLoading();
+        void hydrateAuthenticatedUser(session?.user ?? null);
+      } catch (err) {
+        logger.error('[Auth] Error during initAuth:', err);
+      } finally {
+        window.clearTimeout(loadingGuard);
+        finishLoading();
+      }
+    };
+
+    void initAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event: AuthChangeEvent, session: Session | null) => {
       try {
+        if (!isActive) return;
         setSession(session);
         setUser(session?.user ?? null);
-
-        if (session?.user) {
-          await fetchProfile(session.user.id);
-          // Migrer les donnees locales vers le compte
-          await migrateLocalDataToAccount(session.user.id);
-        } else {
-          setProfile(null);
-        }
+        finishLoading();
+        void hydrateAuthenticatedUser(session?.user ?? null);
       } catch (err) {
         logger.error('[Auth] Error during onAuthStateChange:', err);
       } finally {
-        setLoading(false);
+        finishLoading();
       }
     });
 
     return () => {
+      isActive = false;
+      window.clearTimeout(loadingGuard);
       subscription.unsubscribe();
     };
   }, []);
 
   // Migrer les donnees localStorage vers le compte Supabase via RPC sécurisée
   const migrateLocalDataToAccount = async (userId: string) => {
+    if (!supabase) return;
     try {
       const raw = typeof window !== 'undefined' ? localStorage.getItem('formation_biblique_identity_v1') : null;
       if (!raw) return;
@@ -162,6 +190,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
+    if (!supabase) {
+      throw new Error('Authentification indisponible.');
+    }
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -172,12 +203,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    if (!supabase) {
+      throw new Error('Authentification indisponible.');
+    }
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   };
 
   // Connexion avec email + mot de passe
   const signInWithEmail = async (email: string, password: string) => {
+    if (!supabase) {
+      throw new Error('Authentification indisponible.');
+    }
     setError(null);
     const { error } = await supabase.auth.signInWithPassword({
       email: email.trim().toLowerCase(),
@@ -191,6 +228,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Inscription avec email + mot de passe + nom d'affichage
   const signUpWithEmail = async (email: string, password: string, displayName: string) => {
+    if (!supabase) {
+      throw new Error('Authentification indisponible.');
+    }
     setError(null);
     const { data, error } = await supabase.auth.signUp({
       email: email.trim().toLowerCase(),
@@ -218,6 +258,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const updateProfile = async (updates: Partial<Profile>) => {
     if (!user) return;
+    if (!supabase) {
+      throw new Error('Profil indisponible.');
+    }
     try {
       const { error } = await supabase
         .from('profiles')

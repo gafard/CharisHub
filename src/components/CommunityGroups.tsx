@@ -1587,13 +1587,14 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
     if (!actor.userId) return;
     setActionState((prev) => ({ ...prev, [groupId]: true }));
     try {
-      await deleteGroup(groupId, actor.userId);
+      await deleteGroup(groupId, actor.userId, actor.deviceId);
+      setShowDeleteConfirm(false);
       setFeedback(t('community.groups.deleted'));
       setSelectedGroupId('');
       updateGroupQuery('');
       await loadGroups();
-    } catch {
-      setFeedback(t('community.groups.actionError'));
+    } catch (error: any) {
+      setFeedback(error?.message || t('community.groups.actionError'));
     } finally {
       setActionState((prev) => ({ ...prev, [groupId]: false }));
     }

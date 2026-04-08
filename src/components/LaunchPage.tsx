@@ -9,6 +9,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { fetchGroups } from './communityApi';
 import AuthModal from './AuthModal';
 
+const SESSION_RESTORE_GUARD_MS = 2500;
+
 export default function LaunchPage() {
   const [mounted, setMounted] = useState(false);
   const [securityTimeout, setSecurityTimeout] = useState(false);
@@ -23,10 +25,10 @@ export default function LaunchPage() {
 
   useEffect(() => {
     setMounted(true);
-    // Secu : si apres 6s on est toujours en "restauration", on debloque
+    // Garde-fou: ne jamais bloquer durablement l'ouverture sur la restauration de session.
     const timer = setTimeout(() => {
       setSecurityTimeout(true);
-    }, 6000);
+    }, SESSION_RESTORE_GUARD_MS);
     return () => clearTimeout(timer);
   }, []);
 

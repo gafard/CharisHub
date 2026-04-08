@@ -916,6 +916,12 @@ function localCreateGroup(payload: {
 
 function localDeleteGroup(groupId: string, actorDeviceId?: string) {
   const groups = loadLocalGroups();
+  const target = groups.find((group) => group.id === groupId);
+  if (!target) return { ok: true };
+  if (actorDeviceId && target.created_by_device_id !== actorDeviceId) {
+    throw new Error('Vous pouvez supprimer uniquement les groupes que vous avez créés.');
+  }
+
   const next = groups.filter((g) => g.id !== groupId);
   if (next.length !== groups.length) {
     saveLocalGroups(next);
@@ -926,6 +932,8 @@ function localDeleteGroup(groupId: string, actorDeviceId?: string) {
     delete membersMap[groupId];
     saveLocalGroupMembers(membersMap);
   }
+
+  return { ok: true };
 }
 
 function localJoinGroup(groupId: string, deviceId: string, displayName: string) {
@@ -1483,14 +1491,22 @@ export async function createPost(payload: {
       .select('*')
       .single();
 
-    if (error) throw error;
-    if (!data) throw new Error('Erreur lors de la création du post.');
+    if (error) {
+      logger.error('[createPost] Supabase Insert Error:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      });
+      throw error;
+    }
+    if (!data) throw new Error('Erreur lors de la création du post (aucune donnée retournée).');
 
     const created = normalizePost(data);
     void triggerCommunityPostPush(created, payload.author_device_id);
     return created;
   } catch (error: any) {
-    console.error('[createPost] Error:', error.message);
+    logger.error('[createPost] Global Error:', error?.message || error);
     throw error;
   }
 }
@@ -2121,20 +2137,27 @@ export async function createGroup(payload: {
   }
 }
 
-export async function deleteGroup(groupId: string, userId: string) {
-  if (!supabase) throw new Error('Service indisponible.');
-  if (!userId) throw new Error('Authentification requise.');
-
+export async function deleteGroup(groupId: string, userId: string, actorDeviceId?: string) {
   const cleanedId = cleanUuid(groupId);
+  if (!cleanedId) throw new Error('Groupe introuvable.');
+
+  if (!supabase) {
+    return localDeleteGroup(cleanedId, actorDeviceId);
+  }
+  if (!userId) throw new Error('Authentification requise.');
   
   try {
-    const { error } = await supabase
-      .from('charishub_groups')
-      .delete()
-      .eq('id', cleanedId)
-      .eq('user_id', userId);
+    const response = await authFetch('/api/groups/delete', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ groupId: cleanedId }),
+    });
 
-    if (error) throw error;
+    const body = (await response.json().catch(() => ({}))) as { error?: string; ok?: boolean };
+    if (!response.ok || !body.ok) {
+      throw new Error(body.error || 'Erreur lors de la suppression du groupe.');
+    }
+
     return { ok: true };
   } catch (error: any) {
     throw new Error(error?.message || 'Erreur lors de la suppression du groupe.');

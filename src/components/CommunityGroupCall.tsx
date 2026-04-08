@@ -309,26 +309,26 @@ function StageVideo({
 
       {/* Internal Floating Action Bar */}
       {isLocalHost && (
-        <div className="absolute bottom-8 left-1/2 flex -translate-x-1/2 items-center gap-4 rounded-[40px] bg-black/50 p-2 backdrop-blur-3xl ring-1 ring-white/10">
+        <div className="absolute bottom-4 md:bottom-8 left-1/2 flex -translate-x-1/2 items-center gap-2 md:gap-4 rounded-[32px] md:rounded-[40px] bg-black/60 p-2 backdrop-blur-3xl ring-1 ring-white/10 max-w-[95vw] sm:max-w-none">
           <button
             onClick={(e) => { e.stopPropagation(); onToggleAudio(); }}
-            className={`flex h-12 w-12 items-center justify-center rounded-full transition-all ${
+            className={`flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-full transition-all ${
               localAudioEnabled ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-[#D4FF33] text-black shadow-[0_0_15px_rgba(212,255,51,0.3)]'
             }`}
           >
-            {localAudioEnabled ? <Mic size={20} /> : <MicOff size={20} />}
+            {localAudioEnabled ? <Mic size={18} className="md:w-[20px]" /> : <MicOff size={18} className="md:w-[20px]" />}
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onToggleVideo(); }}
-            className={`flex h-12 w-12 items-center justify-center rounded-full transition-all ${
+            className={`flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-full transition-all ${
               localVideoEnabled ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-[#D4FF33] text-black shadow-[0_0_15px_rgba(212,255,51,0.3)]'
             }`}
           >
-            {localVideoEnabled ? <Camera size={20} /> : <CameraOff size={20} />}
+            {localVideoEnabled ? <Camera size={18} className="md:w-[20px]" /> : <CameraOff size={18} className="md:w-[20px]" />}
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onToggleHand(); }}
-            className={`flex h-12 w-12 items-center justify-center rounded-full transition-all ${
+            className={`flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-full transition-all ${
               handRaised ? 'bg-[#D4FF33] text-black shadow-[0_0_15px_rgba(212,255,51,0.3)]' : 'bg-white/10 text-white hover:bg-white/20'
             }`}
             title={handRaised ? 'Baisser la main' : 'Lever la main'}
@@ -337,49 +337,49 @@ function StageVideo({
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onToggleShare(); }}
-            className={`flex h-12 w-12 items-center justify-center rounded-full transition-all ${
+            className={`hidden sm:flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-full transition-all ${
               localScreenSharing ? 'bg-[#D4FF33] text-black shadow-[0_0_15px_rgba(212,255,51,0.3)]' : 'bg-white/10 text-white hover:bg-white/20'
             }`}
           >
-            <ScreenShare size={20} />
+            <ScreenShare size={18} className="md:w-[20px]" />
           </button>
-          {/* === FONCTIONNALITÉ 6: BOUTON ENREGISTREMENT === */}
+          {/* === BOUTON ENREGISTREMENT (Visible uniquement sur plus grands écrans ou avec scroll sur mobile) === */}
           <button
             onClick={(e) => { e.stopPropagation(); isRecording ? onStopRecording() : onStartRecording(); }}
-            className={`flex h-12 w-12 items-center justify-center rounded-full transition-all ${
+            className={`flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-full transition-all ${
               isRecording ? 'bg-red-500 text-white shadow-[0_0_15px_rgba(239,68,68,0.4)] animate-pulse' : 'bg-white/10 text-white hover:bg-white/20'
             }`}
             title={isRecording ? 'Arrêter l\'enregistrement' : 'Démarrer l\'enregistrement'}
           >
-            {isRecording ? <Square size={18} /> : <Circle size={18} />}
+            {isRecording ? <Square size={16} className="md:w-[18px]" /> : <Circle size={16} className="md:w-[18px]" />}
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onLeave(); }}
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-500 text-white shadow-xl hover:bg-rose-600 active:scale-95 transition-all"
+            className="flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-full bg-rose-500 text-white shadow-xl hover:bg-rose-600 active:scale-95 transition-all"
           >
-            <Phone size={20} className="rotate-[135deg]" />
+            <Phone size={18} className="rotate-[135deg] md:w-[20px]" />
           </button>
         </div>
       )}
 
       {/* Floating Meta Labels */}
-      <div className="absolute left-6 top-6 flex items-center gap-3">
-        <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-black/40 px-4 py-2 backdrop-blur-xl ring-1 ring-white/5">
+      <div className="absolute left-4 top-4 md:left-6 md:top-6 flex flex-wrap items-center gap-2 md:gap-3">
+        <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-black/40 px-3 py-1.5 md:px-4 md:py-2 backdrop-blur-xl ring-1 ring-white/5">
           {participant?.isLocal && (
-             <div className="h-6 w-6 overflow-hidden rounded-full border border-white/20 bg-white/10">
-               <div className="flex h-full w-full items-center justify-center text-[8px] font-black">{initials(name)}</div>
+             <div className="h-5 w-5 md:h-6 md:w-6 overflow-hidden rounded-full border border-white/20 bg-white/10">
+               <div className="flex h-full w-full items-center justify-center text-[7px] md:text-[8px] font-black">{initials(name)}</div>
              </div>
           )}
-          <span className="text-xs font-bold text-white/90">{name}</span>
+          <span className="text-[10px] md:text-xs font-bold text-white/90 truncate max-w-[80px] md:max-w-none">{name}</span>
         </div>
         {speaking && (
-           <div className="flex items-center gap-2 rounded-full bg-[#D4FF33] px-3 py-1 text-[9px] font-black uppercase tracking-wider text-black">
-             <Mic size={10} /> EN PAROLE
+           <div className="flex items-center gap-1.5 md:gap-2 rounded-full bg-[#D4FF33] px-2 py-0.5 md:px-3 md:py-1 text-[8px] md:text-[9px] font-black uppercase tracking-wider text-black">
+             <Mic size={9} className="md:w-[10px]" /> <span className="hidden xs:inline">EN PAROLE</span>
            </div>
         )}
         {participant?.handRaised && (
-          <div className="flex items-center gap-2 rounded-full bg-amber-400 px-3 py-1 text-[9px] font-black uppercase tracking-wider text-black">
-            <Hand size={10} /> MAIN LEVÉE
+          <div className="flex items-center gap-1.5 md:gap-2 rounded-full bg-amber-400 px-2 py-0.5 md:px-3 md:py-1 text-[8px] md:text-[9px] font-black uppercase tracking-wider text-black">
+            <Hand size={9} className="md:w-[10px]" /> <span className="hidden xs:inline">MAIN LEVÉE</span>
           </div>
         )}
       </div>
@@ -417,6 +417,7 @@ export default function CommunityGroupCall({
   const [localVideoEnabled, setLocalVideoEnabled] = useState(true);
   const [localScreenSharing, setLocalScreenSharing] = useState(false);
   const [sidebarTab, setSidebarTab] = useState<'programme' | 'chat'>('programme');
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [screenShareStream, setScreenShareStream] = useState<MediaStream | null>(null);
   const [remotePeers, setRemotePeers] = useState<RemotePeer[]>([]);
@@ -1629,29 +1630,29 @@ export default function CommunityGroupCall({
   return (
     <section className="relative flex h-screen w-screen overflow-hidden bg-[#1a1c24] transition-all duration-700">
       
-      <div className="relative z-10 flex flex-1 flex-col p-6 lg:p-10">
+      <div className="relative z-10 flex flex-1 flex-col p-4 md:p-6 lg:p-10 min-h-0">
         
         {/* Floating Header */}
         <motion.header 
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="mx-auto flex w-full max-w-6xl items-center justify-between rounded-[40px] border border-white/10 bg-white/[0.03] px-8 py-5 backdrop-blur-3xl ring-1 ring-white/5"
+          className="mx-auto flex w-full max-w-6xl items-center justify-between rounded-[24px] md:rounded-[40px] border border-white/10 bg-white/[0.03] px-4 py-3 md:px-8 md:py-5 backdrop-blur-3xl ring-1 ring-white/5"
         >
-          <div className="flex items-center gap-6">
-            <button onClick={handleLeaveRoom} className="flex h-12 w-12 items-center justify-center rounded-full bg-white/5 text-white/50 hover:bg-white/10 hover:text-white transition-all">
-              <ChevronLeft size={24} />
+          <div className="flex items-center gap-2 md:gap-6">
+            <button onClick={handleLeaveRoom} className="flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-full bg-white/5 text-white/50 hover:bg-white/10 hover:text-white transition-all">
+              <ChevronLeft size={20} className="md:w-[24px]" />
             </button>
-            <div>
-              <h2 className="text-xl font-bold tracking-tight text-white/95 uppercase">{activeTask?.text}</h2>
-              <p className="text-[11px] font-medium text-white/40">Session de Groupe • {displayName || "Disciple"}</p>
+            <div className="min-w-0">
+              <h2 className="text-sm md:text-xl font-bold tracking-tight text-white/95 uppercase truncate max-w-[120px] md:max-w-none">{activeTask?.text}</h2>
+              <p className="text-[9px] md:text-[11px] font-medium text-white/40 truncate">Session de Groupe • {displayName || "Disciple"}</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2 md:gap-6">
             {/* === FONCTIONNALITÉ 1: CHRONOMÈTRE === */}
-            <div className="flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 ring-1 ring-white/10">
-              <div className={`h-2 w-2 rounded-full ${joined ? 'bg-emerald-400 animate-pulse' : 'bg-gray-500'}`} />
-              <span className="text-sm font-mono font-bold text-white/80">
+            <div className="hidden xs:flex items-center gap-2 rounded-full bg-white/5 px-3 py-1.5 md:px-4 md:py-2 ring-1 ring-white/10">
+              <div className={`h-1.5 w-1.5 md:h-2 md:w-2 rounded-full ${joined ? 'bg-emerald-400 animate-pulse' : 'bg-gray-500'}`} />
+              <span className="text-[10px] md:text-sm font-mono font-bold text-white/80">
                 {Math.floor(callDurationSec / 3600).toString().padStart(2, '0')}:
                 {Math.floor((callDurationSec % 3600) / 60).toString().padStart(2, '0')}:
                 {(callDurationSec % 60).toString().padStart(2, '0')}
@@ -1660,22 +1661,28 @@ export default function CommunityGroupCall({
 
             {/* === FONCTIONNALITÉ 6: INDICATEUR ENREGISTREMENT === */}
             {isRecording && (
-              <div className="flex items-center gap-2 rounded-full bg-red-500/20 px-4 py-2 ring-1 ring-red-500/40">
-                <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-                <span className="text-xs font-bold text-red-400">REC</span>
+              <div className="flex items-center gap-2 rounded-full bg-red-500/20 px-3 py-1.5 md:px-4 md:py-2 ring-1 ring-red-500/40">
+                <div className="h-1.5 w-1.5 md:h-2 md:w-2 rounded-full bg-red-500 animate-pulse" />
+                <span className="text-[10px] md:text-xs font-bold text-red-400">REC</span>
               </div>
             )}
 
-            <div className="flex items-center gap-3 rounded-full bg-white/5 px-5 py-2 ring-1 ring-white/10">
+            <div className="hidden sm:flex items-center gap-3 rounded-full bg-white/5 px-5 py-2 ring-1 ring-white/10">
                <Link2 size={16} className="text-white/30 " />
                <span className="text-[12px] font-mono font-medium text-white/60 tracking-wider font-bold">MODE-ÉTUDE</span>
             </div>
-            <div className="flex -space-x-3">
-               {participants.map((p, i) => (
-                 <div key={p.peerId} className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#1a1c24] bg-slate-700 text-[10px] font-black text-white shadow-xl" style={{ zIndex: 10 - i }}>
+            
+            <div className="flex -space-x-2 md:-space-x-3">
+               {participants.slice(0, 3).map((p, i) => (
+                 <div key={p.peerId} className="flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-full border-2 border-[#1a1c24] bg-slate-700 text-[8px] md:text-[10px] font-black text-white shadow-xl" style={{ zIndex: 10 - i }}>
                    {initials(p.displayName)}
                  </div>
                ))}
+               {participants.length > 3 && (
+                 <div className="flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-full border-2 border-[#1a1c24] bg-[#D4FF33] text-[8px] md:text-[10px] font-black text-black shadow-xl" style={{ zIndex: 0 }}>
+                   +{participants.length - 3}
+                 </div>
+               )}
             </div>
           </div>
         </motion.header>
@@ -1694,11 +1701,11 @@ export default function CommunityGroupCall({
         ) : null}
 
         {/* Main Area */}
-        <div className="mt-8 flex flex-1 gap-8 min-h-0 overflow-hidden">
+        <div className="mt-4 md:mt-8 flex flex-1 flex-col md:flex-row gap-4 md:gap-8 min-h-0 overflow-hidden">
           
           {/* Stage */}
-          <div className="flex flex-[2.8] flex-col gap-8 min-w-0 relative">
-             <div className="flex-1 flex min-h-0 relative bg-black/20 rounded-[32px] overflow-hidden border border-white/10 shadow-2xl">
+          <div className="flex flex-1 md:flex-[2.8] flex-col gap-4 md:gap-8 min-w-0 relative">
+             <div className="flex-1 flex min-h-0 relative bg-black/20 rounded-[28px] md:rounded-[32px] overflow-hidden border border-white/10 shadow-2xl">
                {viewMode === 'bible' ? (
                   <div className="relative flex flex-1 flex-col min-h-0">
                      {/* Floating Video for Speaker (PIP Mode) */}
@@ -1720,6 +1727,7 @@ export default function CommunityGroupCall({
                        isRecording={isRecording}
                        onStartRecording={onStartRecording}
                        onStopRecording={onStopRecording}
+                       isPip={true}
                      />
                      <div className="flex-1 min-h-0 flex flex-col relative w-full h-full">
                         <BibleReader 
@@ -1783,7 +1791,7 @@ export default function CommunityGroupCall({
 
              {/* Participants Rail */}
              {viewMode !== 'bible' && (
-               <div className="flex h-[180px] gap-4 overflow-x-auto no-scrollbar pb-2 min-h-0">
+               <div className="flex h-[120px] md:h-[180px] gap-3 md:gap-4 overflow-x-auto no-scrollbar pb-2 min-h-0">
                   {participants.filter(p => p.peerId !== stageParticipant?.peerId).map(p => (
                     <ParticipantThumb
                       key={p.peerId}
@@ -1798,8 +1806,8 @@ export default function CommunityGroupCall({
              )}
           </div>
 
-          {/* Sidebar */}
-          <aside className="flex w-[340px] flex-col overflow-hidden rounded-[40px] border border-white/10 bg-[#141829]/40 backdrop-blur-3xl ring-1 ring-white/5 shadow-2xl">
+          {/* Sidebar (Hidden on mobile) */}
+          <aside className="hidden md:flex w-[340px] flex-col overflow-hidden rounded-[40px] border border-white/10 bg-[#141829]/40 backdrop-blur-3xl ring-1 ring-white/5 shadow-2xl">
             <div className="p-8 pb-4">
               {/* Sidebar Tabs Switcher */}
               <div className="flex items-center gap-1 p-1 rounded-2xl bg-white/[0.03] border border-white/5 mb-6">
@@ -2047,30 +2055,169 @@ export default function CommunityGroupCall({
         </div>
       </div>
 
-      {/* Control Switcher (Bible Mode) */}
+      {/* Mobile Floating Access Bar */}
+      <div className="fixed bottom-6 right-6 z-[80] flex md:hidden items-center gap-3">
+        <button 
+          onClick={() => setViewMode(prev => prev === 'bible' ? 'grid' : 'bible')}
+          className={`h-12 w-12 items-center justify-center rounded-full flex shadow-2xl backdrop-blur-xl transition-all active:scale-95 ${viewMode === 'bible' ? 'bg-[#D4FF33] text-black' : 'bg-white/10 text-white/60 border border-white/10'}`}
+        >
+          <BookOpen size={20} />
+        </button>
+        <button 
+          onClick={() => { setSidebarTab('chat'); setIsDrawerOpen(true); }}
+          className="h-12 w-12 items-center justify-center rounded-full flex shadow-2xl backdrop-blur-xl bg-white/10 text-white/60 border border-white/10 transition-all active:scale-95"
+        >
+          <MessageSquareText size={20} />
+        </button>
+        <button 
+          onClick={() => { setSidebarTab('programme'); setIsDrawerOpen(true); }}
+          className="h-12 w-12 items-center justify-center rounded-full flex shadow-2xl backdrop-blur-xl bg-white/10 text-white/60 border border-white/10 transition-all active:scale-95"
+        >
+          <Users size={20} />
+        </button>
+      </div>
+
+      {/* Control Switcher (Bible Mode - Desktop ONLY) */}
       <button 
         onClick={() => setViewMode(prev => prev === 'bible' ? 'grid' : 'bible')}
-        className={`fixed left-10 bottom-10 z-[100] h-14 w-14 items-center justify-center rounded-full flex shadow-2xl transition-all hover:scale-110 active:scale-95 ${viewMode === 'bible' ? 'bg-[#D4FF33] text-black' : 'bg-white/5 text-white/60 ring-1 ring-white/10 backdrop-blur-xl'}`}
+        className={`hidden md:flex fixed left-10 bottom-10 z-[100] h-14 w-14 items-center justify-center rounded-full shadow-2xl transition-all hover:scale-110 active:scale-95 ${viewMode === 'bible' ? 'bg-[#D4FF33] text-black' : 'bg-white/5 text-white/60 ring-1 ring-white/10 backdrop-blur-xl'}`}
       >
         <BookOpen size={24} />
       </button>
 
+      {/* Mobile Drawer (Drawer style) */}
+      <AnimatePresence>
+        {isDrawerOpen && (
+          <>
+            <motion.div 
+               initial={{ opacity: 0 }}
+               animate={{ opacity: 1 }}
+               exit={{ opacity: 0 }}
+               onClick={() => setIsDrawerOpen(false)}
+               className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm md:hidden"
+            />
+            <motion.div 
+               initial={{ y: "100%" }}
+               animate={{ y: 0 }}
+               exit={{ y: "100%" }}
+               transition={{ type: "spring", damping: 30, stiffness: 300 }}
+               className="fixed inset-x-0 bottom-0 z-[110] flex h-[80vh] flex-col rounded-t-[40px] border-t border-white/10 bg-[#141829] shadow-2xl md:hidden"
+            >
+               {/* Drag Handle */}
+               <div className="flex justify-center p-4">
+                  <div className="h-1 w-12 rounded-full bg-white/10" />
+               </div>
+
+               <div className="p-6 pt-2">
+                  {/* Tabs Switcher in Drawer */}
+                  <div className="flex items-center gap-1 p-1 rounded-2xl bg-white/[0.03] border border-white/5">
+                    <button 
+                      onClick={() => setSidebarTab('programme')}
+                      className={`flex-1 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${sidebarTab === 'programme' ? 'bg-[#D4FF33] text-black shadow-lg shadow-[#D4FF33]/20' : 'text-white/30'}`}
+                    >
+                        Programme
+                    </button>
+                    <button 
+                      onClick={() => setSidebarTab('chat')}
+                      className={`flex-1 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${sidebarTab === 'chat' ? 'bg-[#D4FF33] text-black shadow-lg shadow-[#D4FF33]/20' : 'text-white/30'}`}
+                    >
+                        Discussion
+                    </button>
+                  </div>
+               </div>
+
+               <div className="flex-1 overflow-hidden px-8 pb-8">
+                  {sidebarTab === 'programme' ? (
+                     <div className="h-full flex flex-col">
+                        <div className="mb-4 flex items-center justify-between">
+                           <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40">Programme</h4>
+                           <span className="text-[9px] font-extrabold text-[#D4FF33]">{sessionTasks.filter(t => t.done).length}/{sessionTasks.length} FINI</span>
+                        </div>
+                        <div className="space-y-3 overflow-y-auto custom-scrollbar">
+                           {sessionTasks.map((task, index) => (
+                             <div 
+                               key={task.id} 
+                               className={`flex items-start gap-4 p-3 rounded-2xl ${task.active ? 'bg-[#D4FF33]/10 border border-[#D4FF33]/20' : 'bg-white/5'}`}
+                               onClick={() => {
+                                 setSessionTasks(prev => prev.map((t, idx) => ({ 
+                                    ...t, 
+                                    active: t.id === task.id,
+                                    done: idx < index ? true : (t.id === task.id ? t.done : t.done)
+                                 })));
+                               }}
+                             >
+                                <div className={`mt-1 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-all ${task.done ? 'bg-[#D4FF33] border-[#D4FF33]' : 'border-white/20'}`}>
+                                   {task.done && <div className="h-2 w-2 rounded-full bg-black" />}
+                                </div>
+                                <span className={`text-[12px] font-black uppercase tracking-wider ${task.active ? 'text-[#D4FF33]' : (task.done ? 'text-white/20 line-through' : 'text-white/60')}`}>
+                                   {task.text}
+                                </span>
+                             </div>
+                           ))}
+                        </div>
+                     </div>
+                  ) : (
+                     <div className="h-full flex flex-col">
+                        <div className="flex-1 overflow-y-auto space-y-4 mb-4 custom-scrollbar">
+                           {chatMessages.length === 0 ? (
+                             <div className="h-full flex flex-col items-center justify-center opacity-20">
+                                <MessageSquareText size={32} className="mb-2" />
+                                <p className="text-[9px] font-black uppercase tracking-widest">Conversation vide</p>
+                             </div>
+                           ) : (
+                             chatMessages.map(m => (
+                               <div key={m.id} className="space-y-1">
+                                  <div className="flex items-center justify-between">
+                                     <span className="text-[9px] font-black uppercase tracking-widest text-[#D4FF33]">{m.displayName}</span>
+                                     <span className="text-[8px] font-bold text-white/20">{m.createdAt.slice(11, 16)}</span>
+                                  </div>
+                                  <p className="text-xs text-white/70 leading-relaxed bg-white/5 p-3 rounded-2xl border border-white/5">
+                                    {m.text}
+                                  </p>
+                               </div>
+                             ))
+                           )}
+                        </div>
+                        <div className="relative">
+                           <input 
+                              value={chatDraft}
+                              onChange={e => setChatDraft(e.target.value)}
+                              onKeyDown={e => e.key === 'Enter' && onSendChat()}
+                              type="text" 
+                              placeholder="Écrire..." 
+                              className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 pr-12 text-xs text-white outline-none"
+                           />
+                           <button 
+                             onClick={onSendChat}
+                             className="absolute right-2 top-1.5 h-8 w-8 rounded-xl bg-[#D4FF33] text-black grid place-items-center"
+                           >
+                              <Send size={14} />
+                           </button>
+                        </div>
+                     </div>
+                  )}
+               </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       {!joined && (
-        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-[#0a0c14]/95 backdrop-blur-2xl">
-           <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-full max-w-sm rounded-[40px] border border-white/10 bg-white/5 p-12 text-center shadow-2xl ring-1 ring-white/10">
-              <div className="mx-auto mb-10 flex h-24 w-24 items-center justify-center rounded-[32px] bg-[#D4FF33] text-black shadow-[0_0_30px_rgba(212,255,51,0.3)]"><Mic size={44} /></div>
-              <h1 className="mb-4 text-3xl font-black text-white">Prêt à entrer ?</h1>
-              <p className="mb-12 text-sm leading-relaxed text-white/30">Rejoignez vos frères et sœurs pour ce temps d'étude communautaire.</p>
+        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-[#0a0c14]/95 backdrop-blur-2xl p-6">
+           <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-full max-w-sm rounded-[32px] md:rounded-[40px] border border-white/10 bg-white/5 p-8 md:p-12 text-center shadow-2xl ring-1 ring-white/10 overflow-y-auto max-h-[90vh]">
+              <div className="mx-auto mb-6 md:mb-10 flex h-20 w-20 md:h-24 md:w-24 items-center justify-center rounded-[24px] md:rounded-[32px] bg-[#D4FF33] text-black shadow-[0_0_30px_rgba(212,255,51,0.3)]"><Mic size={32} className="md:w-[44px]" /></div>
+              <h1 className="mb-4 text-2xl md:text-3xl font-black text-white">Prêt à entrer ?</h1>
+              <p className="mb-8 md:mb-12 text-sm leading-relaxed text-white/30">Rejoignez vos frères et sœurs pour ce temps d'étude communautaire.</p>
               <div className="flex flex-col gap-4">
-                 <button onClick={joinCall} disabled={busy} className="flex h-16 items-center justify-center rounded-3xl bg-[#D4FF33] text-sm font-black uppercase tracking-widest text-black shadow-xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50">{busy ? "CONNEXION..." : "Rejoindre maintenant"}</button>
+                 <button onClick={joinCall} disabled={busy} className="flex h-14 md:h-16 items-center justify-center rounded-2xl md:rounded-3xl bg-[#D4FF33] text-sm font-black uppercase tracking-widest text-black shadow-xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50">{busy ? "CONNEXION..." : "Rejoindre maintenant"}</button>
                  {error ? (
                    <div className="rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-left text-xs font-medium text-rose-100">
                      {error}
                    </div>
                  ) : null}
                  <div className="flex items-center gap-2 mt-4 rounded-2xl bg-white/5 p-1 ring-1 ring-white/10">
-                    <button onClick={() => setLocalVideoEnabled(true)} className={`flex-1 rounded-xl py-3 text-[10px] font-black uppercase tracking-widest transition-all ${localVideoEnabled ? 'bg-white/10 text-white shadow-lg' : 'text-white/20'}`}>VIDEO ACTIVÉE</button>
-                    <button onClick={() => setLocalVideoEnabled(false)} className={`flex-1 rounded-xl py-3 text-[10px] font-black uppercase tracking-widest transition-all ${!localVideoEnabled ? 'bg-white/10 text-white shadow-lg' : 'text-white/20'}`}>AUDIO SEUL</button>
+                    <button onClick={() => setLocalVideoEnabled(true)} className={`flex-1 rounded-xl py-3 text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all ${localVideoEnabled ? 'bg-white/10 text-white shadow-lg' : 'text-white/20'}`}>VIDEO</button>
+                    <button onClick={() => setLocalVideoEnabled(false)} className={`flex-1 rounded-xl py-3 text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all ${!localVideoEnabled ? 'bg-white/10 text-white shadow-lg' : 'text-white/20'}`}>AUDIO SEUL</button>
                  </div>
               </div>
            </motion.div>
