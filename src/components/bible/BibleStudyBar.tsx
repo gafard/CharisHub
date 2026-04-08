@@ -7,6 +7,7 @@ import {
   Highlighter,
   Link2,
   NotebookPen,
+  Sparkles,
   SplitSquareHorizontal,
   X,
 } from 'lucide-react';
@@ -51,16 +52,9 @@ export default function BibleStudyBar({
   hasNote,
   refsCount,
   highlightColor,
-  onClose,
-  onStrong,
-  onRefs,
-  onHighlight,
-  onNote,
-  onCompare,
-  onCopy,
-  strongTokens,
   strongLoading,
   onStrongToken,
+  onHuios,
 }: {
   open: boolean;
   refLabel: string;
@@ -75,6 +69,7 @@ export default function BibleStudyBar({
   onNote: () => void;
   onCompare: () => void;
   onCopy: () => void;
+  onHuios: () => void;
   strongTokens: StudyStrongToken[];
   strongLoading?: boolean;
   onStrongToken?: (strong: string) => void;
@@ -138,6 +133,15 @@ export default function BibleStudyBar({
 
             <div className="max-h-[46vh] overflow-y-auto p-3 sm:max-h-none sm:overflow-visible">
               <div className="grid grid-cols-6 gap-1.5 sm:flex sm:flex-wrap sm:gap-2">
+                <button
+                  type="button"
+                  onClick={onHuios}
+                  className="col-span-3 flex h-10 w-full items-center justify-center gap-2 rounded-2xl border border-amber-400/30 bg-gradient-to-r from-amber-500/20 to-amber-600/20 px-0 py-2 text-xs font-black text-amber-500 transition hover:bg-amber-500/30 sm:h-auto sm:w-auto sm:justify-start sm:px-4"
+                  title="Vision Charis ✨"
+                >
+                  <Sparkles size={14} className="animate-pulse" />
+                  <span>Vision Charis</span>
+                </button>
                 <ActionChip label="Strong" onClick={onStrong} icon={<BookText size={14} />} />
                 <ActionChip label="Réfs" onClick={onRefs} icon={<Link2 size={14} />} hint="Références croisées" />
                 <ActionChip

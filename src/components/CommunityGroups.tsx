@@ -1740,7 +1740,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
                   Plateforme chrétienne
                 </div>
 
-                <h1 className="text-4xl font-black leading-[1.05] tracking-tight text-[#161c35] sm:text-6xl lg:text-7xl font-display">
+                <h1 className="text-[2rem] font-black leading-[1.05] tracking-tight text-[#161c35] xs:text-4xl sm:text-6xl lg:text-7xl font-display">
                   Crée tes groupes,
                   <br />
                   lance tes appels,
@@ -2039,7 +2039,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
               {status === 'loading' &&
                 [1, 2, 3].map((i) => (
                   <div key={i} className="h-[320px] animate-pulse rounded-[32px] bg-gray-100" />

@@ -164,8 +164,8 @@ export default function LaunchPage() {
           </button>
         </header>
 
-        <div className="relative z-10 flex flex-1 flex-col">
-          <div className="mx-auto flex w-full max-w-[820px] flex-col items-center px-5 pt-8 text-center sm:px-8 sm:pt-10 lg:pt-12">
+        <div className="relative z-10 flex flex-1 flex-col pb-8">
+          <div className="mx-auto flex w-full max-w-[820px] flex-col items-center px-5 pt-8 text-center sm:px-8 sm:pt-14 lg:pt-16">
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -180,7 +180,7 @@ export default function LaunchPage() {
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.16, duration: 0.62 }}
-              className="mt-8 max-w-[760px] text-4xl font-black leading-[0.96] tracking-[-0.05em] text-[#161c35] sm:text-6xl lg:text-[4.5rem]"
+              className="mt-6 max-w-[760px] text-[1.9rem] font-black leading-[1.05] tracking-[-0.05em] text-[#161c35] xs:text-4xl sm:mt-10 sm:text-6xl lg:text-[4.5rem]"
             >
               Crée des groupes,
               <br />

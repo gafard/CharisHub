@@ -3065,6 +3065,11 @@ export default function BibleReader({
           setShowStrongViewer(true);
           setStudyBarOpen(false);
         }}
+        onHuios={() => {
+          if (!selectedVerse) return;
+          setStudyBarOpen(false);
+          onVerseAction(selectedVerse, 'huios');
+        }}
       />
       <BibleStudyRadar
         open={radarOpen}
@@ -3286,7 +3291,7 @@ export default function BibleReader({
         </div>
       ) : null}
       {toast ? (
-        <div className="fixed bottom-[calc(170px+env(safe-area-inset-bottom))] left-1/2 z-[13000] -translate-x-1/2 rounded-full bg-black/70 px-4 py-2 text-sm font-bold text-white shadow-xl md:bottom-24">
+        <div className="fixed bottom-[calc(142px+env(safe-area-inset-bottom))] left-1/2 z-[13000] -translate-x-1/2 rounded-full bg-black/72 px-4 py-2 text-sm font-bold text-white shadow-xl backdrop-blur-md md:bottom-24">
           {toast}
         </div>
       ) : null}
