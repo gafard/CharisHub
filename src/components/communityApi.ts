@@ -1079,36 +1079,45 @@ export async function triggerGroupCallPush(payload: {
   try {
     if (supabase) {
       const channelNames = [`group-call:${payload.groupId}`, `group:${payload.groupId}`];
-      await Promise.all(
-        channelNames.map(
-          (channelName) =>
-            new Promise<void>((resolve) => {
-              const channel = supabase.channel(channelName);
+      const promises: Promise<void>[] = [];
+      
+      channelNames.forEach((channelName) => {
+        const pushPromise = new Promise<void>((resolve) => {
+          try {
+            const channel = supabase.channel(channelName);
+            
+            const sendPayload = async () => {
+              try {
+                await channel.send({
+                  type: 'broadcast',
+                  event: 'call.invite',
+                  payload: {
+                    callId: payload.callId,
+                    groupId: payload.groupId,
+                    startedBy: payload.callerDeviceId,
+                    callerName: payload.callerDisplayName,
+                    callerUserId: payload.callerUserId,
+                    type: payload.callType,
+                    groupName: payload.groupName,
+                  },
+                });
+              } catch (e) {
+                console.error(`[triggerGroupCallPush] Broadcast failed on ${channelName}:`, e);
+              } finally {
+                resolve();
+              }
+            };
+
+            // Si déjà abonné, on envoie direct
+            if ((channel as any).state === 'joined') {
+              void sendPayload();
+            } else {
               channel.subscribe(async (status: string) => {
                 if (status === 'SUBSCRIBED') {
-                  try {
-                    await channel.send({
-                      type: 'broadcast',
-                      event: 'call.invite',
-                      payload: {
-                        callId: payload.callId || undefined,
-                        groupId: payload.groupId,
-                        startedBy: payload.callerDeviceId,
-                        startedByUserId: payload.callerUserId || null,
-                        startedByUserName: payload.callerDisplayName,
-                        groupName: payload.groupName,
-                        callType: payload.callType,
-                        startedAt: new Date().toISOString(),
-                      },
-                    });
-                  } finally {
-                    resolve();
-                  }
-                  return;
-                }
-
-                if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-                  resolve();
+                  await sendPayload();
+                } else {
+                  // Timeout ou erreur, on résout quand même pour ne pas bloquer
+                  setTimeout(resolve, 2000);
                 }
               });
             })

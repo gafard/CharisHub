@@ -142,6 +142,13 @@ export default function GlobalCallManager() {
                     channelNames.forEach((channelName) => {
                         logger.log('[GlobalCallManager] Subscribing to channel:', channelName);
                         const channel = client.channel(channelName);
+                        
+                        // Update global status for diagnostics
+                        if (typeof window !== 'undefined') {
+                            const statusObj = (window as any).__callSystemStatus || { channels: {} };
+                            statusObj.channels[channelName] = 'subscribing';
+                            (window as any).__callSystemStatus = statusObj;
+                        }
                         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                         // @ts-ignore
                         channel.on('broadcast', { event: 'call.invite' }, ({ payload }) => {
@@ -188,6 +195,14 @@ export default function GlobalCallManager() {
 
                         channel.subscribe((status: string) => {
                             logger.log(`[GlobalCallManager] 📡 Channel ${channelName} status:`, status);
+                            
+                            // Update global status for diagnostics
+                            if (typeof window !== 'undefined') {
+                                const statusObj = (window as any).__callSystemStatus || { channels: {} };
+                                statusObj.channels[channelName] = status;
+                                (window as any).__callSystemStatus = statusObj;
+                            }
+
                             if (status === 'SUBSCRIBED') {
                                 logger.log(`[GlobalCallManager] ✅ Ready on ${channelName}`);
                             } else if (status === 'CHANNEL_ERROR') {

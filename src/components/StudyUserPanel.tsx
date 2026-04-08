@@ -454,6 +454,78 @@ export default function StudyUserPanel({
           </div>
         ) : null}
       </div>
+      
+      {/* 🛠️ DIAGNOSTICS & SUPPORT */}
+      <div className="mt-8 rounded-[32px] border border-blue-200/50 bg-blue-50/30 p-5 shadow-sm sm:p-6">
+        <div className="flex items-start gap-4">
+          <div className="grid h-12 w-12 place-items-center rounded-2xl border border-blue-200 bg-white text-blue-600">
+            <HelpCircle size={20} />
+          </div>
+          <div className="flex-1">
+            <div className="text-sm font-extrabold text-blue-900">Diagnostics Appels</div>
+            <p className="mt-1 text-[11px] font-medium text-blue-700/70">
+              Utilisez cet outil pour vérifier si votre téléphone est prêt à recevoir des appels.
+            </p>
+
+            <div className="mt-4 space-y-2 rounded-2xl bg-white/60 p-4 text-[10px] font-mono border border-blue-100">
+              <div className="flex justify-between">
+                <span className="text-blue-900/40">Appareil (ID):</span>
+                <span className="font-bold text-blue-900 select-all">{identity?.deviceId}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-blue-900/40">Compte (ID):</span>
+                <span className="font-bold text-blue-900 select-all">{identity?.userId || 'Non connecté'}</span>
+              </div>
+              <div className="border-t border-blue-100 pt-2">
+                <span className="text-blue-900/40">Canaux Actifs (Realtime):</span>
+                <div className="mt-1 space-y-1">
+                  {typeof window !== 'undefined' && (window as any).__callSystemStatus?.channels ? (
+                    Object.entries((window as any).__callSystemStatus.channels).map(([name, status]) => (
+                      <div key={name} className="flex justify-between">
+                        <span className="max-w-[150px] truncate">{name}</span>
+                        <span className={status === 'SUBSCRIBED' ? 'text-emerald-600 font-bold' : 'text-amber-600 font-bold'}>
+                          {String(status)}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-blue-900/30 italic">Aucun canal actif - essayez de redémarrer</div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-5 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  try {
+                    const audio = new Audio('/sounds/Elysian.mp3');
+                    audio.play().catch(e => alert("Test sonnerie : " + e.message + "\nAssurez-vous que le mode silencieux est désactivé."));
+                    setTimeout(() => {
+                      audio.pause();
+                      audio.currentTime = 0;
+                    }, 4000);
+                  } catch (e: any) {
+                    alert("Erreur critique : " + e.message);
+                  }
+                }}
+                className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-[11px] font-bold text-white transition hover:bg-blue-700 active:scale-95 shadow-sm"
+              >
+                Tester la sonnerie
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="inline-flex items-center gap-2 rounded-xl bg-white border border-blue-200 px-4 py-3 text-[11px] font-bold text-blue-600 transition hover:bg-blue-50 active:scale-95 shadow-sm"
+              >
+                Réinitialiser Realtime
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <SupabaseOnboardingModal
         isOpen={showSupabaseOnboarding}

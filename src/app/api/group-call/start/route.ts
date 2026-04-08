@@ -67,7 +67,10 @@ export async function POST(req: Request) {
     // Créer les invitations pour chaque membre (sauf initiateur)
     logger.log('[start-call] step=filter-other-members');
     const approvedMembers = (groupMembers ?? []).filter((member: any) => !member.status || member.status === 'approved');
-    const otherMembers = approvedMembers.filter((member: any) => member.device_id !== userId);
+    const otherMembers = approvedMembers.filter((m: any) => 
+      (m.device_id && m.device_id !== userId) && // legacy check if device_id happened to be the userId
+      (m.user_id && m.user_id !== userId)
+    );
     logger.log('[start-call] step=create-invites');
     const invitePromises = otherMembers.map(member =>
       client.from('charishub_group_call_invites').upsert({
@@ -146,8 +149,9 @@ async function sendPushNotificationsToOfflineMembers(
     // Send to ALL members except initiator (no offline-only filter)
     const memberDeviceIds = groupMembers
       .filter((m: any) => !m.status || m.status === 'approved')
+      .filter((m: any) => (m.user_id && m.user_id !== initiatorId) || (m.device_id && m.device_id !== initiatorId))
       .map((m: any) => m.device_id)
-      .filter(id => id && id !== initiatorId);
+      .filter(id => !!id);
 
     if (memberDeviceIds.length === 0) {
       logger.log('No other members to notify');
