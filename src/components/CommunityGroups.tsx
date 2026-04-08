@@ -1725,7 +1725,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
 
             <div className="absolute right-0 top-0 bottom-0 z-0 hidden w-[58%] lg:block">
               <img
-                src="/images/community_hero.png"
+                src="/images/community_hero.webp"
                 alt=""
                 className="h-full w-full object-cover object-center opacity-95"
                 aria-hidden="true"

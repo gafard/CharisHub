@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { claimLegacyData, performInitialSync } from '@/lib/cloudSync';
 import { Session, User, AuthChangeEvent } from '@supabase/supabase-js';
 
-const AUTH_INIT_TIMEOUT_MS = 3500;
+const AUTH_INIT_TIMEOUT_MS = 1500;
 
 export type Profile = {
   id: string;

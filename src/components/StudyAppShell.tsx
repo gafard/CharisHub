@@ -52,7 +52,7 @@ export default function StudyAppShell({ children }: { children: ReactNode }) {
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 sm:px-8">
           <div className="min-w-0">
             <Link href="/" className="group inline-flex items-center gap-3 rounded-full text-left transition-transform active:scale-95">
-              <img src="/images/Logo.png" alt="CharisHub Logo" className="h-[46px] w-auto object-contain drop-shadow-sm transition-transform group-hover:scale-105" />
+              <img src="/images/Logo.webp" alt="CharisHub Logo" className="h-[46px] w-auto object-contain drop-shadow-sm transition-transform group-hover:scale-105" />
               <span className="flex flex-col items-start leading-[1.05]">
                 <span className="block text-[26px] font-black tracking-tight font-display text-[#141b37]">CharisHub</span>
                 <span className="block text-[9px] font-bold uppercase tracking-[0.15em] text-[#c89f2d]">

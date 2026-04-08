@@ -303,10 +303,10 @@ export function CloudSyncProvider({ children }: { children: ReactNode }) {
 
     logger.log('[CloudSync] Starting initial sync...');
     
-    // Délai de 3s pour laisser l'app se charger
+    // Délai augmenté pour ne pas ralentir le premier rendu de l'app
     const timer = setTimeout(() => {
       syncFromCloud();
-    }, 3000);
+    }, 5000);
 
     return () => clearTimeout(timer);
   }, [syncFromCloud]);

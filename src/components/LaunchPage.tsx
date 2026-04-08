@@ -9,7 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { fetchGroups } from './communityApi';
 import AuthModal from './AuthModal';
 
-const SESSION_RESTORE_GUARD_MS = 2500;
+const SESSION_RESTORE_GUARD_MS = 1200;
 
 export default function LaunchPage() {
   const [mounted, setMounted] = useState(false);
@@ -68,7 +68,7 @@ export default function LaunchPage() {
           animate={{ opacity: 1, scale: 1 }}
           className="flex flex-col items-center gap-6"
         >
-          <img src="/images/Logo.png" alt="CharisHub" className="h-20 w-auto animate-pulse" />
+          <img src="/images/Logo.webp" alt="CharisHub" className="h-20 w-auto animate-pulse" />
           <div className="flex items-center gap-3 text-sm font-bold text-[#c89f2d]">
             <Loader2 className="h-5 w-5 animate-spin" />
             <span>Restauration de votre session...</span>
@@ -119,7 +119,7 @@ export default function LaunchPage() {
             onClick={handleMainAction}
             className="inline-flex items-center gap-3 rounded-full text-left text-[#141b37]"
           >
-            <img src="/images/Logo.png" alt="CharisHub Logo" className="h-[46px] w-auto object-contain drop-shadow-sm" />
+            <img src="/images/Logo.webp" alt="CharisHub Logo" className="h-[46px] w-auto object-contain drop-shadow-sm" />
             <span className="flex flex-col items-start leading-[1.05]">
               <span className="block text-[26px] font-black tracking-tight font-display">CharisHub</span>
               <span className="block text-[9px] font-bold uppercase tracking-[0.15em] text-[#c89f2d] max-w-full truncate">
@@ -263,10 +263,10 @@ export default function LaunchPage() {
             className="pointer-events-none relative -mt-12 w-[120%] max-w-none overflow-hidden lg:-mt-16 lg:w-[115%] max-lg:-ml-[10%]"
           >
             <img
-              src="/images/People_Background.png"
+              src="/images/People_Background.webp"
               alt="Communauté CharisHub"
               className="relative z-0 w-full object-cover object-top"
-              loading="eager"
+              loading="lazy"
             />
           </motion.div>
         </div>

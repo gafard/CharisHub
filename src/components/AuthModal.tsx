@@ -123,7 +123,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onSu
               {/* Left Side: Visual Experience */}
               <div className="relative hidden w-full overflow-hidden bg-[#121936] md:block md:w-[45%] lg:w-[50%]">
                 <div 
-                  className="absolute inset-0 bg-[url('/images/Auth_pic.png')] bg-cover bg-center transition-transform duration-[10s] hover:scale-110"
+                  className="absolute inset-0 bg-[url('/images/Auth_pic.webp')] bg-cover bg-center transition-transform duration-[10s] hover:scale-110"
                   style={{ filter: 'brightness(0.7)' }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#121936] via-[#121936]/40 to-transparent" />
@@ -131,7 +131,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onSu
                 {/* Brand Overlay */}
                 <div className="absolute inset-0 flex flex-col justify-between p-12 text-white">
                   <div className="flex items-center gap-3">
-                    <img src="/images/Logo.png" alt="Logo" className="h-10 w-auto brightness-0 invert" />
+                    <img src="/images/Logo.webp" alt="Logo" className="h-10 w-auto brightness-0 invert" />
                     <div className="flex flex-col leading-none">
                       <span className="text-2xl font-black tracking-tighter">CharisHub</span>
                       <span className="text-[8px] font-bold uppercase tracking-widest text-amber-400/80">Connectés par la grâce</span>
@@ -178,10 +178,10 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onSu
 
               {/* Mobile Header Image (Visible only on small screens) */}
               <div className="relative h-48 w-full md:hidden">
-                <div className="absolute inset-0 bg-[url('/images/Auth_pic.png')] bg-cover bg-center" />
+                <div className="absolute inset-0 bg-[url('/images/Auth_pic.webp')] bg-cover bg-center" />
                 <div className="absolute inset-0 bg-gradient-to-t from-white to-transparent" />
                 <div className="absolute inset-0 flex items-center justify-center">
-                   <img src="/images/Logo.png" alt="Logo" className="h-12 w-auto drop-shadow-2xl" />
+                   <img src="/images/Logo.webp" alt="Logo" className="h-12 w-auto drop-shadow-2xl" />
                 </div>
               </div>
 
