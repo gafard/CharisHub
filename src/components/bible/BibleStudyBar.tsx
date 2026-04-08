@@ -52,9 +52,17 @@ export default function BibleStudyBar({
   hasNote,
   refsCount,
   highlightColor,
+  onClose,
+  onStrong,
+  onRefs,
+  onHighlight,
+  onNote,
+  onCompare,
+  onCopy,
+  onHuios,
+  strongTokens,
   strongLoading,
   onStrongToken,
-  onHuios,
 }: {
   open: boolean;
   refLabel: string;
