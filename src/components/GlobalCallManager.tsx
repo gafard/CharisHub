@@ -54,14 +54,35 @@ export default function GlobalCallManager() {
         if (incomingCall) {
             document.body.classList.add('group-call-incoming-active');
             releaseAudioFocus();
+            // Start ringing immediately if context was already resumed
+            startRinging();
         } else {
             document.body.classList.remove('group-call-incoming-active');
+            stopRinging();
         }
 
         return () => {
             document.body.classList.remove('group-call-incoming-active');
+            stopRinging();
         };
-    }, [incomingCall]);
+    }, [incomingCall, startRinging, stopRinging]);
+
+    // Resumer l'AudioContext au premier clic utilisateur (nécessaire pour les navigateurs)
+    useEffect(() => {
+        const resumeAudio = () => {
+            if (audioContextRef.current?.state === 'suspended') {
+                audioContextRef.current.resume();
+            }
+            window.removeEventListener('click', resumeAudio);
+            window.removeEventListener('touchstart', resumeAudio);
+        };
+        window.addEventListener('click', resumeAudio);
+        window.addEventListener('touchstart', resumeAudio);
+        return () => {
+            window.removeEventListener('click', resumeAudio);
+            window.removeEventListener('touchstart', resumeAudio);
+        };
+    }, []);
 
     const startRinging = useCallback(() => {
         if (audioContextRef.current) return;
@@ -183,7 +204,8 @@ export default function GlobalCallManager() {
                                     startedAt: String(raw.startedAt || new Date().toISOString()),
                                 };
                             });
-                            startRinging();
+                            // La sonnerie est déclenchée par l'useEffect réagissant à incomingCall
+                            
                             void sendNotification({
                                 title: `Appel de groupe: ${String(raw.groupName || group.name || 'Communaute')}`,
                                 body: `${String(raw.startedByUserName || 'Un membre')} vous invite a rejoindre l'appel`,

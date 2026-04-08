@@ -178,30 +178,49 @@ async function sendPushNotificationsToOfflineMembers(
 
     logger.log(`[start-call] Found ${subscriptions.length} push subscriptions`);
 
-    // Envoyer les notifications push
+    // Envoyer les notifications push en plusieurs vagues pour simuler une sonnerie persistante
     let sent = 0;
     let failed = 0;
-    const notificationPromises = subscriptions.map(async (sub) => {
-      if (!sub.subscription_json) return;
+    const waves = 3; // 3 vagues de notifications
+    const interval = 8000; // Toutes les 8 secondes
 
-      try {
-        await sendWebPush(sub.subscription_json, {
-          title: 'Appel de groupe',
-          body: 'Un appel de groupe a commencé. Appuyez pour rejoindre.',
-          url: `/groups?group=${encodeURIComponent(groupId)}&call=${encodeURIComponent(callId)}&autoJoin=true`,
-          tag: `group-call-${callId}`,
-          icon: '/globe.svg',
-          badge: '/globe.svg',
+    const sendWave = async (wave: number) => {
+        logger.log(`[start-call] Sending wave ${wave + 1}/${waves}`);
+        const notificationPromises = subscriptions.map(async (sub) => {
+            if (!sub.subscription_json) return;
+            try {
+                await sendWebPush(sub.subscription_json, {
+                    title: `Appel de groupe ${wave > 0 ? '(Rappel)' : ''}`,
+                    body: `${userName || 'Un membre'} vous invite à rejoindre l'appel.`,
+                    url: `/groups?group=${encodeURIComponent(groupId)}&call=${encodeURIComponent(callId)}&autoJoin=true`,
+                    tag: `group-call-${callId}`,
+                    icon: '/globe.svg',
+                    badge: '/globe.svg',
+                    requireInteraction: true,
+                    vibrate: [500, 200, 500, 200, 1000]
+                });
+                sent++;
+            } catch (err: any) {
+                failed++;
+                logger.error(`[start-call] Push wave ${wave} failed for ${sub.device_id}:`, err?.statusCode || err?.message);
+            }
         });
-        sent++;
-      } catch (err: any) {
-        failed++;
-        logger.error(`[start-call] Push failed for ${sub.device_id}:`, err?.statusCode || err?.message);
-      }
-    });
+        await Promise.all(notificationPromises);
+    };
 
-    await Promise.all(notificationPromises);
-    logger.log(`[start-call] Push results: sent=${sent}, failed=${failed}`);
+    // Première vague immédiate
+    await sendWave(0);
+
+    // Vagues suivantes en arrière-plan pour ne pas bloquer la réponse API
+    if (waves > 1) {
+        (async () => {
+            for (let i = 1; i < waves; i++) {
+                await new Promise(r => setTimeout(r, interval));
+                await sendWave(i);
+            }
+            logger.log(`[start-call] Multi-wave push complete: sent=${sent}, failed=${failed}`);
+        })().catch(e => logger.error('[start-call] Background push waves failed:', e));
+    }
   } catch (error) {
     logger.error('Error sending push notifications:', error);
   }
