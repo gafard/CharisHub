@@ -21,7 +21,14 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Verse and reference are required' }, { status: 400 });
         }
 
-        const provider = process.env.AI_PROVIDER || 'gemini';
+        // Auto-detection: prioritize openrouter if key is present but no provider set
+        let provider = process.env.AI_PROVIDER;
+        if (!provider) {
+            if (process.env.OPENROUTER_API_KEY) provider = 'openrouter';
+            else if (process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY) provider = 'gemini';
+            else provider = 'gemini'; // final fallback
+        }
+
         let text = "";
 
         const prompt = `${SYSTEM_PROMPT}\n\nANALYSE CE VERSET : "${verse}" (${reference})\n\nContexte supplémentaire (facultatif) : ${context || 'N/A'}`;
@@ -38,7 +45,15 @@ export async function POST(req: Request) {
 
             const { GoogleGenerativeAI } = await import("@google/generative-ai");
             const genAI = new GoogleGenerativeAI(apiKey);
-            const modelsToTry = ["gemini-1.5-flash-latest", "gemini-1.5-flash", "gemini-1.5-pro"];
+            
+            // Re-ordered and updated list: Flash is prioritized as it's typically free-tier friendly and faster.
+            const modelsToTry = [
+                "gemini-1.5-flash-latest", 
+                "gemini-1.5-flash",
+                "gemini-pro", // classic stable name
+                "gemini-1.5-pro",
+                "gemini-1.5-pro-latest"
+            ];
             let lastError = null;
 
             for (const modelName of modelsToTry) {
@@ -47,7 +62,10 @@ export async function POST(req: Request) {
                     const result = await model.generateContent(prompt);
                     const response = await result.response;
                     text = response.text();
-                    if (text) break;
+                    if (text) {
+                        logger.log(`[VisionCharis] Succès avec Gemini : ${modelName}`);
+                        break;
+                    }
                 } catch (err: any) {
                     lastError = err;
                     logger.error(`[VisionCharis] Gemini Error (${modelName}):`, err.message);
@@ -66,7 +84,9 @@ export async function POST(req: Request) {
                 case 'openrouter':
                     apiKey = process.env.OPENROUTER_API_KEY || "";
                     baseURL = "https://openrouter.ai/api/v1";
-                    modelName = "openrouter/auto"; // La route auto d'OpenRouter choisit le meilleur modèle
+                    // Using a specific free model by default if auto results in issues, but auto is usually fine.
+                    // google/gemini-flash-1.5-exp is a common free choice on OpenRouter.
+                    modelName = process.env.OPENROUTER_MODEL || "google/gemini-flash-1.5-exp"; 
                     break;
                 case 'qwen':
                     apiKey = process.env.QWEN_API_KEY || "";
