@@ -3372,7 +3372,7 @@ export default function BibleReader({
         onClose={() => setHuiosModalOpen(false)}
         content={huiosAnalysis}
         loading={huiosLoading}
-        reference={activeVerseReference}
+        reference={activeVerseReference || ''}
       />
     </section>
   );

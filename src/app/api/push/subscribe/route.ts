@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     );
   }
 
-  await verifyAuthSoft(req);
+  const auth = await verifyAuthSoft(req);
 
   let body: SubscribeBody;
   try {
@@ -42,24 +42,27 @@ export async function POST(req: Request) {
 
   const endpoint = (body.subscription?.endpoint || '').trim();
   const p256dh = (body.subscription?.keys?.p256dh || '').trim();
-  const auth = (body.subscription?.keys?.auth || '').trim();
+  const authKey = (body.subscription?.keys?.auth || '').trim();
   const deviceId = clip((body.deviceId || '').trim(), 120);
-  const userId = body.userId; // UUID
   const locale = clip((body.locale || '').trim(), 16);
 
-  if (!endpoint || !p256dh || !auth) {
+  if (!endpoint || !p256dh || !authKey) {
     return NextResponse.json(
       { ok: false, error: 'Missing endpoint or keys' },
       { status: 400 }
     );
   }
 
+  // Sécurité: Si l'utilisateur est authentifié, on utilise son ID de session.
+  // Sinon, on n'autorise pas de lier arbitrairement un userId (spoofing protection).
+  const finalUserId = auth?.userId || null;
+
   const payload = {
     device_id: deviceId || null,
-    user_id: userId || null, // NOUVEAU
+    user_id: finalUserId, 
     endpoint,
     p256dh,
-    auth,
+    auth: authKey,
     locale: locale || null,
     subscription_json: body.subscription ?? null,
     updated_at: new Date().toISOString(),

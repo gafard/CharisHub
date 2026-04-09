@@ -10,26 +10,37 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Supabase server client is not configured' }, { status: 503 });
   }
 
-  await verifyAuthSoft(req);
+  const auth = await verifyAuthSoft(req);
 
   const client = supabaseServer;
 
   try {
-    const { callId, userId, action } = await req.json(); // action: 'accept', 'decline', 'miss'
+    const { callId, userId: bodyUserId, action } = await req.json(); // bodyUserId is deviceId
     
-    if (!callId || !userId || !action) {
+    if (!callId || !bodyUserId || !action) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Mettre à jour l'état de l'invitation
-    const { error } = await client
+    // Sécurité: Si l'utilisateur est authentifié, on lie son user_id à l'invitation (deviceId)
+    // S'il n'est pas authentifié, on se fie au device_id fourni dans le body.
+    let query = client
       .from('charishub_group_call_invites')
       .update({ 
         state: action,
-        responded_at: new Date().toISOString()
+        responded_at: new Date().toISOString(),
+        user_id: auth?.userId || null
       })
-      .eq('call_id', callId)
-      .eq('device_id', userId);
+      .eq('call_id', callId);
+
+    if (auth) {
+        // Un utilisateur authentifié peut répondre à une invitation liée à son device_id
+        // ou à son user_id (migration future)
+        query = query.or(`device_id.eq.${bodyUserId},user_id.eq.${auth.userId}`);
+    } else {
+        query = query.eq('device_id', bodyUserId);
+    }
+
+    const { error } = await query;
 
     if (error) {
       logger.error('Error updating call invite:', error);

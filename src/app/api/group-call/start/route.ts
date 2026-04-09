@@ -13,13 +13,17 @@ export async function POST(req: Request) {
   }
   const client = supabaseServer;
 
-  // Auth check (soft: logs warning but doesn't block yet)
-  await verifyAuthSoft(req);
+  // Auth check (strict)
+  const auth = await verifyAuth(req);
+  if (!auth) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  const userId = auth.userId;
 
   try {
-    const { groupId, userId, userName } = await req.json();
+    const { groupId, userName } = await req.json();
 
-    if (!groupId || !userId) {
+    if (!groupId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 

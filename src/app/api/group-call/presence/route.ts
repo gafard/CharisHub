@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: 'Supabase server client is not configured' }, { status: 503 });
   }
 
-  await verifyAuthSoft(req);
+  const auth = await verifyAuthSoft(req);
 
   let body: UpsertPresenceBody;
   try {
@@ -42,11 +42,19 @@ export async function POST(req: Request) {
   }
 
   if (action === 'clear') {
-    const { error } = await supabaseServer
+    // Si authentifié, on peut supprimer par user_id ou device_id
+    let query = supabaseServer
       .from('community_group_call_presence')
       .delete()
-      .eq('group_id', groupId)
-      .eq('device_id', deviceId);
+      .eq('group_id', groupId);
+      
+    if (auth) {
+        query = query.or(`device_id.eq.${deviceId},user_id.eq.${auth.userId}`);
+    } else {
+        query = query.eq('device_id', deviceId);
+    }
+    
+    const { error } = await query;
 
     if (error) {
       return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
@@ -59,6 +67,7 @@ export async function POST(req: Request) {
   const row = {
     group_id: groupId,
     device_id: deviceId,
+    user_id: auth?.userId || null, // Sécurité: On utilise l'ID du token, pas du body
     guest_id: deviceId,
     display_name: String(body.displayName || 'Invite').trim() || 'Invite',
     audio_enabled: !!body.audioEnabled,

@@ -11,16 +11,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Supabase server client is not configured' }, { status: 503 });
   }
 
-  await verifyAuthSoft(req);
+  const auth = await verifyAuth(req);
+  if (!auth) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   try {
-    const { callId, deviceId } = await req.json();
+    const { callId } = await req.json();
 
-    if (!callId || !deviceId) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    if (!callId) {
+      return NextResponse.json({ error: 'Missing callId' }, { status: 400 });
     }
 
-    // Mettre à jour le statut de l'appel
+    // Mettre à jour le statut de l'appel - uniquement si l'utilisateur en est le créateur
     const { error } = await supabaseServer
       .from('charishub_group_calls')
       .update({ 
@@ -28,7 +31,8 @@ export async function POST(req: Request) {
         ended_at: new Date().toISOString() 
       })
       .eq('id', callId)
-      .in('status', ['ringing', 'active']); // Gère aussi le cas où l'organisateur raccroche avant qu'un pair rejoigne
+      .eq('created_by', auth.userId) // Sécurité : seul le créateur peut terminer l'appel techniquement ici
+      .in('status', ['ringing', 'active']);
 
     if (error) {
       logger.error('Error updating call status:', error);

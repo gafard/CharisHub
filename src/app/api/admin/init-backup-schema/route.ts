@@ -31,6 +31,7 @@ export async function POST() {
       'user_prayer_journal',
       'user_study_tags',
       'user_data_exports',
+      'user_reading_reflections',
     ];
 
     const createdTables = [];
@@ -113,6 +114,7 @@ export async function GET() {
     'user_prayer_journal',
     'user_study_tags',
     'user_data_exports',
+    'user_reading_reflections',
   ];
 
   const results = await Promise.all(

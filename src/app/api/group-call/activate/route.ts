@@ -11,7 +11,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Supabase server client is not configured' }, { status: 503 });
   }
 
-  await verifyAuthSoft(req);
+  const auth = await verifyAuth(req);
+  if (!auth) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   try {
     const { callId, deviceId } = await req.json();
