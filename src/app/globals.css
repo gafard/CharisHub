@@ -1,5 +1,6 @@
 @import "swiper/css";
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 /* Make Tailwind `dark:` utilities follow the `.dark` class set by ModeContext. */
 @custom-variant dark (&:where(.dark, .dark *));
 
