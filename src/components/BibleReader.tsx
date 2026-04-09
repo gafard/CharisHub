@@ -2595,7 +2595,11 @@ export default function BibleReader({
         setHuiosLoading(true);
         graceService.analyzeVerse(verse.text, `${book.name} ${chapter}:${verse.number}`)
           .then(res => {
-            setHuiosAnalysis(res.content);
+            if (res.error) {
+              setHuiosError(res.error);
+            } else {
+              setHuiosAnalysis(res.content);
+            }
             setHuiosLoading(false);
           })
           .catch(err => {
@@ -3080,7 +3084,11 @@ export default function BibleReader({
           setHuiosLoading(true);
           graceService.analyzeVerse(selectedVerse.text, `${book.name} ${chapter}:${selectedVerse.number}`)
             .then(res => {
-              setHuiosAnalysis(res.content);
+              if (res.error) {
+                setHuiosError(res.error);
+              } else {
+                setHuiosAnalysis(res.content);
+              }
               setHuiosLoading(false);
             })
             .catch(err => {
