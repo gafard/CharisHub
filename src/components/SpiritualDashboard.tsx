@@ -119,7 +119,7 @@ function DailyVerseCard({ verse }: { verse: DailyVerse }) {
       <div className="relative z-10">
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 backdrop-blur-md">
-            <Sparkles size={14} className="text-white/80" />
+            <Sun size={14} className="text-white/80" />
             <span className="text-[10px] font-black uppercase tracking-widest">Identité du Jour</span>
           </div>
           <button className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-all">
@@ -370,7 +370,7 @@ export default function SpiritualDashboard() {
           <div className="lg:w-1/3 flex flex-col gap-6">
              <div className="flex flex-col items-center justify-center rounded-[32px] border border-blue-200/50 bg-gradient-to-b from-blue-50/80 to-[#fffdf8] p-6 shadow-sm ring-1 ring-blue-100/50">
                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm mb-4">
-                  <Sparkles size={28} className="text-blue-600" />
+                  <Sun size={28} className="text-blue-600" />
                </div>
                <div className="text-center">
                  <div className="text-xs font-black uppercase tracking-[0.2em] text-blue-600/60 mb-1">Cœur de Grâce</div>
@@ -391,7 +391,7 @@ export default function SpiritualDashboard() {
             <StatCard icon={<BookOpen size={20} />} label="Paroles méditées" value={streak.totalChapters} subtext="Trésors ouverts" color="#3b82f6" delay={0.1} />
             <StatCard icon={<Clock size={20} />} label="Intimité" value={`${totalPrayerMinutes}m`} subtext={`${sessions.length} rencontres`} color="#ec4899" delay={0.15} />
             <StatCard icon={<Star size={20} />} label="Favoris" value={pepites.length} subtext="Lumières d'identité" color="#D4AF37" delay={0.2} />
-            <StatCard icon={<Sparkles size={20} />} label="Réflexions" value={localData.highlights} subtext={`${localData.notes} notes`} color="#8b5cf6" delay={0.25} />
+            <StatCard icon={<Sun size={20} />} label="Réflexions" value={localData.highlights} subtext={`${localData.notes} notes`} color="#8b5cf6" delay={0.25} />
           </div>
         </section>
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { pepitesStore, Pepite } from '../../lib/pepitesStore';
-import { Sparkles, Trash2, BookOpen, Quote, ShieldCheck, Search, Filter } from 'lucide-react';
+import { Sun, Trash2, BookOpen, Quote, ShieldCheck, Search, Filter } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -31,7 +31,7 @@ export default function IdentityTreasures() {
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'grace': return <Sparkles className="h-4 w-4 text-emerald-500" />;
+      case 'grace': return <Sun className="h-4 w-4 text-emerald-500" />;
       case 'identity': return <ShieldCheck className="h-4 w-4 text-sky-500" />;
       case 'promise': return <Quote className="h-4 w-4 text-amber-500" />;
       default: return <BookOpen className="h-4 w-4" />;
@@ -86,7 +86,7 @@ export default function IdentityTreasures() {
           onClick={() => setFilter('grace')}
           className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold transition ${filter === 'grace' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-[color:var(--surface-strong)] border border-[color:var(--border-soft)] text-[color:var(--foreground)]/70 hover:border-[color:var(--border-strong)]'}`}
         >
-          <Sparkles className="h-3 w-3" /> Grâce
+          <Sun className="h-3 w-3" /> Grâce
         </button>
         <button 
           onClick={() => setFilter('promise')}
@@ -137,11 +137,11 @@ export default function IdentityTreasures() {
       ) : (
         <div className="flex flex-col items-center justify-center py-20 rounded-[40px] border-2 border-dashed border-[color:var(--border-soft)] bg-[color:var(--surface)]/50">
           <div className="h-16 w-16 mb-6 rounded-full bg-[color:var(--accent-soft)] flex items-center justify-center">
-            <Sparkles className="h-8 w-8 text-[color:var(--accent)]" />
+            <Sun className="h-8 w-8 text-[color:var(--accent)]" />
           </div>
           <h3 className="text-lg font-bold">Aucun trésor trouvé</h3>
           <p className="text-sm text-[color:var(--foreground)]/60 mt-1 max-w-xs text-center">
-            Utilisez la "Vision Huios" dans le lecteur biblique pour découvrir et enregistrer vos pépites.
+            Utilisez le "Miroir de Grâce" dans le lecteur biblique pour découvrir et enregistrer vos pépites.
           </p>
         </div>
       )}

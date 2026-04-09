@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertCircle, Sparkles, X, Heart, Shield, Zap } from 'lucide-react';
+import { AlertCircle, X, Heart, Shield, Zap, Sun } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface HuiosVisionModalProps {
@@ -41,7 +41,7 @@ export default function HuiosVisionModal({ isOpen, onClose, content, loading, er
                         <div className="flex items-center justify-between p-6 border-b border-white/10 bg-slate-900/50 backdrop-blur-md">
                             <div className="flex items-center gap-4">
                                 <div className="p-3 rounded-2xl bg-amber-400/10 border border-amber-400/20 text-amber-400">
-                                    <Sparkles size={24} className="animate-pulse" />
+                                    <Sun size={24} className="animate-pulse" />
                                 </div>
                                 <div className="flex flex-col">
                                     <h2 className="text-2xl font-black tracking-tighter text-white uppercase leading-none">Miroir de Grâce</h2>
@@ -68,7 +68,7 @@ export default function HuiosVisionModal({ isOpen, onClose, content, loading, er
                                                 transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
                                                 className="relative w-24 h-24 border-2 border-dashed border-amber-400/30 rounded-full flex items-center justify-center"
                                             >
-                                                <Sparkles className="text-amber-400" size={32} />
+                                                <Sun className="text-amber-400" size={32} />
                                             </motion.div>
                                         </div>
                                         <div className="flex flex-col items-center gap-2">

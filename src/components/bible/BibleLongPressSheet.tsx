@@ -1,6 +1,6 @@
 'use client';
 
-import { BookText, Link2, NotebookPen, Search, Share2, Sparkles, X } from 'lucide-react';
+import { BookText, Link2, NotebookPen, Search, Share2, Sparkles, Sun, X } from 'lucide-react';
 
 type LongPressAction = 'strong' | 'refs' | 'note' | 'compare' | 'share' | 'huios' | 'pepite';
 
@@ -93,12 +93,12 @@ export default function BibleLongPressSheet({
             onClick={() => onAction('huios')}
             className="col-span-2 flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 px-6 py-4 text-sm font-black text-white shadow-lg shadow-amber-500/20 active:scale-95 transition-transform"
           >
-            <Sparkles size={18} />
-            VISION CHARIS ✨
+            <Sun size={18} />
+            MIROIR DE GRÂCE ✨
           </button>
 
           {[
-            { label: 'Pépite', icon: <Sparkles size={14} className="text-amber-500" />, action: 'pepite' as const },
+            { label: 'Identité', icon: <Sun size={14} className="text-amber-500" />, action: 'huios' as const },
             { label: 'Comparer', icon: <Search size={14} className="accent-text" />, action: 'compare' as const },
             { label: 'Strong', icon: <BookText size={14} className="accent-text" />, action: 'strong' as const },
             { label: 'Références', icon: <Link2 size={14} className="accent-text" />, action: 'refs' as const },

@@ -11,7 +11,7 @@ import {
   Loader2,
   MessageCircleQuestion,
   PenLine,
-  Sparkles,
+  Sun,
 } from 'lucide-react';
 import { formatDayReadingsLabel, type PlanReading, findReadingPlan } from '../../lib/readingPlans';
 import {
@@ -178,7 +178,7 @@ export default function ReflectionQuestions({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-[rgba(255,255,255,0.05)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.22em] text-[rgba(255,240,222,0.7)]">
-              <Sparkles size={13} />
+              <Sun size={13} className="text-amber-400" />
               {finalChapter ? 'Réflexion finale du jour' : 'Réflexion du chapitre'}
               {aiLoading && <Loader2 size={12} className="animate-spin ml-1" />}
             </div>
@@ -289,7 +289,7 @@ export default function ReflectionQuestions({
             className="flex w-full items-center gap-4 px-4 py-4 text-left transition-colors hover:bg-white/[0.02] sm:px-5"
           >
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-[rgba(255,255,255,0.06)] text-[#fff6e6]">
-              <Sparkles size={16} />
+              <Sun size={16} className="text-amber-400" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-[15px] font-semibold text-[#fff8ef]">Synthèse et élans de prière</p>

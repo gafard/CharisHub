@@ -18,7 +18,7 @@ import {
     Scroll,
     ScrollText,
     ShieldCheck,
-    Sparkles,
+    Sun,
     Sprout,
     Sunrise,
     TreePine,
@@ -122,7 +122,7 @@ const PLAN_SYMBOLS: Record<PlanSymbolId, typeof BookOpen> = {
     'scroll-text': ScrollText,
     sunrise: Sunrise,
     'library-big': LibraryBig,
-    sparkles: Sparkles,
+    sparkles: Sun,
 };
 
 export function PlanSymbol({

@@ -8,7 +8,8 @@ import {
   ChevronDown,
   ChevronUp,
   Layers3,
-  Sparkles,
+  Sun,
+  Flame,
   X,
 } from 'lucide-react';
 import { loadLocalBible } from '../../lib/localBible';
@@ -223,8 +224,8 @@ export default function ReflectionSheet({
           <div className="relative z-10 flex items-start justify-between gap-4 border-b border-white/8 px-5 pb-4 pt-5 sm:px-7 sm:pb-5 sm:pt-6">
             <div className="min-w-0">
               <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.22em] text-[rgba(255,240,222,0.7)]">
-                <Sparkles size={13} />
-                {finalChapter ? 'Méditation Finale' : 'Cœur à Cœur'}
+                <Sun size={13} className="text-amber-400" />
+                {finalChapter ? 'Miroir de Grâce' : 'Cœur à Cœur'}
               </div>
               <h2 className="mt-4 font-display text-[28px] font-bold leading-[0.95] text-[#fff7ec] sm:text-[36px]">
                 {focus ? `${focus.reading.bookName} ${focus.chapter}` : 'Méditation'}
@@ -369,8 +370,8 @@ export default function ReflectionSheet({
 
                 <section className="overflow-hidden rounded-[30px] border border-[rgba(246,225,192,0.12)] bg-[linear-gradient(180deg,#1f1a1a_0%,#151419_100%)] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.24)]">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-[#fff7ec]">
-                      <Sparkles size={18} />
+                    <div className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-amber-400">
+                      <Flame size={18} />
                     </div>
                     <div>
                       <p className="text-[15px] font-semibold text-[#fff7ec]">
@@ -378,7 +379,7 @@ export default function ReflectionSheet({
                       </p>
                       <p className="mt-1 text-[12px] text-[rgba(255,240,222,0.62)]">
                         {finalChapter
-                          ? `Les ${reflectionInsights.length || 1} écho${reflectionInsights.length > 1 ? 's' : ''} enregistré${reflectionInsights.length > 1 ? 's' : ''} serviront de base à la prière guidée.`
+                          ? `Vos ${reflectionInsights.length || 1} écho${reflectionInsights.length > 1 ? 's' : ''} spirituel${reflectionInsights.length > 1 ? 's' : ''} serviront de base à la prière guidée.`
                           : 'Votre réflexion est gardée. Vous pourrez revenir au plan ou continuer votre lecture.'}
                       </p>
                     </div>
@@ -408,7 +409,7 @@ export default function ReflectionSheet({
                       {loadingPrayer ? (
                         <>
                           <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#160d0a]/30 border-t-[#160d0a]" />
-                          Préparation...
+                          Éclairage en cours...
                         </>
                       ) : (
                         <>

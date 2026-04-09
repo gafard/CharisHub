@@ -7,7 +7,7 @@ import {
   Highlighter,
   Link2,
   NotebookPen,
-  Sparkles,
+  Sun,
   SplitSquareHorizontal,
   X,
 } from 'lucide-react';
@@ -147,7 +147,7 @@ export default function BibleStudyBar({
                   title="Miroir de Grâce ✨"
                 >
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-100/10 to-slate-100/5 border border-white/10 flex items-center justify-center group-hover:bg-amber-400 group-hover:text-black transition-all duration-300 shadow-lg group-active:scale-95 group-hover:border-amber-400/50 group-hover:shadow-amber-400/20">
-                    <Sparkles size={20} className={showAIVision ? "text-amber-400" : "text-slate-400 group-hover:text-black"} />
+                    <Sun size={20} className={showAIVision ? "text-amber-400" : "text-slate-400 group-hover:text-black"} />
                   </div>
                   <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400 group-hover:text-amber-400 transition-colors">Miroir de Grâce</span>
                 </button>

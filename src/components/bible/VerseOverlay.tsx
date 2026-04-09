@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Sparkles, X, Search } from 'lucide-react';
+import { BookOpen, Sun, X, Search } from 'lucide-react';
 
 interface VerseOverlayProps {
   reference: string;
@@ -66,8 +66,8 @@ export default function VerseOverlay({ reference, content, onClose, onOpenInterl
 
           <div className="flex items-center justify-between gap-4 pt-1">
             <div className="flex items-center gap-1.5 rounded-full bg-white/5 px-2.5 py-1 text-[10px] font-bold text-amber-200/40 border border-white/5">
-              <Sparkles size={10} />
-              VISION HUIOS
+              <Sun size={10} className="text-amber-400" />
+              <span>Miroir</span>
             </div>
             <div className="text-[10px] font-medium text-slate-500 italic">
               Données de concordance réelles issues du texte original

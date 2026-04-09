@@ -5,7 +5,7 @@ import logger from '@/lib/logger';
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  Volume2, ChevronLeft, ChevronRight, Link2, Search, Sparkles, X, Settings, Maximize, Play, Pause, Bookmark, ListVideo, AlignLeft, BookmarkCheck,
+  Volume2, ChevronLeft, ChevronRight, Link2, Search, Sun, X, Settings, Maximize, Play, Pause, Bookmark, ListVideo, AlignLeft, BookmarkCheck,
 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { BIBLE_BOOKS, type BibleBook } from '../lib/bibleCatalog';
@@ -2929,7 +2929,7 @@ export default function BibleReader({
                             className="group relative flex items-center gap-3 overflow-hidden rounded-full bg-[#161c35] px-8 py-4 text-white shadow-xl transition-all hover:shadow-[#c89f2d]/20"
                           >
                             <div className="absolute inset-0 bg-gradient-to-r from-[#c89f2d]/20 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-                            <Sparkles size={18} className="text-[#c89f2d]" />
+                            <Sun size={18} className="text-[#c89f2d]" />
                             <span className="text-xs font-black uppercase tracking-[0.2em]">
                               {currentMatchingReading.isCompleted ? 'Revoir ma méditation' : 'Valider ma lecture'}
                             </span>

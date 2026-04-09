@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ArrowUpRight, Sparkles } from 'lucide-react';
+import { ArrowUpRight, Sun } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import ReflectionSheet from './bible/ReflectionSheet';
 import {
@@ -197,7 +197,7 @@ export default function ReadingPlanWidget({
 
                         <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-2.5 text-[10px] font-black uppercase tracking-[0.25em] text-[#161c35]/40">
-                                {activePlan && <Sparkles size={10} className="text-[#c89f2d]" />}
+                                {activePlan && <Sun size={10} className="text-[#c89f2d] animate-pulse" />}
                                 <span>{eyebrow}</span>
                             </div>
 
