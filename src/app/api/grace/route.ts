@@ -83,9 +83,12 @@ export async function POST(req: Request) {
             switch (provider) {
                 case 'openrouter':
                     apiKey = process.env.OPENROUTER_API_KEY || "";
+                    if (!apiKey) {
+                        return NextResponse.json({
+                            error: "Configuration Incomplète : OPENROUTER_API_KEY est manquante sur Vercel. Veuillez l'ajouter dans les paramètres du projet et redéployer."
+                        }, { status: 500 });
+                    }
                     baseURL = "https://openrouter.ai/api/v1";
-                    // Using a specific free model by default if auto results in issues, but auto is usually fine.
-                    // google/gemini-flash-1.5-exp is a common free choice on OpenRouter.
                     modelName = process.env.OPENROUTER_MODEL || "google/gemini-flash-1.5-exp"; 
                     break;
                 case 'qwen':
@@ -107,11 +110,14 @@ export async function POST(req: Request) {
 
             if (!apiKey) {
                 return NextResponse.json({
-                    content: `### Vision Charis : ${reference}\n\n**Note** : Le fournisseur ${provider} n'est pas configuré. Veuillez ajouter la clé API correspondante.`
+                    content: `### Vision Charis : ${reference}\n\n**Note** : Le fournisseur ${provider} n'est pas configuré. Veuillez ajouter la clé API correspondante sur Vercel.`
                 });
             }
 
-            const openai = new OpenAI({ 
+            const openaiImport = await import("openai");
+            const OpenAIClass = openaiImport.default || openaiImport.OpenAI || openaiImport;
+            
+            const openai = new (OpenAIClass as any)({ 
                 apiKey, 
                 baseURL,
                 defaultHeaders: provider === 'openrouter' ? {
