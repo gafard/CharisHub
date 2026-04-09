@@ -142,13 +142,14 @@ export default function BibleStudyBar({
             <div className="max-h-[46vh] overflow-y-auto p-3 sm:max-h-none sm:overflow-visible">
               <div className="grid grid-cols-6 gap-1.5 sm:flex sm:flex-wrap sm:gap-2">
                 <button
-                  type="button"
-                  onClick={onHuios}
-                  className="col-span-3 flex h-10 w-full items-center justify-center gap-2 rounded-2xl border border-amber-400/30 bg-gradient-to-r from-amber-500/20 to-amber-600/20 px-0 py-2 text-xs font-black text-amber-500 transition hover:bg-amber-500/30 sm:h-auto sm:w-auto sm:justify-start sm:px-4"
-                  title="Vision Charis ✨"
+                  onClick={onVisionClick}
+                  className="flex flex-col items-center gap-1.5 group"
+                  title="Miroir de Grâce ✨"
                 >
-                  <Sparkles size={14} className="animate-pulse" />
-                  <span>Vision Charis</span>
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-100/10 to-slate-100/5 border border-white/10 flex items-center justify-center group-hover:bg-amber-400 group-hover:text-black transition-all duration-300 shadow-lg group-active:scale-95 group-hover:border-amber-400/50 group-hover:shadow-amber-400/20">
+                    <Sparkles size={20} className={showAIVision ? "text-amber-400" : "text-slate-400 group-hover:text-black"} />
+                  </div>
+                  <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400 group-hover:text-amber-400 transition-colors">Miroir de Grâce</span>
                 </button>
                 <ActionChip label="Strong" onClick={onStrong} icon={<BookText size={14} />} />
                 <ActionChip label="Réfs" onClick={onRefs} icon={<Link2 size={14} />} hint="Références croisées" />
