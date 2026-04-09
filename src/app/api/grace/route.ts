@@ -21,60 +21,69 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Verse and reference are required' }, { status: 400 });
         }
 
-        // Rétablissement de la logique stable : Gemini par défaut (comme en local)
+        // Détection de la région Vercel pour le diagnostic
+        const vercelRegion = process.env.VERCEL_REGION || 'local';
         const provider = process.env.AI_PROVIDER || 'gemini';
         let text = "";
 
         const prompt = `${SYSTEM_PROMPT}\n\nANALYSE CE VERSET : "${verse}" (${reference})\n\nContexte supplémentaire (facultatif) : ${context || 'N/A'}`;
 
-        logger.log(`[VisionCharis] Utilisation du fournisseur : ${provider}`);
+        logger.log(`[VisionCharis] Fournisseur: ${provider} | Région: ${vercelRegion}`);
+
+        const tryGeminiViaOpenAI = async (apiKey: string) => {
+            const { OpenAI } = await import("openai");
+            const openai = new OpenAI({
+                apiKey: apiKey,
+                baseURL: "https://generativelanguage.googleapis.com/v1beta/",
+            });
+
+            // On essaie le modèle le plus léger et le plus disponible
+            const completion = await openai.chat.completions.create({
+                model: "gemini-1.5-flash",
+                messages: [
+                    { role: "system", content: SYSTEM_PROMPT },
+                    { role: "user", content: `ANALYSE CE VERSET : "${verse}" (${reference})\n\nContexte : ${context || 'N/A'}` }
+                ],
+            });
+            return completion.choices[0]?.message?.content || "";
+        };
 
         if (provider === 'gemini') {
-            const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-            if (!apiKey) {
-                return NextResponse.json({
-                    content: `### Vision Charis : ${reference}\n\n**Note** : Le fournisseur Gemini n'est pas configuré. Veuillez ajouter GEMINI_API_KEY.`
-                });
-            }
-
-            const { GoogleGenerativeAI } = await import("@google/generative-ai");
-            const genAI = new GoogleGenerativeAI(apiKey);
+            const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
             
-            // On essaie d'abord l'API v1 (stable) puis v1beta si nécessaire
-            const configs = [
-                { model: "gemini-1.5-flash", version: "v1" },
-                { model: "gemini-1.5-flash-latest", version: "v1" },
-                { model: "gemini-1.5-pro", version: "v1" },
-                { model: "gemini-1.5-pro-latest", version: "v1" },
-                { model: "gemini-pro", version: "v1" },
-                // Fallbacks v1beta
-                { model: "gemini-1.5-flash", version: "v1beta" },
-                { model: "gemini-1.5-pro", version: "v1beta" }
-            ];
-            
-            let lastError = null;
-
-            for (const config of configs) {
-                try {
-                    const model = genAI.getGenerativeModel(
-                        { model: config.model }, 
-                        { apiVersion: config.version as any }
-                    );
+            try {
+                if (!geminiKey) throw new Error("GEMINI_API_KEY manquante");
+                text = await tryGeminiViaOpenAI(geminiKey);
+            } catch (err: any) {
+                logger.error(`[VisionCharis] Échec Gemini Direct (Région: ${vercelRegion}):`, err.message);
+                
+                // Fallback vers OpenRouter si configuré, pour sauver l'expérience utilisateur
+                if (process.env.OPENROUTER_API_KEY) {
+                    logger.log("[VisionCharis] Tentative de Fallback vers OpenRouter...");
+                    const { OpenAI } = await import("openai");
+                    const orClient = new OpenAI({
+                        apiKey: process.env.OPENROUTER_API_KEY,
+                        baseURL: "https://openrouter.ai/api/v1",
+                    });
+                    const orCompletion = await orClient.chat.completions.create({
+                        model: "openrouter/auto",
+                        messages: [
+                            { role: "system", content: SYSTEM_PROMPT },
+                            { role: "user", content: `ANALYSE CE VERSET : "${verse}" (${reference})\n\nContexte : ${context || 'N/A'}` }
+                        ],
+                    });
+                    text = orCompletion.choices[0]?.message?.content || "";
+                } else {
+                    // Si pas d'OpenRouter, on renvoie une erreur détaillée pour aider l'utilisateur
+                    const isEU = ['cdg1', 'fra1', 'lhr1', 'arn1'].includes(vercelRegion);
+                    const regionMsg = isEU ? `Note: Votre région Vercel (${vercelRegion}) pourrait être restreinte par Google.` : "";
                     
-                    const result = await model.generateContent(prompt);
-                    const response = await result.response;
-                    text = response.text();
-                    
-                    if (text) {
-                        logger.log(`[VisionCharis] Succès avec Gemini : ${config.model} (${config.version})`);
-                        break;
-                    }
-                } catch (err: any) {
-                    lastError = err;
-                    logger.error(`[VisionCharis] Gemini Error (${config.model} - ${config.version}):`, err.message);
+                    return NextResponse.json({ 
+                        error: `Erreur Gemini: ${err.message}. ${regionMsg}`,
+                        suggestion: "Vérifiez votre clé API ou changez la région Vercel pour 'us-east-1'."
+                    }, { status: 500 });
                 }
             }
-            if (!text && lastError) throw lastError;
         } 
         else {
             // OpenAI Compatible Providers (OpenRouter, Qwen, GLM, Kimi)
@@ -88,11 +97,10 @@ export async function POST(req: Request) {
                     apiKey = process.env.OPENROUTER_API_KEY || "";
                     if (!apiKey) {
                         return NextResponse.json({
-                            error: "Configuration Incomplète : OPENROUTER_API_KEY est manquante sur Vercel. Veuillez l'ajouter dans les paramètres du projet et redéployer."
+                            error: "Configuration Incomplète : OPENROUTER_API_KEY est manquante."
                         }, { status: 500 });
                     }
                     baseURL = "https://openrouter.ai/api/v1";
-                    // Retour sur 'auto' qui est le plus robuste pour OpenRouter
                     modelName = process.env.OPENROUTER_MODEL || "openrouter/auto"; 
                     break;
                 case 'qwen':
@@ -114,14 +122,11 @@ export async function POST(req: Request) {
 
             if (!apiKey) {
                 return NextResponse.json({
-                    content: `### Vision Charis : ${reference}\n\n**Note** : Le fournisseur ${provider} n'est pas configuré. Veuillez ajouter la clé API correspondante sur Vercel.`
+                    content: `### Vision Charis : ${reference}\n\n**Note** : Le fournisseur ${provider} n'est pas configuré.`
                 });
             }
 
-            const openaiImport = await import("openai");
-            const OpenAIClass = openaiImport.default || openaiImport.OpenAI || openaiImport;
-            
-            const openai = new (OpenAIClass as any)({ 
+            const openai = new OpenAI({ 
                 apiKey, 
                 baseURL,
                 defaultHeaders: provider === 'openrouter' ? {
@@ -148,7 +153,7 @@ export async function POST(req: Request) {
         logger.error('[VisionCharis] Erreur finale:', error);
         return NextResponse.json({ 
             error: error.message,
-            suggestion: "Le service d'analyse IA rencontre une difficulté technique. Veuillez réessayer."
+            suggestion: "Veuillez réessayer dans quelques instants."
         }, { status: 500 });
     }
 }
