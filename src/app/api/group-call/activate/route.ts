@@ -1,7 +1,7 @@
 import logger from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabaseServer';
-import { verifyAuthSoft } from '@/lib/apiAuth';
+import { verifyAuth } from '@/lib/apiAuth';
 
 export const runtime = 'nodejs';
 

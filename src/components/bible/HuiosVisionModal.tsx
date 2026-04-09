@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, X, Heart, Shield, Zap } from 'lucide-react';
+import { AlertCircle, Sparkles, X, Heart, Shield, Zap } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface HuiosVisionModalProps {
@@ -9,10 +9,11 @@ interface HuiosVisionModalProps {
     onClose: () => void;
     content: string;
     loading: boolean;
+    error: string | null;
     reference: string;
 }
 
-export default function HuiosVisionModal({ isOpen, onClose, content, loading, reference }: HuiosVisionModalProps) {
+export default function HuiosVisionModal({ isOpen, onClose, content, loading, error, reference }: HuiosVisionModalProps) {
     return (
         <AnimatePresence>
             {isOpen && (
@@ -67,6 +68,16 @@ export default function HuiosVisionModal({ isOpen, onClose, content, loading, re
                                         <div className="text-center space-y-2">
                                             <p className="text-lg font-bold text-white">Révélation en cours...</p>
                                             <p className="text-sm text-slate-400">Le Saint-Esprit illumine ton intelligence.</p>
+                                        </div>
+                                    </div>
+                                ) : error ? (
+                                    <div className="flex flex-col items-center justify-center gap-5 py-12">
+                                        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-500/10 text-red-400">
+                                            <AlertCircle size={32} />
+                                        </div>
+                                        <div className="text-center space-y-2 max-w-sm">
+                                            <p className="text-lg font-bold text-white">Analyse indisponible</p>
+                                            <p className="text-sm text-slate-400">{error}</p>
                                         </div>
                                     </div>
                                 ) : (

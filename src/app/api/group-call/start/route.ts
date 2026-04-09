@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabaseServer';
 import { hasWebPushConfig, sendWebPush } from '@/lib/webPush';
-import { verifyAuthSoft } from '@/lib/apiAuth';
+import { verifyAuth } from '@/lib/apiAuth';
 import logger from '@/lib/logger';
 
 export const runtime = 'nodejs';

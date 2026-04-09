@@ -1013,6 +1013,7 @@ export default function BibleReader({
   const [activeVerseText, setActiveVerseText] = useState<string | null>(null);
   const [huiosAnalysis, setHuiosAnalysis] = useState<string>('');
   const [huiosLoading, setHuiosLoading] = useState(false);
+  const [huiosError, setHuiosError] = useState<string | null>(null);
   const [huiosModalOpen, setHuiosModalOpen] = useState(false);
   const [activeVerseProgress, setActiveVerseProgress] = useState(0);
   // Changement : Utiliser noteOpenFor pour gérer la note ouverte par verset
@@ -2589,11 +2590,16 @@ export default function BibleReader({
         break;
       case 'huios': {
         setActiveVerseReference(`${book.name} ${chapter}:${verse.number}`);
+        setHuiosError(null);
         setHuiosModalOpen(true);
         setHuiosLoading(true);
         graceService.analyzeVerse(verse.text, `${book.name} ${chapter}:${verse.number}`)
           .then(res => {
             setHuiosAnalysis(res.content);
+            setHuiosLoading(false);
+          })
+          .catch(err => {
+            setHuiosError(err instanceof Error ? err.message : 'Analyse indisponible');
             setHuiosLoading(false);
           });
         break;
@@ -3069,11 +3075,16 @@ export default function BibleReader({
           if (!selectedVerse) return;
           setStudyBarOpen(false);
           setActiveVerseReference(`${book.name} ${chapter}:${selectedVerse.number}`);
+          setHuiosError(null);
           setHuiosModalOpen(true);
           setHuiosLoading(true);
           graceService.analyzeVerse(selectedVerse.text, `${book.name} ${chapter}:${selectedVerse.number}`)
             .then(res => {
               setHuiosAnalysis(res.content);
+              setHuiosLoading(false);
+            })
+            .catch(err => {
+              setHuiosError(err instanceof Error ? err.message : 'Analyse indisponible');
               setHuiosLoading(false);
             });
         }}
@@ -3369,9 +3380,10 @@ export default function BibleReader({
 
       <HuiosVisionModal
         isOpen={huiosModalOpen}
-        onClose={() => setHuiosModalOpen(false)}
+        onClose={() => { setHuiosModalOpen(false); setHuiosError(null); }}
         content={huiosAnalysis}
         loading={huiosLoading}
+        error={huiosError}
         reference={activeVerseReference || ''}
       />
     </section>

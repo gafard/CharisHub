@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, type ReactNode, useEffect } from 'react';
 import { BookOpen, Home, Settings, Users, LogIn, User as UserIcon, TrendingUp } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthModal from './AuthModal';
 
