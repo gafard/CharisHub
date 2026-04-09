@@ -89,7 +89,8 @@ export async function POST(req: Request) {
                         }, { status: 500 });
                     }
                     baseURL = "https://openrouter.ai/api/v1";
-                    modelName = process.env.OPENROUTER_MODEL || "google/gemini-flash-1.5-exp"; 
+                    // Using a more recent free model ID. "exp:free" is the standard naming for free experimental Gemini on OpenRouter.
+                    modelName = process.env.OPENROUTER_MODEL || "google/gemini-2.0-flash-exp:free"; 
                     break;
                 case 'qwen':
                     apiKey = process.env.QWEN_API_KEY || "";
