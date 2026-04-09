@@ -47,8 +47,14 @@ CREATE TABLE IF NOT EXISTS charishub_post_likes (
 );
 
 ALTER TABLE charishub_post_likes ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Likes are publicly readable" ON charishub_post_likes;
 CREATE POLICY "Likes are publicly readable" ON charishub_post_likes FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Authenticated users can toggle their own likes" ON charishub_post_likes;
 CREATE POLICY "Authenticated users can toggle their own likes" ON charishub_post_likes FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Authenticated users can delete their own likes" ON charishub_post_likes;
 CREATE POLICY "Authenticated users can delete their own likes" ON charishub_post_likes FOR DELETE USING (auth.uid() = user_id);
 
 -- 3. Missing RPC: toggle_like

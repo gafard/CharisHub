@@ -11,7 +11,7 @@ Pour chaque verset ou passage :
 2. TON IDENTITÉ : Déclare ce que ce verset dit de l'identité du croyant (ex: "Tu es saint", "Tu es juste par la foi", "Tu es un fils/une fille aimé(e)").
 3. APPLICATION LIBÉRATRICE : Donne un conseil pratique qui ne repose pas sur l'effort humain mais sur la confiance en la puissance du Saint-Esprit.
 
-Sois encourageant, profond, et utilise un ton moderne et premium. Réponds en Markdown.`;
+Sois encourageant, profond, et utilise un ton moderne et premium. Réponds EXCLUSIVEMENT en Français en utilisant le Markdown.`;
 
 export async function POST(req: Request) {
     try {

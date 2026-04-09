@@ -105,18 +105,18 @@ export default function HuiosVisionModal({ isOpen, onClose, content, loading, er
 
                             {/* Footer stats / Identity Declaration */}
                             {!loading && !error && (
-                                <div className="border-t border-white/10 bg-slate-950/40 px-8 py-6 backdrop-blur-sm">
-                                    <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
-                                        <div className="flex items-center gap-2.5 text-[10px] font-black uppercase tracking-[0.2em] text-rose-400/90 bg-rose-500/5 px-4 py-2 rounded-full border border-rose-500/10">
-                                            <Heart size={14} className="fill-current" />
+                                <div className="border-t border-white/10 bg-slate-950/40 px-6 py-5 backdrop-blur-sm">
+                                    <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-3">
+                                        <div className="flex items-center gap-2 whitespace-nowrap text-[9px] font-black uppercase tracking-[0.1em] text-rose-400/90 bg-rose-500/5 px-3 py-1.5 rounded-full border border-rose-500/10">
+                                            <Heart size={12} className="fill-current" />
                                             Amour Inconditionnel
                                         </div>
-                                        <div className="flex items-center gap-2.5 text-[10px] font-black uppercase tracking-[0.2em] text-sky-400/90 bg-sky-500/5 px-4 py-2 rounded-full border border-sky-500/10">
-                                            <Shield size={14} className="fill-current" />
+                                        <div className="flex items-center gap-2 whitespace-nowrap text-[9px] font-black uppercase tracking-[0.1em] text-sky-400/90 bg-sky-500/5 px-3 py-1.5 rounded-full border border-sky-500/10">
+                                            <Shield size={12} className="fill-current" />
                                             Position Scellée
                                         </div>
-                                        <div className="flex items-center gap-2.5 text-[10px] font-black uppercase tracking-[0.2em] text-amber-400 bg-amber-500/5 px-4 py-2 rounded-full border border-amber-500/10">
-                                            <Zap size={14} className="fill-current" />
+                                        <div className="flex items-center gap-2 whitespace-nowrap text-[9px] font-black uppercase tracking-[0.1em] text-amber-400 bg-amber-500/5 px-3 py-1.5 rounded-full border border-amber-500/10">
+                                            <Zap size={12} className="fill-current" />
                                             Pleine Puissance
                                         </div>
                                     </div>
