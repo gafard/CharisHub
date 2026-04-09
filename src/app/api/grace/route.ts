@@ -21,14 +21,8 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Verse and reference are required' }, { status: 400 });
         }
 
-        // Auto-detection: prioritize openrouter if key is present but no provider set
-        let provider = process.env.AI_PROVIDER;
-        if (!provider) {
-            if (process.env.OPENROUTER_API_KEY) provider = 'openrouter';
-            else if (process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY) provider = 'gemini';
-            else provider = 'gemini'; // final fallback
-        }
-
+        // Rétablissement de la logique stable : Gemini par défaut (comme en local)
+        const provider = process.env.AI_PROVIDER || 'gemini';
         let text = "";
 
         const prompt = `${SYSTEM_PROMPT}\n\nANALYSE CE VERSET : "${verse}" (${reference})\n\nContexte supplémentaire (facultatif) : ${context || 'N/A'}`;
@@ -46,14 +40,8 @@ export async function POST(req: Request) {
             const { GoogleGenerativeAI } = await import("@google/generative-ai");
             const genAI = new GoogleGenerativeAI(apiKey);
             
-            // Re-ordered and updated list: Flash is prioritized as it's typically free-tier friendly and faster.
-            const modelsToTry = [
-                "gemini-1.5-flash-latest", 
-                "gemini-1.5-flash",
-                "gemini-pro", // classic stable name
-                "gemini-1.5-pro",
-                "gemini-1.5-pro-latest"
-            ];
+            // Simplification radicale pour la stabilité : noms de modèles standards
+            const modelsToTry = ["gemini-1.5-flash", "gemini-1.5-pro"];
             let lastError = null;
 
             for (const modelName of modelsToTry) {
@@ -89,8 +77,8 @@ export async function POST(req: Request) {
                         }, { status: 500 });
                     }
                     baseURL = "https://openrouter.ai/api/v1";
-                    // Using a more recent free model ID. "exp:free" is the standard naming for free experimental Gemini on OpenRouter.
-                    modelName = process.env.OPENROUTER_MODEL || "google/gemini-2.0-flash-exp:free"; 
+                    // Retour sur 'auto' qui est le plus robuste pour OpenRouter
+                    modelName = process.env.OPENROUTER_MODEL || "openrouter/auto"; 
                     break;
                 case 'qwen':
                     apiKey = process.env.QWEN_API_KEY || "";
