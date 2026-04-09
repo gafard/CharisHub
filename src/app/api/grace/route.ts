@@ -40,23 +40,38 @@ export async function POST(req: Request) {
             const { GoogleGenerativeAI } = await import("@google/generative-ai");
             const genAI = new GoogleGenerativeAI(apiKey);
             
-            // Simplification radicale pour la stabilité : noms de modèles standards
-            const modelsToTry = ["gemini-1.5-flash", "gemini-1.5-pro"];
+            // On essaie d'abord l'API v1 (stable) puis v1beta si nécessaire
+            const configs = [
+                { model: "gemini-1.5-flash", version: "v1" },
+                { model: "gemini-1.5-flash-latest", version: "v1" },
+                { model: "gemini-1.5-pro", version: "v1" },
+                { model: "gemini-1.5-pro-latest", version: "v1" },
+                { model: "gemini-pro", version: "v1" },
+                // Fallbacks v1beta
+                { model: "gemini-1.5-flash", version: "v1beta" },
+                { model: "gemini-1.5-pro", version: "v1beta" }
+            ];
+            
             let lastError = null;
 
-            for (const modelName of modelsToTry) {
+            for (const config of configs) {
                 try {
-                    const model = genAI.getGenerativeModel({ model: modelName });
+                    const model = genAI.getGenerativeModel(
+                        { model: config.model }, 
+                        { apiVersion: config.version as any }
+                    );
+                    
                     const result = await model.generateContent(prompt);
                     const response = await result.response;
                     text = response.text();
+                    
                     if (text) {
-                        logger.log(`[VisionCharis] Succès avec Gemini : ${modelName}`);
+                        logger.log(`[VisionCharis] Succès avec Gemini : ${config.model} (${config.version})`);
                         break;
                     }
                 } catch (err: any) {
                     lastError = err;
-                    logger.error(`[VisionCharis] Gemini Error (${modelName}):`, err.message);
+                    logger.error(`[VisionCharis] Gemini Error (${config.model} - ${config.version}):`, err.message);
                 }
             }
             if (!text && lastError) throw lastError;
