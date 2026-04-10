@@ -5,6 +5,7 @@ import {
   BookOpen,
   BookOpenText,
   Check,
+  Church,
   Crown,
   FishSymbol,
   Flame,
@@ -133,6 +134,7 @@ const PLAN_SYMBOLS: Record<PlanSymbolId, typeof BookOpen> = {
   sunrise: Sunrise,
   'library-big': LibraryBig,
   sparkles: Sun,
+  cross: Church,
 };
 
 export function PlanSymbol({
