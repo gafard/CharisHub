@@ -1393,7 +1393,7 @@ export default function BibleReader({
           return rows[0];
         });
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         if (!active) return;
         setError(
           `Erreur de chargement: ${err.message}. Vérifiez votre connexion internet ou réessayez plus tard.`
@@ -3101,7 +3101,7 @@ export default function BibleReader({
               }
               setMirrorLoading(false);
             })
-            .catch(err => {
+            .catch((err: unknown) => {
               setMirrorError(err instanceof Error ? err.message : 'Éclairage indisponible');
               setMirrorLoading(false);
             });
