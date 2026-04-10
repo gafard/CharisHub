@@ -1395,8 +1395,9 @@ export default function BibleReader({
       })
       .catch((err: unknown) => {
         if (!active) return;
+        const msg = err instanceof Error ? err.message : 'Détail indisponible';
         setError(
-          `Erreur de chargement: ${err.message}. Vérifiez votre connexion internet ou réessayez plus tard.`
+          `Erreur de chargement: ${msg}. Vérifiez votre connexion internet ou réessayez plus tard.`
         );
         setVerses([]);
         setSelectedVerse(null);
