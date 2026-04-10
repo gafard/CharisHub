@@ -5,7 +5,7 @@ import logger from '@/lib/logger';
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  Volume2, ChevronLeft, ChevronRight, Link2, Search, Sun, X, Settings, Maximize, Play, Pause, Bookmark, ListVideo, AlignLeft, BookmarkCheck,
+  Volume2, ChevronLeft, ChevronRight, Link2, Search, Sun, X, Settings, Maximize, Play, Pause, Bookmark, ListVideo, AlignLeft, BookmarkCheck, AlertCircle, Heart, Shield, Flame,
 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { BIBLE_BOOKS, type BibleBook } from '../lib/bibleCatalog';
@@ -35,7 +35,7 @@ import ShareableVerseCard from './ShareableVerseCard';
 import ReadingPlanWidget from './ReadingPlanWidget';
 import BibleCompareModal from './bible/BibleCompareModal';
 import BibleStudyRadar from './bible/BibleStudyRadar';
-import BibleStudyBar from './bible/BibleStudyBar';
+import BibleMeditationBar from './bible/BibleMeditationBar';
 import { useActiveVerse } from './bible/useActiveVerse';
 import { useVerseSync } from '../hooks/useVerseSync';
 import MyHighlightsModal from './bible/MyHighlightsModal';
@@ -48,7 +48,7 @@ import { getActivePlan, isReadingChapterCompleted } from '../lib/readingPlans';
 
 import { graceService } from '../lib/graceService';
 import { pepitesStore } from '../lib/pepitesStore';
-import HuiosVisionModal from './bible/HuiosVisionModal';
+import GraceMirrorModal from './bible/GraceMirrorModal';
 
 // Traductions de la Bible provenant du fichier centralisé
 const LOCAL_BIBLE_TRANSLATIONS = [
@@ -1011,10 +1011,10 @@ export default function BibleReader({
   const [activeCueVerse, setActiveCueVerse] = useState<number | null>(null);
   const [activeVerseReference, setActiveVerseReference] = useState<string | null>(null);
   const [activeVerseText, setActiveVerseText] = useState<string | null>(null);
-  const [huiosAnalysis, setHuiosAnalysis] = useState<string>('');
-  const [huiosLoading, setHuiosLoading] = useState(false);
-  const [huiosError, setHuiosError] = useState<string | null>(null);
-  const [huiosModalOpen, setHuiosModalOpen] = useState(false);
+  const [mirrorAnalysis, setMirrorAnalysis] = useState<string>('');
+  const [mirrorLoading, setMirrorLoading] = useState(false);
+  const [mirrorError, setMirrorError] = useState<string | null>(null);
+  const [mirrorModalOpen, setMirrorModalOpen] = useState(false);
   const [activeVerseProgress, setActiveVerseProgress] = useState(0);
   // Changement : Utiliser noteOpenFor pour gérer la note ouverte par verset
   const [noteOpenFor, setNoteOpenFor] = useState<string | null>(null);
@@ -2349,7 +2349,12 @@ export default function BibleReader({
     setStudyBarOpen(false);
     setRadarVerse(verse);
     setRadarWord(word);
-    setRadarPos({ x, y });
+    
+    // Sécuriser la position à l'écran (Clamping)
+    const safeX = typeof window !== 'undefined' ? Math.max(170, Math.min(window.innerWidth - 170, x)) : x;
+    const safeY = typeof window !== 'undefined' ? Math.max(180, Math.min(window.innerHeight - 160, y)) : y;
+    
+    setRadarPos({ x: safeX, y: safeY });
     setRadarPreferredBubble(preferredBubble);
     setRadarOpen(true);
   };
@@ -2561,7 +2566,9 @@ export default function BibleReader({
     }
   };
 
-  const handleLongPressAction = async (action: 'strong' | 'refs' | 'note' | 'compare' | 'share' | 'huios' | 'pepite') => {
+  type LongPressAction = 'strong' | 'refs' | 'note' | 'compare' | 'share' | 'mirror' | 'pepite';
+
+  const handleLongPressAction = async (action: LongPressAction) => {
     if (!longPressTarget) return;
     const target = longPressTarget;
     setLongPressTarget(null);
@@ -2588,23 +2595,22 @@ export default function BibleReader({
           onSyncBible(ref, verse.text, { bookId: book.id, chapter, verse: verse.number });
         }
         break;
-      case 'huios': {
-        setActiveVerseReference(`${book.name} ${chapter}:${verse.number}`);
-        setHuiosError(null);
-        setHuiosModalOpen(true);
-        setHuiosLoading(true);
-        graceService.analyzeVerse(verse.text, `${book.name} ${chapter}:${verse.number}`)
+      case 'mirror': {
+        setMirrorError(null);
+        setMirrorModalOpen(true);
+        setMirrorLoading(true);
+        graceService.getSpiritInsight(`${book.name} ${chapter}:${verse.number}`, verse.text)
           .then(res => {
             if (res.error) {
-              setHuiosError(res.error);
+              setMirrorError(res.error);
             } else {
-              setHuiosAnalysis(res.content);
+              setMirrorAnalysis(res.content);
             }
-            setHuiosLoading(false);
+            setMirrorLoading(false);
           })
           .catch(err => {
-            setHuiosError(err instanceof Error ? err.message : 'Analyse indisponible');
-            setHuiosLoading(false);
+            setMirrorError(err instanceof Error ? err.message : 'Éclairage indisponible');
+            setMirrorLoading(false);
           });
         break;
       }
@@ -2846,6 +2852,11 @@ export default function BibleReader({
                     </span>
                   </div>
                 )}
+                
+                <div className="flex items-center gap-2 whitespace-nowrap text-[9px] font-black uppercase tracking-[0.1em] text-amber-400 bg-amber-500/5 px-3 py-1.5 rounded-full border border-amber-500/10">
+                    <Flame size={12} className="fill-current" />
+                    Pleine Puissance
+                </div>
               </div>
             </div>
           </div>
@@ -3031,7 +3042,7 @@ export default function BibleReader({
       </div>
 
       <audio ref={audioRef} preload="none" />
-      <BibleStudyBar
+      <BibleMeditationBar
         open={Boolean(selectedVerse && studyBarOpen)}
         refLabel={studyRefLabel}
         verseText={studyVerseText}
@@ -3075,25 +3086,24 @@ export default function BibleReader({
           setShowStrongViewer(true);
           setStudyBarOpen(false);
         }}
-        onHuios={() => {
+        onMirror={() => {
           if (!selectedVerse) return;
-          setStudyBarOpen(false);
-          setActiveVerseReference(`${book.name} ${chapter}:${selectedVerse.number}`);
-          setHuiosError(null);
-          setHuiosModalOpen(true);
-          setHuiosLoading(true);
-          graceService.analyzeVerse(selectedVerse.text, `${book.name} ${chapter}:${selectedVerse.number}`)
+          const ref = `${book.name} ${chapter}:${selectedVerse.number}`;
+          setMirrorError(null);
+          setMirrorModalOpen(true);
+          setMirrorLoading(true);
+          graceService.getSpiritInsight(ref, selectedVerse.text)
             .then(res => {
               if (res.error) {
-                setHuiosError(res.error);
+                setMirrorError(res.error);
               } else {
-                setHuiosAnalysis(res.content);
+                setMirrorAnalysis(res.content);
               }
-              setHuiosLoading(false);
+              setMirrorLoading(false);
             })
             .catch(err => {
-              setHuiosError(err instanceof Error ? err.message : 'Analyse indisponible');
-              setHuiosLoading(false);
+              setMirrorError(err instanceof Error ? err.message : 'Éclairage indisponible');
+              setMirrorLoading(false);
             });
         }}
       />
@@ -3386,12 +3396,12 @@ export default function BibleReader({
         />
       )}
 
-      <HuiosVisionModal
-        isOpen={huiosModalOpen}
-        onClose={() => { setHuiosModalOpen(false); setHuiosError(null); }}
-        content={huiosAnalysis}
-        loading={huiosLoading}
-        error={huiosError}
+      <GraceMirrorModal
+        isOpen={mirrorModalOpen}
+        onClose={() => { setMirrorModalOpen(false); setMirrorError(null); }}
+        content={mirrorAnalysis}
+        loading={mirrorLoading}
+        error={mirrorError}
         reference={activeVerseReference || ''}
       />
     </section>

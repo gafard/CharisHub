@@ -36,7 +36,7 @@ const messages: Record<Locale, Record<string, string>> = {
 
     'community.badge': 'Communaute',
     'community.title': 'La Grâce Connectée',
-    'community.subtitle': 'Connectés par la grâce — Formation des Huios',
+    'community.subtitle': 'Connectés par la grâce — Vision Miroir',
     'community.navigation': 'Navigation',
     'community.tab.all': 'Fil d actualite',
     'community.tab.prayer': 'Priere',
@@ -106,7 +106,7 @@ const messages: Record<Locale, Record<string, string>> = {
     'community.groups.adminPromoted': 'Responsable ajoute au groupe.',
     'community.groups.deleted': 'Groupe supprime.',
     'community.groups.inAppCall': 'Appel de groupe integre',
-    'community.groups.callWorkspaceTitle': 'Salle immersive Huios',
+    'community.groups.callWorkspaceTitle': 'Salle Miroir de Grâce',
     'community.groups.inAppCallHint': '{count} participant(s) dans la salle de grâce',
     'community.groups.callLaunchTitle': 'Temps de communion',
     'community.groups.callLaunchHint': "Priez, partagez et alignez-vous ensemble dans la présence de Dieu.",
@@ -212,11 +212,11 @@ const messages: Record<Locale, Record<string, string>> = {
     'bible.action.strong': 'Strong',
     'bible.action.interlinear': 'Interlineaire',
     'bible.action.study': 'Etude',
-    'bible.action.huios': 'Vision Huios ✨',
+    'bible.action.mirror': 'Miroir de Grâce',
     'bible.action.pepite': 'Saisir une Pépite 💎',
     'bible.toast.selectVerse': 'Sélectionnez un verset d\'abord',
     'bible.toast.noStrong': 'Données Strong indisponibles',
-    'bible.hint.longPress': 'Appui long sur un verset pour révéler les Trésors d\'Identité (Huios).',
+    'bible.hint.longPress': 'Appui long sur un verset pour révéler les Trésors d\'Identité.',
   },
   en: {
     'lang.label': 'Language',
@@ -239,7 +239,7 @@ const messages: Record<Locale, Record<string, string>> = {
 
     'community.badge': 'Community',
     'community.title': 'Connected by Grace',
-    'community.subtitle': 'CharisHub — Formation of Huios',
+    'community.subtitle': 'CharisHub — Mirror Vision',
     'community.navigation': 'Navigation',
     'community.tab.all': 'News feed',
     'community.tab.prayer': 'Prayer',
@@ -271,8 +271,8 @@ const messages: Record<Locale, Record<string, string>> = {
       'News feed is read-only. Publish from Prayer, Help, Announcements or Content tabs.',
     'community.storageLocalOnly':
       'Local mode is active: posts stay on this device until Supabase is configured.',
-    'community.groups.title': 'Huios Groups',
-    'community.groups.subtitle': 'Study, pray and grow together in your royal identity.',
+    'community.groups.title': 'Mirror Groups',
+    'community.groups.subtitle': 'Study, pray and grow together in your identity.',
     'community.groups.listTitle': 'Group list',
     'community.groups.totalCount': '{count} groups',
     'community.groups.joinedCount': '{count} joined',
@@ -309,7 +309,7 @@ const messages: Record<Locale, Record<string, string>> = {
     'community.groups.adminPromoted': 'Leader promoted successfully.',
     'community.groups.deleted': 'Group deleted.',
     'community.groups.inAppCall': 'Built-in group call',
-    'community.groups.callWorkspaceTitle': 'Immersive group room',
+    'community.groups.callWorkspaceTitle': 'Mirror Room',
     'community.groups.inAppCallHint': '{count} participant(s) in the room',
     'community.groups.callLaunchTitle': 'Ready for a group call?',
     'community.groups.callLaunchHint': 'Open the call space first, then choose audio or video mode.',
@@ -412,11 +412,11 @@ const messages: Record<Locale, Record<string, string>> = {
     'feed.deleteError': 'Unable to delete this post.',
 
     'bible.action.strong': 'Strong',
-    'bible.action.huios': 'Huios Vision ✨',
-    'bible.action.pepite': 'Capture Identiy Gem 💎',
+    'bible.action.mirror': 'Grace Mirror',
+    'bible.action.pepite': 'Capture Identity Gem 💎',
     'bible.toast.selectVerse': 'Select a verse first',
     'bible.toast.noStrong': 'No Strong data available',
-    'bible.hint.longPress': 'Long-press a verse to reveal Identity Treasures (Huios).',
+    'bible.hint.longPress': 'Long-press a verse to reveal Identity Treasures.',
   },
 };
 
@@ -460,7 +460,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
       setLocale: setLocaleState,
       t: (key: string, params?: TranslateParams) => {
         const template = messages[locale][key] ?? messages.fr[key] ?? key;
-        return interpolate(template, params).replace(/Huios/g, 'CharisHub');
+        return interpolate(template, params).replace(/Huios/g, 'Miroir');
       },
     };
   }, [locale]);

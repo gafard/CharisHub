@@ -3,16 +3,31 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Flame, BookOpen, Heart, Star, TrendingUp, Clock,
-  Calendar, Award, Zap, MessageCircle, Users, Sparkles,
-  Quote, Copy, Share2, Info
+  Award,
+  BookOpen,
+  Calendar,
+  Check,
+  Clock,
+  Cloud,
+  Copy,
+  Flame,
+  Heart,
+  Info,
+  MessageCircle,
+  Quote,
+  RefreshCw,
+  Share2,
+  Star,
+  Sun,
+  TrendingUp,
+  Users,
+  Zap
 } from 'lucide-react';
 import { getStreak, type StreakData } from '@/lib/bibleStreak';
 import { getAllSessions, type PrayerFlowSession } from '@/lib/prayerFlowStore';
 import { pepitesStore, type Pepite } from '@/lib/pepitesStore';
 import { useAuth } from '@/contexts/AuthContext';
 import { performInitialSync } from '@/lib/cloudSync';
-import { RefreshCw, Check, Cloud } from 'lucide-react';
 
 // ============================================================
 // Types & Data

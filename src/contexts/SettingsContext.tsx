@@ -23,7 +23,7 @@ type SettingsState = {
   openSettings: () => void;
   closeSettings: () => void;
 
-  // options IA
+  // assistance à la méditation
   autoPlayOnOpen: boolean;
   setAutoPlayOnOpen: (v: boolean) => void;
 

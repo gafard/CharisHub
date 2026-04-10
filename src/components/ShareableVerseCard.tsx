@@ -75,7 +75,7 @@ function generateSVG(reference: string, text: string, translation: string, theme
   <text x="96" y="1257" fill="rgba(255,255,255,0.6)" font-family="system-ui,-apple-system,sans-serif" font-size="20" font-weight="600">${esc(translation)}</text>
   
   <!-- App name -->
-  <text x="945" y="1257" fill="rgba(255,255,255,0.35)" font-family="system-ui,-apple-system,sans-serif" font-size="18" text-anchor="end">Huios · Identité & Grâce</text>
+  <text x="945" y="1257" fill="rgba(255,255,255,0.35)" font-family="system-ui,-apple-system,sans-serif" font-size="18" text-anchor="end">Miroir · Identité & Grâce</text>
 </svg>`;
 }
 

@@ -31,7 +31,7 @@ const merriweather = Merriweather({
 
 export const metadata: Metadata = {
   title: 'CharisHub',
-  description: "Connectés par la grâce — Formation des Huios",
+  description: "Connectés par la grâce — Vision Miroir",
   applicationName: 'CharisHub',
   manifest: '/manifest.webmanifest',
 };

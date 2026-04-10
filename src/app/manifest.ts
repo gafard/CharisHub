@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: 'CharisHub',
     short_name: 'CharisHub',
     lang: 'fr',
-    description: 'Connectés par la grâce — Formation des Huios',
+    description: 'Connectés par la grâce — Vision Miroir',
     start_url: '/',
     scope: '/',
     display: 'standalone',
@@ -36,7 +36,7 @@ export default function manifest(): MetadataRoute.Manifest {
         sizes: '1024x1024',
         type: 'image/png',
         form_factor: 'wide',
-        label: 'Formation des Huios - Communauté',
+        label: 'Miroir de Grâce - Communauté',
       },
       {
         src: '/images/Logo.png',

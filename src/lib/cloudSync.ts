@@ -537,7 +537,7 @@ export function mergeCloudToLocal(
     // 4. Merge pépites
     reportProgress('Fusion des pépites');
     if (cloudData.pepites.length > 0) {
-      const localPepitesRaw = localStorage.getItem('huios_pepites_v1');
+      const localPepitesRaw = localStorage.getItem('mirror_pepites_v1');
       const localPepites: Pepite[] = localPepitesRaw ? JSON.parse(localPepitesRaw) : [];
       
       for (const p of cloudData.pepites) {
@@ -554,7 +554,7 @@ export function mergeCloudToLocal(
         }
       }
       
-      localStorage.setItem('huios_pepites_v1', JSON.stringify(localPepites));
+      localStorage.setItem('mirror_pepites_v1', JSON.stringify(localPepites));
       counts.pepites = cloudData.pepites.length;
     }
 
@@ -637,7 +637,7 @@ export function exportAllLocalData(): ExportData {
     notes: safeParse(localStorage.getItem('formation_biblique_bible_notes_v1'), {}),
     verseNotes: safeParse(localStorage.getItem('formation_biblique_bible_verse_notes_v1'), {}),
     bookmarks: safeParse(localStorage.getItem('bible_bookmarks'), []),
-    pepites: safeParse(localStorage.getItem('huios_pepites_v1'), []),
+    pepites: safeParse(localStorage.getItem('mirror_pepites_v1'), []),
     readingPlans: safeParse(localStorage.getItem('formation_biblique_reading_plans_v3'), {}),
     readingStreak: safeParse(localStorage.getItem('formation_biblique_bible_streak_v1'), {
       current: 0,
@@ -703,7 +703,7 @@ export function importData(data: ExportData): { success: boolean; counts: Record
     }
 
     if (data.pepites && data.pepites.length > 0) {
-      localStorage.setItem('huios_pepites_v1', JSON.stringify(data.pepites));
+      localStorage.setItem('mirror_pepites_v1', JSON.stringify(data.pepites));
       counts.pepites = data.pepites.length;
     }
 

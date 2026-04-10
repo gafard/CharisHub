@@ -12,19 +12,34 @@ export interface Pepite {
     type: 'grace' | 'identity' | 'promise';
 }
 
-const STORE_KEY = 'huios_pepites_v1';
+const STORE_KEY = 'mirror_pepites_v1';
+const LEGACY_STORE_KEY = 'huios_pepites_v1';
 
 import { syncLocalToCloud, exportAllLocalData } from './cloudSync';
 
 export const pepitesStore = {
     load(): Pepite[] {
         if (typeof window === 'undefined') return [];
-        try {
-            const raw = localStorage.getItem(STORE_KEY);
-            return raw ? JSON.parse(raw) : [];
-        } catch {
-            return [];
+        const saved = localStorage.getItem(STORE_KEY);
+        if (saved) {
+            try {
+                return JSON.parse(saved);
+            } catch {
+                return [];
+            }
         }
+        // Migration
+        const legacy = localStorage.getItem(LEGACY_STORE_KEY);
+        if (legacy) {
+            localStorage.setItem(STORE_KEY, legacy);
+            localStorage.removeItem(LEGACY_STORE_KEY);
+            try {
+                return JSON.parse(legacy);
+            } catch {
+                return [];
+            }
+        }
+        return [];
     },
 
     save(pepite: Omit<Pepite, 'id' | 'createdAt'>): Pepite {

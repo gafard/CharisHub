@@ -1,16 +1,15 @@
 'use client';
 
 import logger from '@/lib/logger';
-
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   BookMarked,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
   Loader2,
-  MessageCircleQuestion,
   PenLine,
+  Sparkles,
   Sun,
 } from 'lucide-react';
 import { formatDayReadingsLabel, type PlanReading, findReadingPlan } from '../../lib/readingPlans';
@@ -23,11 +22,11 @@ import {
 import { BIBLE_BOOKS } from '../../lib/bibleCatalog';
 
 const DAILY_PROMPTS = [
-  { id: 'p1', text: 'Quel verset ou quelle idee revient le plus dans ma journee ?' },
-  { id: 'p2', text: 'Qu\'est-ce que Dieu me demande d\'ajuster ou d\'abandonner ?' },
-  { id: 'p3', text: 'Pour quoi puis-je remercier Dieu apres cette lecture ?' },
-  { id: 'p4', text: 'Quelle demande ou quelle personne vais-je porter dans la priere ?' },
-  { id: 'p5', text: 'Quel pas concret vais-je poser avant la fin de la journee ?' },
+  { id: 'p1', text: 'Quel verset ou quelle idée revient le plus dans ma journée ?' },
+  { id: 'p2', text: "Qu'est-ce que Dieu me demande d'ajuster ou d'abandonner ?" },
+  { id: 'p3', text: 'Pour quoi puis-je remercier Dieu après cette lecture ?' },
+  { id: 'p4', text: 'Quelle demande ou quelle personne vais-je porter dans la prière ?' },
+  { id: 'p5', text: 'Quel pas concret vais-je poser avant la fin de la journée ?' },
 ];
 
 type FocusContext = {
@@ -35,13 +34,18 @@ type FocusContext = {
   chapter: number;
 };
 
-type AiQuestions = { q1: string; q2: string; q3: string; q4: string };
+type AiQuestions = {
+  q1: string;
+  q2: string;
+  q3: string;
+  q4: string;
+};
 
 const DEFAULT_AI_QUESTIONS: AiQuestions = {
-  q1: 'Que revele ce chapitre sur Dieu ou sur Jesus ?',
-  q2: 'Qu\'est-ce qui me frappe, me derange ou m\'eclaire ici ?',
-  q3: 'Y a-t-il un appel concret pour ma vie aujourd\'hui ?',
-  q4: 'Quelle verite dois-je retenir ou mediter davantage ?',
+  q1: 'Que révèle ce chapitre sur Dieu ou sur Jésus ?',
+  q2: "Qu'est-ce qui me frappe, me dérange ou m'éclaire ici ?",
+  q3: "Y a-t-il un appel concret pour ma vie aujourd'hui ?",
+  q4: 'Quelle vérité dois-je retenir ou méditer davantage ?',
 };
 
 interface ReflectionQuestionsProps {
@@ -70,7 +74,7 @@ function getFocusContext(
 }
 
 function getBookDisplayName(bookId: string): string {
-  const book = BIBLE_BOOKS.find(b => b.id === bookId);
+  const book = BIBLE_BOOKS.find((b) => b.id === bookId);
   return book?.name || bookId;
 }
 
@@ -88,19 +92,60 @@ export default function ReflectionQuestions({
     () => getFocusContext(readings, activeReading, activeChapter),
     [activeChapter, activeReading, readings],
   );
+
   const readingLabel = readings.length ? formatDayReadingsLabel(readings) : 'Lecture du jour';
   const focusLabel = focus ? `${focus.reading.bookName} ${focus.chapter}` : 'Chapitre du jour';
 
-  // AI questions state
   const [aiQuestions, setAiQuestions] = useState<AiQuestions>(DEFAULT_AI_QUESTIONS);
   const [aiLoading, setAiLoading] = useState(false);
 
+  const questions = useMemo(
+    () => [
+      { id: 'q1' as const, text: aiQuestions.q1 },
+      { id: 'q2' as const, text: aiQuestions.q2 },
+      { id: 'q3' as const, text: aiQuestions.q3 },
+      { id: 'q4' as const, text: aiQuestions.q4 },
+    ],
+    [aiQuestions],
+  );
+
+  const loadStoredAnswers = useCallback(() => {
+    if (!focus) return {};
+    return getChapterReflection(planId, dayIndex, focus.reading.id, focus.chapter)?.answers ?? {};
+  }, [focus, planId, dayIndex]);
+
+  const loadStoredDailyAnswers = useCallback(() => {
+    return getDayDailyPrompts(planId, dayIndex);
+  }, [planId, dayIndex]);
+
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [dailyAnswers, setDailyAnswers] = useState<Record<string, string>>({});
+  const [expandedQuestion, setExpandedQuestion] = useState<string | null>(null);
+  const [showDailyPrompts, setShowDailyPrompts] = useState(finalChapter);
+
+  const aiRequestRef = useRef(0);
+
+  useEffect(() => {
+    setAnswers(loadStoredAnswers());
+    setDailyAnswers(loadStoredDailyAnswers());
+  }, [loadStoredAnswers, loadStoredDailyAnswers]);
+
+  useEffect(() => {
+    const nextAnswers = loadStoredAnswers();
+    const firstUnanswered = questions.find((q) => !(nextAnswers[q.id] ?? '').trim());
+    setExpandedQuestion(firstUnanswered?.id ?? questions[0]?.id ?? null);
+  }, [questions, loadStoredAnswers]);
+
   const fetchAiQuestions = useCallback(async () => {
     if (!focus) return;
+
+    const requestId = ++aiRequestRef.current;
     setAiLoading(true);
+
     try {
       const plan = findReadingPlan(planId);
       const bookName = getBookDisplayName(focus.reading.bookId);
+
       const res = await fetch('/api/bible/reflection-questions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -111,48 +156,33 @@ export default function ReflectionQuestions({
           planCategory: plan?.category,
         }),
       });
-      if (res.ok) {
-        const data = await res.json();
-        setAiQuestions(data);
-      }
+
+      if (!res.ok) return;
+
+      const data = (await res.json()) as Partial<AiQuestions>;
+      if (requestId !== aiRequestRef.current) return;
+
+      setAiQuestions({
+        q1: data.q1 || DEFAULT_AI_QUESTIONS.q1,
+        q2: data.q2 || DEFAULT_AI_QUESTIONS.q2,
+        q3: data.q3 || DEFAULT_AI_QUESTIONS.q3,
+        q4: data.q4 || DEFAULT_AI_QUESTIONS.q4,
+      });
     } catch (err) {
       logger.warn('[ReflectionQuestions] AI fetch failed, using defaults:', err);
+      if (requestId === aiRequestRef.current) {
+        setAiQuestions(DEFAULT_AI_QUESTIONS);
+      }
     } finally {
-      setAiLoading(false);
+      if (requestId === aiRequestRef.current) {
+        setAiLoading(false);
+      }
     }
   }, [focus, passageText, planId]);
 
-  // Fetch AI questions on mount or when chapter changes
   useEffect(() => {
     void fetchAiQuestions();
   }, [fetchAiQuestions]);
-
-  const questions = useMemo(() => [
-    { id: 'q1' as const, text: aiQuestions.q1 },
-    { id: 'q2' as const, text: aiQuestions.q2 },
-    { id: 'q3' as const, text: aiQuestions.q3 },
-    { id: 'q4' as const, text: aiQuestions.q4 },
-  ], [aiQuestions]);
-
-  const initialAnswers = focus
-    ? getChapterReflection(planId, dayIndex, focus.reading.id, focus.chapter)?.answers ?? {}
-    : {};
-  const initialDailyAnswers = getDayDailyPrompts(planId, dayIndex);
-
-  const [answers, setAnswers] = useState<Record<string, string>>(initialAnswers);
-  const [dailyAnswers, setDailyAnswers] = useState<Record<string, string>>(initialDailyAnswers);
-  const [expandedQuestion, setExpandedQuestion] = useState<string | null>(
-    questions.find((q) => !(initialAnswers[q.id] ?? '').trim())?.id ?? questions[0]?.id ?? null,
-  );
-  const [showDailyPrompts, setShowDailyPrompts] = useState(finalChapter);
-
-  // Update expanded question when questions change
-  useEffect(() => {
-    if (!expandedQuestion || !questions.find(q => q.id === expandedQuestion)) {
-      const firstUnanswered = questions.find((q) => !(answers[q.id] ?? '').trim());
-      setExpandedQuestion(firstUnanswered?.id ?? questions[0]?.id ?? null);
-    }
-  }, [aiQuestions, questions, answers, expandedQuestion]);
 
   const saveChapterAnswer = (nextAnswers: Record<string, string>) => {
     setAnswers(nextAnswers);
@@ -170,42 +200,61 @@ export default function ReflectionQuestions({
   const answeredCount = questions.filter((q) => (answers[q.id] ?? '').trim().length > 0).length;
   const chapterComplete = answeredCount > 0;
   const promptCount = DAILY_PROMPTS.filter((p) => (dailyAnswers[p.id] ?? '').trim().length > 0).length;
+  const progressPercent = Math.round((answeredCount / questions.length) * 100);
 
   return (
     <div className="space-y-5">
-      {/* Header card */}
-      <div className="overflow-hidden rounded-[28px] border border-[rgba(246,225,192,0.12)] bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] p-5 text-white shadow-[0_24px_70px_rgba(0,0,0,0.18)]">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-[rgba(255,255,255,0.05)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.22em] text-[rgba(255,240,222,0.7)]">
-              <Sun size={13} className="text-amber-400" />
-              {finalChapter ? 'Réflexion finale du jour' : 'Réflexion du chapitre'}
-              {aiLoading && <Loader2 size={12} className="animate-spin ml-1" />}
+      <div className="overflow-hidden rounded-[30px] border border-[rgba(246,225,192,0.14)] bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02))] text-white shadow-[0_26px_80px_rgba(0,0,0,0.22)]">
+        <div className="relative p-5 sm:p-6">
+          <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-amber-400/10 blur-3xl" />
+          <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-px bg-white/8" />
+
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-[rgba(255,255,255,0.05)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.22em] text-[rgba(255,240,222,0.72)]">
+                <Sun size={13} className="text-amber-400" />
+                {finalChapter ? 'Réflexion finale du jour' : 'Réflexion du chapitre'}
+                {aiLoading ? <Loader2 size={12} className="animate-spin ml-1" /> : null}
+              </div>
+
+              <h3 className="mt-3 font-display text-[24px] font-bold leading-[0.98] text-[#fff7ec] sm:text-[30px]">
+                {focusLabel}
+              </h3>
+
+              <p className="mt-2 max-w-[58ch] text-[13px] leading-relaxed text-[rgba(255,240,222,0.68)]">
+                {finalChapter
+                  ? `${readingLabel}. Prenez quelques instants pour recueillir ce que Dieu vous a montré aujourd’hui.`
+                  : 'Prenez une minute pour fixer ce que Dieu a mis en lumière dans ce chapitre.'}
+              </p>
             </div>
-            <h3 className="mt-3 font-display text-[24px] font-bold leading-[0.98] text-[#fff7ec] sm:text-[28px]">
-              {focusLabel}
-            </h3>
-            <p className="mt-2 max-w-[52ch] text-[13px] leading-relaxed text-[rgba(255,240,222,0.66)]">
-              {finalChapter
-                ? `${readingLabel}. Terminez votre relecture intérieure avant d'entrer dans la prière.`
-                : 'Prenez une minute pour fixer ce que Dieu a mis en lumière dans ce chapitre.'}
-            </p>
+
+            <div className="grid shrink-0 gap-2 text-right">
+              <span className="inline-flex items-center justify-center rounded-full border border-white/10 bg-[rgba(255,255,255,0.05)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[rgba(255,240,222,0.76)]">
+                {answeredCount}/{questions.length} réponses
+              </span>
+              {finalChapter ? (
+                <span className="inline-flex items-center justify-center rounded-full border border-white/10 bg-[rgba(255,255,255,0.05)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[rgba(255,240,222,0.76)]">
+                  {promptCount}/{DAILY_PROMPTS.length} prompts
+                </span>
+              ) : null}
+            </div>
           </div>
 
-          <div className="grid shrink-0 gap-2 text-right">
-            <span className="inline-flex items-center justify-center rounded-full border border-white/10 bg-[rgba(255,255,255,0.05)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[rgba(255,240,222,0.76)]">
-              {answeredCount}/{questions.length} réponses
-            </span>
-            {finalChapter ? (
-              <span className="inline-flex items-center justify-center rounded-full border border-white/10 bg-[rgba(255,255,255,0.05)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[rgba(255,240,222,0.76)]">
-                {promptCount}/{DAILY_PROMPTS.length} prompts
-              </span>
-            ) : null}
+          <div className="mt-5">
+            <div className="mb-2 flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.18em] text-[rgba(255,240,222,0.56)]">
+              <span>Avancement</span>
+              <span>{progressPercent}%</span>
+            </div>
+            <div className="h-2 overflow-hidden rounded-full bg-white/10">
+              <div
+                className="h-full rounded-full bg-[linear-gradient(90deg,rgba(251,191,36,0.95),rgba(255,238,186,0.9))] transition-all duration-500"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
           </div>
         </div>
       </div>
 
-      {/* AI-generated questions */}
       <div className="grid gap-3">
         {questions.map((question, index) => {
           const isExpanded = expandedQuestion === question.id;
@@ -214,7 +263,11 @@ export default function ReflectionQuestions({
           return (
             <div
               key={question.id}
-              className="overflow-hidden rounded-[24px] border border-[rgba(246,225,192,0.12)] bg-[linear-gradient(180deg,#15110d_0%,#0f0b08_100%)] text-white shadow-[0_16px_48px_rgba(0,0,0,0.18)]"
+              className={`overflow-hidden rounded-[24px] border shadow-[0_18px_52px_rgba(0,0,0,0.18)] transition-all ${
+                isExpanded
+                  ? 'border-amber-300/18 bg-[linear-gradient(180deg,#17120d_0%,#100c09_100%)]'
+                  : 'border-[rgba(246,225,192,0.10)] bg-[linear-gradient(180deg,#15110d_0%,#0f0b08_100%)]'
+              } text-white`}
             >
               <button
                 type="button"
@@ -222,7 +275,7 @@ export default function ReflectionQuestions({
                 className="flex w-full items-center gap-4 px-4 py-4 text-left transition-colors hover:bg-white/[0.02] sm:px-5"
               >
                 <div
-                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-[12px] font-bold ${
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border text-[12px] font-bold ${
                     hasAnswer
                       ? 'border-emerald-300/30 bg-emerald-400/14 text-emerald-200'
                       : aiLoading
@@ -230,13 +283,21 @@ export default function ReflectionQuestions({
                         : 'border-white/12 bg-white/[0.05] text-[rgba(255,240,222,0.68)]'
                   }`}
                 >
-                  {hasAnswer ? <CheckCircle2 size={16} /> : aiLoading ? <Loader2 size={14} className="animate-spin" /> : index + 1}
+                  {hasAnswer ? (
+                    <CheckCircle2 size={16} />
+                  ) : aiLoading ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    index + 1
+                  )}
                 </div>
+
                 <div className="min-w-0 flex-1">
                   <p className="text-[14px] font-semibold leading-snug text-[#fff8ef]">
                     {question.text}
                   </p>
                 </div>
+
                 <div className="rounded-full border border-white/10 bg-white/[0.05] p-1.5 text-[rgba(255,240,222,0.62)]">
                   {isExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
                 </div>
@@ -255,7 +316,7 @@ export default function ReflectionQuestions({
                         });
                       }}
                       placeholder="Écrivez votre réflexion..."
-                      className="min-h-[118px] w-full resize-none bg-transparent py-4 pl-11 pr-4 text-[14px] leading-relaxed text-[#fff7ec] outline-none placeholder:text-[rgba(255,240,222,0.3)]"
+                      className="min-h-[124px] w-full resize-none bg-transparent py-4 pl-11 pr-4 text-[14px] leading-relaxed text-[#fff7ec] outline-none placeholder:text-[rgba(255,240,222,0.3)]"
                     />
                   </div>
                 </div>
@@ -265,7 +326,6 @@ export default function ReflectionQuestions({
         })}
       </div>
 
-      {/* Footer info */}
       {!finalChapter ? (
         <div className="rounded-[24px] border border-[rgba(246,225,192,0.12)] bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] p-4 text-[13px] leading-relaxed text-[rgba(255,240,222,0.68)]">
           <div className="flex items-center gap-2 text-[#fff6e6]">
@@ -276,27 +336,28 @@ export default function ReflectionQuestions({
           </div>
           <p className="mt-2">
             {chapterComplete
-              ? "Votre réflexion est conservée. Vous pourrez la retrouver dans la synthèse du dernier chapitre du jour."
+              ? 'Votre réflexion est conservée. Vous pourrez la retrouver dans la synthèse du dernier chapitre du jour.'
               : "Vous pouvez laisser une seule phrase. L'app gardera cette trace pour la synthèse finale du jour."}
           </p>
         </div>
       ) : (
-        /* Daily prompts for final chapter */
-        <div className="overflow-hidden rounded-[26px] border border-[rgba(246,225,192,0.12)] bg-[linear-gradient(180deg,#130d10_0%,#0a0a0d_100%)] text-white shadow-[0_20px_60px_rgba(0,0,0,0.2)]">
+        <div className="overflow-hidden rounded-[28px] border border-amber-300/14 bg-[linear-gradient(180deg,#160f11_0%,#0b090c_100%)] text-white shadow-[0_24px_70px_rgba(0,0,0,0.24)]">
           <button
             type="button"
             onClick={() => setShowDailyPrompts((value) => !value)}
             className="flex w-full items-center gap-4 px-4 py-4 text-left transition-colors hover:bg-white/[0.02] sm:px-5"
           >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-[rgba(255,255,255,0.06)] text-[#fff6e6]">
-              <Sun size={16} className="text-amber-400" />
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/10 bg-[rgba(255,255,255,0.06)] text-[#fff6e6]">
+              <Sparkles size={17} className="text-amber-400" />
             </div>
+
             <div className="min-w-0 flex-1">
               <p className="text-[15px] font-semibold text-[#fff8ef]">Synthèse et élans de prière</p>
               <p className="mt-1 text-[12px] text-[rgba(255,240,222,0.62)]">
-                Dernier chapitre du jour: préparez la prière finale.
+                Dernier chapitre du jour : préparez votre réponse intérieure.
               </p>
             </div>
+
             <div className="rounded-full border border-white/10 bg-white/[0.05] p-1.5 text-[rgba(255,240,222,0.62)]">
               {showDailyPrompts ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
             </div>
@@ -304,14 +365,20 @@ export default function ReflectionQuestions({
 
           {showDailyPrompts ? (
             <div className="grid gap-3 border-t border-white/8 px-4 pb-4 pt-3 sm:px-5">
-              {DAILY_PROMPTS.map((prompt) => (
+              {DAILY_PROMPTS.map((prompt, index) => (
                 <div
                   key={prompt.id}
                   className="overflow-hidden rounded-[18px] border border-white/8 bg-[rgba(255,255,255,0.04)]"
                 >
-                  <div className="px-4 pt-4 text-[13px] font-semibold leading-snug text-[#fff8ef]">
-                    {prompt.text}
+                  <div className="flex items-start gap-3 px-4 pt-4">
+                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-[11px] font-bold text-[rgba(255,240,222,0.78)]">
+                      {index + 1}
+                    </div>
+                    <div className="pt-1 text-[13px] font-semibold leading-snug text-[#fff8ef]">
+                      {prompt.text}
+                    </div>
                   </div>
+
                   <textarea
                     value={dailyAnswers[prompt.id] ?? ''}
                     onChange={(event) => {
@@ -332,4 +399,3 @@ export default function ReflectionQuestions({
     </div>
   );
 }
-

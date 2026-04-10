@@ -277,7 +277,7 @@ export async function renderVerseStoryPng(
   ctx.font = '600 30px system-ui, -apple-system, Segoe UI, Roboto, Arial';
   ctx.fillStyle = '#ffffff';
   ctx.fillText(`Version: ${verse.version}`, padX, H - 170);
-  ctx.fillText('Huios · Identité & Grâce', padX, H - 120);
+  ctx.fillText('Miroir de Grâce · Identité & Paix', padX, H - 120);
   ctx.globalAlpha = 1;
 
   const dataUrl = canvas.toDataURL('image/png');

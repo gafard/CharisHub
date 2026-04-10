@@ -3,6 +3,7 @@
 import {
   Bell,
   BellOff,
+  CheckCircle2,
   Cloud,
   CloudOff,
   Database,
@@ -11,17 +12,14 @@ import {
   HelpCircle,
   LogOut,
   Save,
+  ShieldCheck,
+  Sparkles,
   Upload,
   UserRound,
   Wifi,
   WifiOff,
-  Heart,
-  Sparkles,
-  ArrowRight,
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useI18n } from '../contexts/I18nContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { useCommunityIdentity } from '../lib/useCommunityIdentity';
@@ -29,6 +27,97 @@ import { useCloudSync } from '../contexts/CloudSyncContext';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import SupabaseOnboardingModal from './SupabaseOnboardingModal';
+
+function SectionCard({
+  eyebrow,
+  title,
+  description,
+  icon,
+  children,
+}: {
+  eyebrow?: string;
+  title: string;
+  description?: string;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="overflow-hidden rounded-[30px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]/92 shadow-[0_14px_36px_rgba(16,24,40,0.06)]">
+      <div className="border-b border-[color:var(--border-soft)] px-5 py-5 sm:px-6">
+        <div className="flex items-start gap-4">
+          {icon ? (
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[color:var(--surface-strong)] text-[color:var(--accent)] ring-1 ring-[color:var(--border-soft)]">
+              {icon}
+            </div>
+          ) : null}
+          <div className="min-w-0">
+            {eyebrow ? (
+              <div className="text-[10px] font-black uppercase tracking-[0.18em] text-[color:var(--foreground)]/45">
+                {eyebrow}
+              </div>
+            ) : null}
+            <h3 className="mt-1 text-lg font-extrabold tracking-tight text-[color:var(--foreground)]">
+              {title}
+            </h3>
+            {description ? (
+              <p className="mt-1 text-sm leading-6 text-[color:var(--foreground)]/62">
+                {description}
+              </p>
+            ) : null}
+          </div>
+        </div>
+      </div>
+
+      <div className="px-5 py-5 sm:px-6">{children}</div>
+    </section>
+  );
+}
+
+function StatusPill({
+  ok,
+  label,
+}: {
+  ok: boolean;
+  label: string;
+}) {
+  return (
+    <div
+      className={[
+        'inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-bold',
+        ok
+          ? 'bg-emerald-500/12 text-emerald-700 dark:text-emerald-300'
+          : 'bg-amber-500/12 text-amber-700 dark:text-amber-300',
+      ].join(' ')}
+    >
+      {ok ? <CheckCircle2 size={13} /> : <HelpCircle size={13} />}
+      {label}
+    </div>
+  );
+}
+
+function QuickMetric({
+  label,
+  value,
+  icon,
+}: {
+  label: string;
+  value: string;
+  icon: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-[22px] border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)]/70 p-4">
+      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-[color:var(--surface)] text-[color:var(--accent)] ring-1 ring-[color:var(--border-soft)]">
+        {icon}
+      </div>
+      <div className="text-base font-black tracking-tight text-[color:var(--foreground)]">
+        {value}
+      </div>
+      <div className="mt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[color:var(--foreground)]/46">
+        {label}
+      </div>
+    </div>
+  );
+}
 
 export default function StudyUserPanel({
   compact = false,
@@ -49,8 +138,7 @@ export default function StudyUserPanel({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const isLoggedIn = !!user;
-  const isCloudReady = isConnected && !!supabase;
+  const isConnectedToSupabase = isConnected && !!supabase;
 
   // Sync draftName when identity changes
   useEffect(() => {
@@ -59,11 +147,11 @@ export default function StudyUserPanel({
     }
   }, [identity?.displayName]);
 
-  const notificationHelper = useMemo(
+  const helper = useMemo(
     () =>
       notificationsEnabled
-        ? "Les notifications sont actives pour vos appels, rappels et invitations."
-        : "Activez les notifications pour recevoir les appels, rappels et invitations de vos groupes.",
+        ? "Les notifications sont actives. Vous pourrez recevoir les invitations d'appel et les rappels de session."
+        : "Activez les notifications pour recevoir les invitations d'appel et les rappels de session.",
     [notificationsEnabled]
   );
 
@@ -87,283 +175,219 @@ export default function StudyUserPanel({
 
     setImporting(true);
     const reader = new FileReader();
-
     reader.onload = (e) => {
       try {
         const json = JSON.parse(e.target?.result as string);
         const result = importData(json);
-
         if (result.success) {
-          alert(`✅ Import réussi`);
+          alert(
+            `✅ Import réussi !\n\n${Object.entries(result.counts)
+              .filter(([_, count]) => count > 0)
+              .map(([key, count]) => `• ${key}: ${count}`)
+              .join('\n')}`
+          );
           window.location.reload();
         } else {
-          alert("❌ Échec de l'import.");
+          alert("❌ Échec de l'import. Vérifiez le fichier.");
         }
       } catch {
-        alert('❌ Fichier invalide.');
+        alert('❌ Fichier invalide');
       } finally {
         setImporting(false);
         if (fileInputRef.current) fileInputRef.current.value = '';
       }
     };
-
     reader.readAsText(file);
   };
 
   const formatLastSync = () => {
-    if (!syncStatus.lastSyncAt) return 'Jamais';
+    if (!syncStatus.lastSyncAt) return 'Jamais synchronisé';
     const now = new Date();
     const diff = now.getTime() - syncStatus.lastSyncAt.getTime();
     const minutes = Math.floor(diff / 60000);
 
-    if (minutes < 1) return "À l’instant";
+    if (minutes < 1) return "À l'instant";
     if (minutes < 60) return `Il y a ${minutes} min`;
     const hours = Math.floor(minutes / 60);
-    return `Il y a ${hours} h`;
+    return `Il y a ${hours}h`;
   };
 
   return (
-    <section className="space-y-4">
-      {/* 👑 PORTAIL DASHBOARD (MON INTIMITÉ) */}
-      <Link 
-        href="/dashboard"
-        className="group relative block overflow-hidden rounded-[32px] border border-amber-200/50 bg-gradient-to-br from-amber-50 to-white p-6 shadow-[0_18px_48px_rgba(200,159,45,0.12)] transition-all hover:scale-[1.01] hover:shadow-[0_24px_56px_rgba(200,159,45,0.18)] active:scale-[0.99]"
+    <div className="space-y-5">
+      {/* Bandeau résumé */}
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <QuickMetric
+          label="Compte"
+          value={isAuthenticated ? 'Connecté' : 'Invité'}
+          icon={<ShieldCheck size={18} />}
+        />
+        <QuickMetric
+          label="Synchronisation"
+          value={isConnectedToSupabase ? 'Cloud actif' : 'Local'}
+          icon={isConnectedToSupabase ? <Cloud size={18} /> : <CloudOff size={18} />}
+        />
+        <QuickMetric
+          label="Notifications"
+          value={notificationsEnabled ? 'Activées' : 'Désactivées'}
+          icon={notificationsEnabled ? <Bell size={18} /> : <BellOff size={18} />}
+        />
+        <QuickMetric
+          label="Langue"
+          value={locale === 'fr' ? 'Français' : 'English'}
+          icon={<Globe size={18} />}
+        />
+      </div>
+
+      {/* Identité */}
+      <SectionCard
+        eyebrow="Identité"
+        title="Profil d’affichage"
+        description="Ce nom est utilisé dans les groupes, les échanges, les appels et votre expérience d’apprentissage."
+        icon={<UserRound size={20} />}
       >
-        <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-amber-200/20 blur-3xl transition-all group-hover:bg-amber-300/30" />
-        
-        <div className="relative flex items-center justify-between">
-          <div className="flex items-center gap-5">
-            <div className="flex h-16 w-16 items-center justify-center rounded-[24px] bg-gradient-to-br from-amber-400 to-amber-600 shadow-lg shadow-amber-200/50">
-              <Heart className="h-8 w-8 text-white animate-pulse" />
-            </div>
-            
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-600">
-                  Espace Sacré
-                </span>
-                <Sparkles className="h-3 w-3 text-amber-500 animate-spin-slow" />
-              </div>
-              <h2 className="mt-1 text-2xl font-black tracking-tight text-[#161c35]">
-                Mon Intimité
-              </h2>
-              <p className="text-xs font-bold text-amber-700/60 transition-colors group-hover:text-amber-700/80">
-                Mémoire de Ses bontés et pépites d'identité
-              </p>
-            </div>
-          </div>
-          
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 transition-all group-hover:bg-amber-600 group-hover:text-white">
-            <ArrowRight size={20} />
-          </div>
-        </div>
-      </Link>
-
-      {/* COMPTE */}
-      <div className="overflow-hidden rounded-[32px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]/95 shadow-[0_18px_40px_rgba(16,24,40,0.06)]">
-        <div className="relative p-5 sm:p-6">
-          {/* Subtle accent overlay */}
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[linear-gradient(180deg,rgba(200,159,45,0.08),rgba(255,255,255,0))]" />
-
-          <div className="relative flex items-start justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="grid h-12 w-12 place-items-center rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)]">
-                {isLoggedIn && user?.user_metadata?.avatar_url ? (
-                  <img 
-                    src={user.user_metadata.avatar_url} 
-                    alt="Profile" 
-                    className="h-full w-full rounded-2xl object-cover"
-                  />
-                ) : (
-                  <UserRound size={18} className="text-[color:var(--foreground)]/60" />
-                )}
-              </div>
-              <div>
-                <div className="text-sm font-extrabold text-[color:var(--foreground)]">
-                  Compte {isLoggedIn ? 'connecté' : 'invité'}
-                </div>
-                <div className="mt-1 text-[11px] font-semibold text-[color:var(--foreground)]/55 truncate max-w-[200px]">
-                  {isLoggedIn ? user?.email : 'Identité locale uniquement'}
-                </div>
-              </div>
-            </div>
-
-            <div
-              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold transition-colors ${
-                isLoggedIn
-                  ? 'bg-emerald-500/12 text-emerald-700 dark:text-emerald-300'
-                  : 'bg-amber-500/12 text-amber-700 dark:text-amber-300'
-              }`}
-            >
-              {isLoggedIn ? <Cloud size={13} /> : <CloudOff size={13} />}
-              {isLoggedIn ? 'Compte Cloud' : 'Mode Invité'}
-            </div>
-          </div>
-
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <div className="relative flex-1">
-              <input
-                value={draftName}
-                onChange={(event) => setDraftName(event.target.value)}
-                placeholder="Ton nom d'affichage"
-                className="w-full rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)] px-4 py-3.5 text-sm outline-none transition-all focus:border-[color:var(--accent-border)] hover:border-[color:var(--border-strong)]"
-              />
-            </div>
-
-            <button
-              type="button"
-              onClick={saveName}
-              disabled={saving || !draftName.trim() || draftName.trim() === identity?.displayName}
-              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-[#121936] px-6 py-3.5 text-sm font-bold text-white transition hover:opacity-95 disabled:opacity-30 active:scale-95 shadow-sm"
-            >
-              {saving ? (
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
-              ) : (
-                <Save size={15} />
-              )}
-              {saved ? 'Enregistré' : 'Sauvegarder'}
-            </button>
-          </div>
-
-          <p className="mt-4 text-[11px] leading-relaxed text-[color:var(--foreground)]/58">
-            Ce nom est votre identité publique sur CharisHub. Il est visible par les autres membres
-            lors de vos échanges dans les groupes et durant vos sessions.
-          </p>
-
-          {isLoggedIn ? (
-            <div className="mt-6 border-t border-[color:var(--border-soft)] pt-5">
-              <button
-                type="button"
-                onClick={signOut}
-                className="inline-flex items-center gap-2 rounded-2xl border border-red-500/10 bg-red-500/5 px-5 py-3 text-sm font-bold text-red-600 transition hover:bg-red-500/10 active:scale-95"
-              >
-                <LogOut size={15} />
-                Se déconnecter
-              </button>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <StatusPill
+            ok={isAuthenticated}
+            label={
+              isAuthenticated
+                ? `Compte connecté${user?.email ? ` • ${user.email}` : ''}`
+                : 'Mode invité local'
+            }
+          />
+          {saved ? (
+            <div className="text-xs font-bold text-emerald-600 dark:text-emerald-300">
+              Profil enregistré
             </div>
           ) : null}
         </div>
-      </div>
 
-      {/* NOTIFICATIONS */}
-      <div className="rounded-[32px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]/95 p-5 shadow-[0_18px_40px_rgba(16,24,40,0.06)] sm:p-6">
-        <div className="flex items-start gap-4">
-          <div className="grid h-12 w-12 place-items-center rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)] text-[color:var(--foreground)]/70">
-            {notificationsEnabled ? <Bell size={20} /> : <BellOff size={20} />}
-          </div>
-          <div className="flex-1">
-            <div className="text-sm font-extrabold">Notifications</div>
-            <div className="mt-1 text-xs leading-relaxed text-[color:var(--foreground)]/60">
-              {notificationHelper}
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setNotificationsEnabled(!notificationsEnabled)}
-              className={[
-                'mt-5 inline-flex items-center gap-2 rounded-2xl border px-5 py-3 text-sm font-bold transition-all active:scale-95',
-                notificationsEnabled
-                  ? 'border-emerald-400/40 bg-emerald-500/12 text-emerald-700 dark:text-emerald-200'
-                  : 'border-[color:var(--border-soft)] bg-[color:var(--surface-strong)] text-[color:var(--foreground)]/80 hover:border-[color:var(--border-strong)]',
-              ].join(' ')}
-            >
-              {notificationsEnabled ? <Bell size={15} /> : <BellOff size={15} />}
-              {notificationsEnabled ? 'Notifications Actives' : 'Notifications Désactivées'}
-            </button>
-          </div>
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+          <input
+            value={draftName}
+            onChange={(event) => setDraftName(event.target.value)}
+            placeholder={isAuthenticated ? "Nom d'affichage" : 'Pseudo invité'}
+            className="h-13 w-full rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)] px-4 text-sm font-medium outline-none transition focus:border-[color:var(--accent-border)] hover:border-[color:var(--border-strong)]"
+          />
+          <button
+            type="button"
+            onClick={saveName}
+            disabled={saving || !draftName.trim() || draftName.trim() === identity?.displayName}
+            className="inline-flex h-13 shrink-0 items-center justify-center gap-2 rounded-2xl bg-[#121936] px-5 text-sm font-bold text-white shadow-[0_14px_32px_rgba(18,25,54,0.22)] transition hover:translate-y-[-1px] disabled:opacity-50"
+          >
+            {saving ? (
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+            ) : (
+              <Save size={15} />
+            )}
+            {saved ? 'Enregistré' : 'Sauvegarder'}
+          </button>
         </div>
-      </div>
 
-      {/* LANGUE */}
-      <div className="rounded-[32px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]/95 p-5 shadow-[0_18px_40px_rgba(16,24,40,0.06)] sm:p-6">
-        <div className="flex items-start gap-4">
-          <div className="grid h-12 w-12 place-items-center rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)] text-[color:var(--foreground)]/70">
-            <Globe size={20} />
-          </div>
-          <div className="flex-1">
-            <div className="text-sm font-extrabold">Langue de l’interface</div>
-            <div className="mt-1 text-xs leading-relaxed text-[color:var(--foreground)]/60">
-              Choisissez la langue dans laquelle vous souhaitez utiliser l'application CharisHub.
-            </div>
-
-            <div className="mt-5 inline-flex items-center gap-1.5 rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)] p-1.5">
-              {[
-                { value: 'fr', label: 'Français' },
-                { value: 'en', label: 'English' },
-              ].map((item) => (
-                <button
-                  key={item.value}
-                  type="button"
-                  onClick={() => setLocale(item.value as 'fr' | 'en')}
-                  className={[
-                    'rounded-xl px-5 py-2 text-[13px] font-bold transition-all active:scale-95',
-                    locale === item.value
-                      ? 'bg-white shadow-sm ring-1 ring-black/5 text-[color:var(--foreground)] dark:bg-[color:var(--surface-strong)]'
-                      : 'text-[color:var(--foreground)]/50 hover:text-[color:var(--foreground)]',
-                  ].join(' ')}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          </div>
+        <div className="mt-4 rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)]/65 p-4 text-xs leading-6 text-[color:var(--foreground)]/62">
+          {isAuthenticated ? (
+            <>
+              Votre nom est relié à votre compte et vous suit dans vos groupes, formations,
+              appels et interactions sur plusieurs appareils.
+            </>
+          ) : (
+            <>
+              En mode invité, votre nom reste enregistré uniquement sur cet appareil.
+              Connectez-vous pour sécuriser votre identité et retrouver vos données partout.
+            </>
+          )}
         </div>
+      </SectionCard>
+
+      {/* Préférences */}
+      <div className="grid gap-5 lg:grid-cols-2">
+        <SectionCard
+          eyebrow="Préférences"
+          title="Notifications"
+          description={helper}
+          icon={notificationsEnabled ? <Bell size={20} /> : <BellOff size={20} />}
+        >
+          <button
+            type="button"
+            onClick={() => setNotificationsEnabled(!notificationsEnabled)}
+            className={[
+              'inline-flex items-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition-all',
+              notificationsEnabled
+                ? 'border-emerald-400/35 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                : 'border-[color:var(--border-soft)] bg-[color:var(--surface-strong)] text-[color:var(--foreground)]/80 hover:border-[color:var(--border-strong)]',
+            ].join(' ')}
+          >
+            {notificationsEnabled ? <Bell size={15} /> : <BellOff size={15} />}
+            {notificationsEnabled ? 'Désactiver les notifications' : 'Activer les notifications'}
+          </button>
+        </SectionCard>
+
+        <SectionCard
+          eyebrow="Préférences"
+          title="Langue de l’interface"
+          description="Choisissez la langue utilisée dans l’application."
+          icon={<Globe size={20} />}
+        >
+          <div className="inline-flex items-center gap-2 rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)] p-1">
+            {[
+              { value: 'fr', label: 'FR' },
+              { value: 'en', label: 'EN' },
+            ].map((item) => (
+              <button
+                key={item.value}
+                type="button"
+                onClick={() => setLocale(item.value as 'fr' | 'en')}
+                className={[
+                  'rounded-xl px-4 py-2 text-sm font-bold transition-all',
+                  locale === item.value
+                    ? 'bg-white shadow-sm ring-1 ring-black/5 text-[color:var(--foreground)] dark:bg-[color:var(--surface-strong)]'
+                    : 'text-[color:var(--foreground)]/60 hover:text-[color:var(--foreground)]',
+                ].join(' ')}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </SectionCard>
       </div>
 
-      {/* DONNÉES & SYNC */}
-      <div className="rounded-[32px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]/95 p-5 shadow-[0_18px_40px_rgba(16,24,40,0.06)] sm:p-6 transition-all">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-start gap-4">
-            <div
-              className={`grid h-12 w-12 place-items-center rounded-2xl border transition-colors ${
-                isCloudReady
-                  ? 'border-emerald-400/40 bg-emerald-500/12'
-                  : 'border-amber-400/40 bg-amber-500/12'
-              }`}
-            >
-              {isCloudReady ? (
-                <Cloud className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-              ) : (
-                <CloudOff className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-              )}
-            </div>
-
-            <div>
-              <div className="text-sm font-extrabold">Synchronisation et Cloud</div>
-              <div className="mt-1 text-xs leading-relaxed text-[color:var(--foreground)]/60">
-                {isCloudReady
-                  ? 'Vos travaux sont synchronisés. Vous les retrouverez sur tous vos appareils connectés.'
-                  : 'Mode local actif. Vos données sont sécurisées sur cet appareil uniquement.'}
-              </div>
-            </div>
-          </div>
+      {/* Sync */}
+      <SectionCard
+        eyebrow="Données"
+        title="Sauvegarde & synchronisation"
+        description="Gardez vos surlignages, notes, pépites et données de prière disponibles sur vos appareils."
+        icon={isConnectedToSupabase ? <Cloud size={20} /> : <CloudOff size={20} />}
+      >
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <StatusPill
+            ok={isConnectedToSupabase}
+            label={isConnectedToSupabase ? 'Synchronisation cloud active' : 'Mode local uniquement'}
+          />
 
           <div
-            className={`hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-black uppercase tracking-wider transition-colors sm:inline-flex ${
-              isCloudReady
+            className={[
+              'inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-bold',
+              isConnectedToSupabase
                 ? 'bg-emerald-500/12 text-emerald-700 dark:text-emerald-300'
-                : 'bg-amber-500/12 text-amber-700 dark:text-amber-300'
-            }`}
+                : 'bg-amber-500/12 text-amber-700 dark:text-amber-300',
+            ].join(' ')}
           >
-            {isCloudReady ? <Wifi size={13} /> : <WifiOff size={13} />}
-            {isCloudReady ? 'Sync Active' : 'Hors Ligne'}
+            {isConnectedToSupabase ? <Wifi size={13} /> : <WifiOff size={13} />}
+            {isConnectedToSupabase ? 'Connecté' : 'Hors cloud'}
           </div>
         </div>
 
-        {isCloudReady ? (
-          <>
-            <div className="mt-5 rounded-2xl bg-[color:var(--surface-strong)] px-4 py-3.5 border border-[color:var(--border-soft)]/50">
-              <div className="flex items-center justify-between text-[11px]">
-                <span className="font-bold text-[color:var(--foreground)]/50 uppercase tracking-wider">État des données</span>
-                <span className="font-bold text-[color:var(--foreground)]/80">
-                  Mis à jour {formatLastSync().toLowerCase()}
-                </span>
-              </div>
+        {isConnectedToSupabase ? (
+          <div className="mt-4 rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)]/70 p-4">
+            <div className="flex items-center justify-between gap-4 text-sm">
+              <span className="text-[color:var(--foreground)]/60">Dernière synchronisation</span>
+              <span className="font-bold text-[color:var(--foreground)]">{formatLastSync()}</span>
+            </div>
 
-              {syncStatus.syncing ? (
-                <div className="mt-3 overflow-hidden rounded-full bg-[color:var(--surface)] h-2">
+            {syncStatus.syncing ? (
+              <div className="mt-3">
+                <div className="h-2 w-full overflow-hidden rounded-full bg-black/5 dark:bg-white/10">
                   <div
-                    className="h-full animate-pulse bg-gradient-to-r from-[#D4AF37] to-[#F1C40F]"
+                    className="h-full bg-gradient-to-r from-[#D4AF37] to-[#B8941F] transition-all"
                     style={{
                       width: syncStatus.syncProgress
                         ? `${(syncStatus.syncProgress.completed / syncStatus.syncProgress.total) * 100}%`
@@ -371,57 +395,68 @@ export default function StudyUserPanel({
                     }}
                   />
                 </div>
-              ) : null}
-            </div>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
 
-            <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {isConnectedToSupabase ? (
+            <>
               <button
                 type="button"
                 onClick={async () => {
                   const success = await syncFromCloud();
-                  if (success) alert('✅ Données récupérées avec succès.');
+                  alert(success ? '✅ Données cloud récupérées.' : '❌ Échec de la récupération.');
                 }}
                 disabled={syncStatus.syncing}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-blue-400/20 bg-blue-500/5 px-5 py-3.5 text-sm font-bold text-blue-700 transition hover:bg-blue-500/10 disabled:opacity-50 dark:text-blue-300 active:scale-95"
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-blue-400/25 bg-blue-500/10 px-4 py-3 text-sm font-bold text-blue-700 transition hover:bg-blue-500/15 disabled:opacity-50 dark:text-blue-300"
               >
-                <Download size={16} />
-                Actualiser
+                <Download size={15} />
+                Récupérer
               </button>
 
               <button
                 type="button"
                 onClick={async () => {
                   const success = await syncToCloud();
-                  if (success) alert('✅ Sauvegarde cloud terminée.');
+                  alert(success ? '✅ Sauvegarde cloud terminée.' : '❌ Échec de la sauvegarde.');
                 }}
                 disabled={syncStatus.syncing}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-400/20 bg-emerald-500/5 px-5 py-3.5 text-sm font-bold text-emerald-700 transition hover:bg-emerald-500/10 disabled:opacity-50 dark:text-emerald-300 active:scale-95"
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-3 text-sm font-bold text-emerald-700 transition hover:bg-emerald-500/15 disabled:opacity-50 dark:text-emerald-300"
               >
-                <Upload size={16} />
-                Forcer Sauvegarde
+                <Upload size={15} />
+                Sauvegarder
               </button>
-            </div>
-          </>
-        ) : null}
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowSupabaseOnboarding(true)}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-amber-400/25 bg-amber-500/10 px-4 py-3 text-sm font-bold text-amber-700 transition hover:bg-amber-500/15 dark:text-amber-300 sm:col-span-2"
+            >
+              <HelpCircle size={15} />
+              Voir le guide cloud
+            </button>
+          )}
 
-        <div className="mt-5 grid grid-cols-1 gap-3 border-t border-[color:var(--border-soft)] pt-5 sm:grid-cols-2">
           <button
             type="button"
             onClick={() => exportData()}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)] px-5 py-3.5 text-sm font-bold text-[color:var(--foreground)]/70 transition hover:border-[color:var(--border-strong)] hover:text-[color:var(--foreground)] active:scale-95"
+            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)] px-4 py-3 text-sm font-bold text-[color:var(--foreground)]/70 transition hover:border-[color:var(--border-strong)] hover:text-[color:var(--foreground)]"
           >
-            <Database size={16} />
-            Exporter (JSON)
+            <Database size={15} />
+            Exporter JSON
           </button>
 
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={importing}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)] px-5 py-3.5 text-sm font-bold text-[color:var(--foreground)]/70 transition hover:border-[color:var(--border-strong)] hover:text-[color:var(--foreground)] active:scale-95 disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)] px-4 py-3 text-sm font-bold text-[color:var(--foreground)]/70 transition hover:border-[color:var(--border-strong)] hover:text-[color:var(--foreground)] disabled:opacity-50"
           >
-            <Upload size={16} />
-            Importer (.json)
+            <Upload size={15} />
+            Importer JSON
           </button>
 
           <input
@@ -433,30 +468,55 @@ export default function StudyUserPanel({
           />
         </div>
 
-        {!isCloudReady ? (
-          <div className="mt-5 rounded-2xl border border-amber-400/20 bg-amber-500/5 p-4">
-            <div className="flex items-start gap-3">
-              <HelpCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600" />
-              <div className="flex-1">
-                <p className="text-[11px] leading-relaxed text-amber-800/80 dark:text-amber-300/80">
-                  La synchronisation cloud est inactive car Supabase n'est pas configuré ou vous n'êtes pas connecté.
-                </p>
+        <div
+          className={[
+            'mt-4 rounded-2xl border p-4 text-xs leading-6',
+            isConnectedToSupabase
+              ? 'border-blue-400/20 bg-blue-500/8 text-blue-900 dark:text-blue-200'
+              : 'border-amber-400/20 bg-amber-500/8 text-amber-900 dark:text-amber-200',
+          ].join(' ')}
+        >
+          {isConnectedToSupabase ? (
+            <>
+              Vos données d’étude et de prière sont synchronisées avec le cloud.
+              Vous pouvez aussi exporter une sauvegarde manuelle pour archivage.
+            </>
+          ) : (
+            <>
+              Vos données sont enregistrées uniquement sur cet appareil. Activez la
+              synchronisation cloud pour mieux protéger votre progression et vos contenus.
+            </>
+          )}
+        </div>
+      </SectionCard>
 
-                <button
-                  type="button"
-                  onClick={() => setShowSupabaseOnboarding(true)}
-                  className="mt-2 text-[11px] font-bold text-blue-700 underline underline-offset-4 hover:text-blue-800"
-                >
-                  Configurer le Hub Cloud
-                </button>
-              </div>
+      {/* Compte */}
+      {isAuthenticated ? (
+        <SectionCard
+          eyebrow="Compte"
+          title="Session connectée"
+          description="Gérez votre accès à CharisHub."
+          icon={<ShieldCheck size={20} />}
+        >
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)]/70 px-4 py-3 text-sm text-[color:var(--foreground)]/70">
+              Connecté en tant que <span className="font-bold text-[color:var(--foreground)]">{user?.email || 'Utilisateur'}</span>
             </div>
+
+            <button
+              type="button"
+              onClick={() => signOut?.()}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-rose-400/25 bg-rose-500/10 px-4 py-3 text-sm font-bold text-rose-700 transition hover:bg-rose-500/15 dark:text-rose-300"
+            >
+              <LogOut size={15} />
+              Déconnexion
+            </button>
           </div>
-        ) : null}
-      </div>
-      
-      {/* 🛠️ DIAGNOSTICS & SUPPORT */}
-      <div className="mt-8 rounded-[32px] border border-blue-200/50 bg-blue-50/30 p-5 shadow-sm sm:p-6">
+        </SectionCard>
+      ) : null}
+
+      {/* Diagnostics Appels */}
+      <section className="rounded-[30px] border border-blue-200/50 bg-blue-50/30 p-5 shadow-sm sm:p-6">
         <div className="flex items-start gap-4">
           <div className="grid h-12 w-12 place-items-center rounded-2xl border border-blue-200 bg-white text-blue-600">
             <HelpCircle size={20} />
@@ -525,12 +585,34 @@ export default function StudyUserPanel({
             </div>
           </div>
         </div>
+      </section>
+
+      {/* Bloc inspiration */}
+      <div className="overflow-hidden rounded-[30px] border border-[color:var(--border-soft)] bg-[linear-gradient(135deg,rgba(200,159,45,0.10),rgba(255,255,255,0))] px-5 py-5 shadow-[0_14px_36px_rgba(16,24,40,0.05)] sm:px-6">
+        <div className="flex items-start gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[color:var(--surface)] text-[color:var(--accent)] ring-1 ring-[color:var(--border-soft)]">
+            <Sparkles size={20} />
+          </div>
+          <div>
+            <div className="text-[10px] font-black uppercase tracking-[0.18em] text-[color:var(--foreground)]/44">
+              CharisHub
+            </div>
+            <div className="mt-1 text-lg font-extrabold tracking-tight text-[color:var(--foreground)]">
+              Un espace personnel pensé pour la croissance
+            </div>
+            <p className="mt-2 text-sm leading-6 text-[color:var(--foreground)]/62">
+              Votre profil, vos groupes, vos temps de prière, vos notes et vos sessions
+              d’étude forment un seul parcours. Cette page vous aide à garder cet espace clair,
+              protégé et prêt pour la suite.
+            </p>
+          </div>
+        </div>
       </div>
 
       <SupabaseOnboardingModal
         isOpen={showSupabaseOnboarding}
         onClose={() => setShowSupabaseOnboarding(false)}
       />
-    </section>
+    </div>
   );
 }

@@ -524,7 +524,7 @@ export const READING_PLANS: ReadingPlan[] = [
         id: 'advent-24',
         name: "L'Avent en 24 jours",
         description: 'Préparez votre cœur pour Noël avec les prophéties et la naissance de Jésus.',
-        emoji: '✨',
+        emoji: '🕯️',
         category: 'saisonnier',
         days: Array.from({ length: 24 }, (_, index) => day(primaryReading('luk', 'Luc', [index + 1]))),
     },

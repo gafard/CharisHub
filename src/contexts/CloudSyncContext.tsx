@@ -72,7 +72,7 @@ export function CloudSyncProvider({ children }: { children: ReactNode }) {
     const notesRaw = safeParse<Record<string, string>>(localStorage.getItem('formation_biblique_bible_notes_v1'), {});
     const verseNotesRaw = safeParse<Record<string, string>>(localStorage.getItem('formation_biblique_bible_verse_notes_v1'), {});
     const bookmarksRaw = safeParse<string[]>(localStorage.getItem('bible_bookmarks'), []);
-    const pepitesRaw = safeParse<any[]>(localStorage.getItem('huios_pepites_v1'), []);
+    const pepitesRaw = safeParse<any[]>(localStorage.getItem('mirror_pepites_v1'), []);
     const streakRaw = safeParse<any>(localStorage.getItem('formation_biblique_bible_streak_v1'), null);
     const prayerSessionsRaw = safeParse<any[]>(localStorage.getItem('formation_biblique_prayer_flow_v1'), []);
     const prayerJournalRaw = safeParse<any[]>(localStorage.getItem('formation_biblique_prayer_journal_v1'), []);

@@ -2,18 +2,20 @@
 
 import { type ReactNode } from 'react';
 import {
+  BookOpen,
   Clipboard,
-  Eye,
   FileText,
   Highlighter,
-  MessageSquare,
+  MessageSquareText,
   Pause,
   Play,
   Search,
+  Volume2,
 } from 'lucide-react';
 
 type ToolMode = 'read' | 'highlight' | 'note';
 type HighlightColor = 'yellow' | 'green' | 'pink' | 'blue' | 'orange' | 'purple';
+
 type AudioVerseSegment = {
   verse: number;
   start: number;
@@ -30,26 +32,26 @@ const HIGHLIGHT_OPTIONS: Array<{ id: HighlightColor; label: string }> = [
 ];
 
 type ToolbarBtnProps = {
-  active: boolean;
+  active?: boolean;
   label: string;
   icon: ReactNode;
   onClick: () => void;
 };
 
-function MobileToolbarBtn({ active, label, icon, onClick }: ToolbarBtnProps) {
+function ToolbarPill({ active = false, label, icon, onClick }: ToolbarBtnProps) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl border px-2.5 text-[11px] font-extrabold leading-none transition ${
+      className={[
+        'inline-flex h-10 shrink-0 items-center gap-2 rounded-2xl border px-3 text-[12px] font-extrabold transition-all',
         active
-          ? 'border-[color:var(--accent-border)]/60 bg-[color:var(--accent-soft)]/45 text-[color:var(--foreground)]'
-          : 'border-[color:var(--border-soft)] bg-[color:var(--surface)] text-[color:var(--foreground)]/92 hover:bg-[color:var(--surface-strong)] dark:border-white/15 dark:bg-white/10 dark:text-white/85 dark:hover:bg-white/15'
-      }`}
-      title={label}
+          ? 'border-[color:var(--accent-border)]/60 bg-[color:var(--accent-soft)]/45 text-[color:var(--foreground)] shadow-[0_6px_20px_rgba(0,0,0,0.08)]'
+          : 'border-[color:var(--border-soft)] bg-[color:var(--surface)] text-[color:var(--foreground)]/88 hover:bg-[color:var(--surface-strong)] dark:border-white/15 dark:bg-white/10 dark:text-white/85 dark:hover:bg-white/15',
+      ].join(' ')}
     >
-      <span className="leading-none">{icon}</span>
-      <span className="whitespace-nowrap">{label}</span>
+      <span className="opacity-90">{icon}</span>
+      <span>{label}</span>
     </button>
   );
 }
@@ -73,34 +75,42 @@ function AudioVerseTimeline({
   const currentTime = (first?.start ?? 0) + totalSpan * Math.max(0, Math.min(1, playerProgress));
 
   return (
-    <div className="mt-1 mx-auto w-full max-w-[780px] rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--surface)]/80 px-1 py-1 dark:border-white/12 dark:bg-white/8">
-      <div className="w-full overflow-x-auto pb-0.5">
-        <div
-          className="mx-auto flex min-w-full items-center gap-[3px]"
-          aria-label={activeVerseNumber ? `Verset audio actif ${activeVerseNumber}` : 'Timeline audio'}
-        >
+    <div className="rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface)]/72 px-2 py-2 dark:border-white/12 dark:bg-white/8">
+      <div className="mb-2 flex items-center justify-between">
+        <div className="text-[10px] font-black uppercase tracking-[0.16em] text-[color:var(--foreground)]/55">
+          Progression audio
+        </div>
+        <div className="text-[10px] font-bold text-[color:var(--foreground)]/55">
+          {activeVerseNumber ? `Verset ${activeVerseNumber}` : 'Lecture'}
+        </div>
+      </div>
+
+      <div className="w-full overflow-x-auto">
+        <div className="flex min-w-full items-center gap-[4px]">
           {segments.map((segment) => {
             const duration = Math.max(0.08, segment.end - segment.start);
             const ratio = duration / totalSpan;
             const isDone = currentTime >= segment.end - 0.02;
             const isActive = activeVerseNumber === segment.verse;
+
             return (
               <button
                 key={`audio-segment-${segment.verse}`}
                 type="button"
                 onClick={() => onSeekToVerse(segment.verse)}
-                className={`h-2 rounded-full border transition ${
+                className={[
+                  'h-2.5 rounded-full border transition-all',
                   isActive
-                    ? 'border-orange-300/80 bg-orange-300 shadow-[0_0_0_2px_rgba(251,146,60,0.26)]'
+                    ? 'border-orange-300/80 bg-orange-300 shadow-[0_0_0_3px_rgba(251,146,60,0.18)]'
                     : isDone
                       ? 'border-[color:var(--accent-border)]/65 bg-[color:var(--accent)]/85'
-                      : 'border-[color:var(--border-soft)] bg-[color:var(--surface-strong)] hover:bg-[color:var(--surface)] dark:border-white/20 dark:bg-white/18 dark:hover:bg-white/30'
-                }`}
+                      : 'border-[color:var(--border-soft)] bg-[color:var(--surface-strong)] hover:bg-[color:var(--surface)] dark:border-white/20 dark:bg-white/18 dark:hover:bg-white/30',
+                ].join(' ')}
                 style={{
                   flexGrow: Math.max(0.4, ratio * 100),
                   flexBasis: 0,
-                  minWidth: '5px',
-                  maxWidth: '18px',
+                  minWidth: '6px',
+                  maxWidth: '22px',
                 }}
                 title={`Aller au verset ${segment.verse}`}
                 aria-label={`Aller au verset ${segment.verse}`}
@@ -112,24 +122,6 @@ function AudioVerseTimeline({
     </div>
   );
 }
-
-type BibleToolbarProps = {
-  tool: ToolMode;
-  setTool: (t: ToolMode) => void;
-  onCopy: () => void;
-  onOpenCompare: () => void;
-  highlightColor: HighlightColor;
-  setHighlightColor: (color: HighlightColor) => void;
-  onOpenAdvancedStudyTools: () => void;
-  playerProgress: number;
-  playerPlaying: boolean;
-  onTogglePlayer: () => void;
-  audioAvailable: boolean;
-  isClient: boolean;
-  audioVerseSegments: AudioVerseSegment[];
-  activeAudioVerseNumber: number | null;
-  onSeekToAudioVerse: (verse: number) => void;
-};
 
 export default function BibleToolbar({
   tool,
@@ -147,7 +139,23 @@ export default function BibleToolbar({
   audioVerseSegments,
   activeAudioVerseNumber,
   onSeekToAudioVerse,
-}: BibleToolbarProps) {
+}: {
+  tool: ToolMode;
+  setTool: (t: ToolMode) => void;
+  onCopy: () => void;
+  onOpenCompare: () => void;
+  highlightColor: HighlightColor;
+  setHighlightColor: (color: HighlightColor) => void;
+  onOpenAdvancedStudyTools: () => void;
+  playerProgress: number;
+  playerPlaying: boolean;
+  onTogglePlayer: () => void;
+  audioAvailable: boolean;
+  isClient: boolean;
+  audioVerseSegments: AudioVerseSegment[];
+  activeAudioVerseNumber: number | null;
+  onSeekToAudioVerse: (verse: number) => void;
+}) {
   const COLOR_DOT: Record<HighlightColor, string> = {
     yellow: 'bg-yellow-300',
     green: 'bg-green-300',
@@ -156,104 +164,151 @@ export default function BibleToolbar({
     orange: 'bg-orange-300',
     purple: 'bg-violet-300',
   };
+
   return (
-    <div className="block">
-      <div className="bible-toolbar w-full rounded-2xl p-2 shadow-[0_12px_40px_rgba(22,28,53,0.08)] ring-1 ring-[#161c35]/5 bg-white/80 backdrop-blur-xl">
-        <div className="overflow-x-auto pb-0.5">
-          <div className="mx-auto flex min-w-max flex-nowrap items-center gap-1.5">
-            <MobileToolbarBtn
+    <div className="w-full">
+      <div className="rounded-[26px] border border-[color:var(--border-soft)] bg-[rgba(255,255,255,0.82)] p-3 shadow-[0_18px_50px_rgba(22,28,53,0.10)] backdrop-blur-2xl ring-1 ring-black/5 dark:border-white/12 dark:bg-[rgba(15,23,42,0.72)] dark:ring-white/5">
+        <div className="flex flex-col gap-3">
+          {/* Ligne 1 */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="mr-1 text-[10px] font-black uppercase tracking-[0.18em] text-[color:var(--foreground)]/48">
+              Mode
+            </div>
+
+            <ToolbarPill
               active={tool === 'read'}
               label="Lecture"
-              icon={<Eye size={16} />}
+              icon={<BookOpen size={15} />}
               onClick={() => setTool('read')}
             />
-            <MobileToolbarBtn
+            <ToolbarPill
               active={tool === 'highlight'}
               label="Surligner"
-              icon={<Highlighter size={16} />}
+              icon={<Highlighter size={15} />}
               onClick={() => setTool(tool === 'highlight' ? 'read' : 'highlight')}
             />
-            <MobileToolbarBtn
+            <ToolbarPill
               active={tool === 'note'}
               label="Note"
-              icon={<FileText size={16} />}
+              icon={<FileText size={15} />}
               onClick={() => setTool('note')}
             />
-            <MobileToolbarBtn
-              active={false}
+          </div>
+
+          {/* Palette highlight */}
+          {tool === 'highlight' ? (
+            <div className="rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface)]/70 p-2.5 dark:border-white/12 dark:bg-white/6">
+              <div className="mb-2 text-[10px] font-black uppercase tracking-[0.16em] text-[color:var(--foreground)]/55">
+                Couleur du surlignage
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {HIGHLIGHT_OPTIONS.map((option) => {
+                  const active = highlightColor === option.id;
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => setHighlightColor(option.id)}
+                      className={[
+                        'inline-flex h-10 items-center gap-2 rounded-2xl border px-3 text-[11px] font-bold transition-all',
+                        active
+                          ? 'border-[color:var(--accent-border)]/60 bg-[color:var(--accent-soft)]/45 text-[color:var(--foreground)] shadow-[0_6px_18px_rgba(0,0,0,0.08)]'
+                          : 'border-[color:var(--border-soft)] bg-[color:var(--surface)] text-[color:var(--foreground)]/88 hover:bg-[color:var(--surface-strong)] dark:border-white/15 dark:bg-white/10 dark:text-white/82 dark:hover:bg-white/15',
+                      ].join(' ')}
+                    >
+                      <span className={`h-3 w-3 rounded-full ${COLOR_DOT[option.id]}`} />
+                      {option.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
+
+          {/* Ligne 2 */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="mr-1 text-[10px] font-black uppercase tracking-[0.18em] text-[color:var(--foreground)]/48">
+              Outils
+            </div>
+
+            <ToolbarPill
               label="Comparer"
-              icon={<Search size={16} />}
+              icon={<Search size={15} />}
               onClick={onOpenCompare}
             />
-            <MobileToolbarBtn
-              active={false}
+            <ToolbarPill
               label="Étudier"
-              icon={<MessageSquare size={16} />}
+              icon={<MessageSquareText size={15} />}
               onClick={onOpenAdvancedStudyTools}
             />
-            {tool === 'highlight' &&
-              HIGHLIGHT_OPTIONS.map((option) => (
-                <button
-                  key={option.id}
-                  type="button"
-                  className={`shrink-0 rounded-xl px-2.5 py-2 text-[11px] font-bold transition ${
-                    highlightColor === option.id
-                      ? 'border border-[color:var(--accent-border)]/60 bg-[color:var(--accent-soft)]/45 text-[color:var(--foreground)]'
-                      : 'border border-[color:var(--border-soft)] bg-[color:var(--surface)] text-[color:var(--foreground)]/90 hover:bg-[color:var(--surface-strong)] dark:border-white/15 dark:bg-white/10 dark:text-white/82 dark:hover:bg-white/15'
-                  }`}
-                  onClick={() => setHighlightColor(option.id)}
-                >
-                  <span className={`mr-1.5 inline-block h-2.5 w-2.5 rounded-full ${COLOR_DOT[option.id]}`} />
-                  {option.label}
-                </button>
-              ))}
-            <button
-              type="button"
+            <ToolbarPill
+              label="Copier"
+              icon={<Clipboard size={15} />}
               onClick={onCopy}
-              className="inline-flex h-9 shrink-0 items-center gap-1 rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--surface)] px-2.5 text-[11px] font-bold text-[color:var(--foreground)] dark:border-white/20 dark:bg-white/10 dark:text-white"
-            >
-              <Clipboard size={14} />
-              Copier
-            </button>
-            <div className="relative shrink-0">
-              <svg className="pointer-events-none absolute -inset-1 h-11 w-11" viewBox="0 0 48 48">
-                <circle cx="24" cy="24" r="18" stroke="var(--border-soft)" strokeWidth="3" fill="none" />
-                <circle
-                  cx="24"
-                  cy="24"
-                  r="18"
-                  stroke="var(--accent)"
-                  strokeWidth="3"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeDasharray={2 * Math.PI * 18}
-                  strokeDashoffset={2 * Math.PI * 18 * (1 - playerProgress)}
-                  style={{ transition: 'stroke-dashoffset 0.4s ease' }}
-                />
-              </svg>
-              <button
-                type="button"
-                onClick={onTogglePlayer}
-                className={`btn-icon h-9 w-9 bg-white/80${
-                  isClient && audioAvailable ? '' : ' opacity-50 cursor-not-allowed'
-                }`}
-                aria-label={playerPlaying ? 'Pause' : 'Play'}
-                title={playerPlaying ? 'Pause' : 'Play'}
-                disabled={!isClient || !audioAvailable}
-              >
-                {playerPlaying ? <Pause size={14} /> : <Play size={14} />}
-              </button>
+            />
+
+            <div className="ml-auto flex items-center gap-2 rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface)] px-2 py-1.5 dark:border-white/15 dark:bg-white/8">
+              <div className="relative">
+                <svg className="pointer-events-none absolute -inset-1 h-11 w-11" viewBox="0 0 48 48">
+                  <circle
+                    cx="24"
+                    cy="24"
+                    r="18"
+                    stroke="var(--border-soft)"
+                    strokeWidth="3"
+                    fill="none"
+                  />
+                  <circle
+                    cx="24"
+                    cy="24"
+                    r="18"
+                    stroke="var(--accent)"
+                    strokeWidth="3"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeDasharray={2 * Math.PI * 18}
+                    strokeDashoffset={2 * Math.PI * 18 * (1 - playerProgress)}
+                    style={{ transition: 'stroke-dashoffset 0.4s ease' }}
+                  />
+                </svg>
+
+                <button
+                  type="button"
+                  onClick={onTogglePlayer}
+                  className={`grid h-9 w-9 place-items-center rounded-full bg-white/85 text-[color:var(--foreground)] shadow-sm transition hover:scale-[1.03] dark:bg-white/12 dark:text-white ${
+                    isClient && audioAvailable ? '' : 'cursor-not-allowed opacity-50'
+                  }`}
+                  aria-label={playerPlaying ? 'Pause' : 'Play'}
+                  title={playerPlaying ? 'Pause' : 'Play'}
+                  disabled={!isClient || !audioAvailable}
+                >
+                  {playerPlaying ? <Pause size={15} /> : <Play size={15} className="translate-x-[1px]" />}
+                </button>
+              </div>
+
+              <div className="pr-1">
+                <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-[color:var(--foreground)]/55">
+                  <Volume2 size={12} />
+                  Audio
+                </div>
+                <div className="text-[11px] font-semibold text-[color:var(--foreground)]/72">
+                  {playerPlaying ? 'Lecture en cours' : 'Appuyer pour écouter'}
+                </div>
+              </div>
             </div>
           </div>
+
+          {/* Timeline audio */}
+          {playerPlaying ? (
+            <AudioVerseTimeline
+              segments={audioVerseSegments}
+              activeVerseNumber={activeAudioVerseNumber}
+              playerProgress={playerProgress}
+              onSeekToVerse={onSeekToAudioVerse}
+            />
+          ) : null}
         </div>
-        {playerPlaying ? (
-          <AudioVerseTimeline
-            segments={audioVerseSegments}
-            activeVerseNumber={activeAudioVerseNumber}
-            playerProgress={playerProgress}
-            onSeekToVerse={onSeekToAudioVerse}
-          />
-        ) : null}
       </div>
     </div>
   );

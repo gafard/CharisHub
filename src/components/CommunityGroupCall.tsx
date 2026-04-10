@@ -17,7 +17,6 @@ import {
   ScreenShare,
   ScreenShareOff,
   Send,
-  Sparkles,
   Users,
   BookOpen,
   ChevronLeft,

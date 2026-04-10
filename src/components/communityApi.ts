@@ -1032,7 +1032,7 @@ function createAutoStoryImageDataUrl(verseReference: string, verseText: string) 
   <rect x="48" y="48" width="984" height="1824" rx="46" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="2"/>
   <text x="64" y="164" fill="#93c5fd" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="42" font-weight="700">${safeRef}</text>
   <text x="64" y="300" fill="#f8fafc" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="52" font-weight="700">${textNodes}</text>
-  <text x="64" y="1838" fill="rgba(255,255,255,0.82)" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="34">Huios · Identité & Grâce</text>
+  <text x="64" y="1838" fill="rgba(255,255,255,0.82)" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="34">Miroir · Identité & Grâce</text>
 </svg>`;
 
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;

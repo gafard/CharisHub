@@ -1,51 +1,201 @@
+'use client';
+
 import { useState, useEffect, useCallback, type MouseEvent } from 'react';
-import { X, Search, Hash, Link as LinkIcon, Bookmark, MessageSquare, Tag, BookText, BookOpen } from 'lucide-react';
+import {
+  X,
+  Search,
+  Link as LinkIcon,
+  Bookmark,
+  MessageSquare,
+  Tag,
+  BookText,
+  BookOpen,
+  Hash,
+  Sparkles,
+  Plus,
+  ChevronRight,
+  ChevronDown,
+  CheckCircle2,
+  PenSquare,
+} from 'lucide-react';
 import strongService from '../services/strong-service';
-import bibleStrongMapper from '../services/bible-strong-mapper';
 import { parseStrong, type StrongToken } from '../lib/strongVerse';
 import { extractTreasuryRefs, type NaveTopic, type TreasuryRef } from '../lib/bibleStudyClient';
-import { parseBibleCommentaryResponse, parseBibleNaveResponse, parseBibleTreasuryResponse, type BibleCommentarySection } from '../lib/bibleStudyApi';
+import {
+  parseBibleCommentaryResponse,
+  parseBibleNaveResponse,
+  parseBibleTreasuryResponse,
+  type BibleCommentarySection,
+} from '../lib/bibleStudyApi';
 
-const AdvancedStudyTools = ({ 
-  isOpen, 
+type StudyTab = 'tags' | 'links' | 'bookmarks' | 'notes' | 'strong';
+
+type BookmarkItem = {
+  id: string;
+  ref: string;
+  title: string;
+  timestamp: Date;
+};
+
+type LinkItem = {
+  id: string;
+  ref: string;
+  description: string;
+};
+
+type VerseWordItem = {
+  details?: any;
+  w?: string;
+  word?: string;
+  originalForm?: string;
+  strong?: string;
+  strong_number?: string;
+  language?: string;
+  phonetic?: string;
+};
+
+const PREDEFINED_TAGS = [
+  { name: 'Foi', color: '#FF6B6B' },
+  { name: 'Espérance', color: '#4ECDC4' },
+  { name: 'Amour', color: '#FFD166' },
+  { name: 'Prière', color: '#6A0572' },
+  { name: 'Guérison', color: '#1A936F' },
+  { name: 'Salut', color: '#114B5F' },
+];
+
+function SectionCard({
+  title,
+  subtitle,
+  right,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  right?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="overflow-hidden rounded-[24px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]/92 shadow-[0_12px_32px_rgba(16,24,40,0.06)]">
+      <div className="flex items-start justify-between gap-4 border-b border-[color:var(--border-soft)] px-5 py-4">
+        <div>
+          <h3 className="text-sm font-extrabold text-[color:var(--foreground)]">{title}</h3>
+          {subtitle ? (
+            <p className="mt-1 text-xs leading-5 text-[color:var(--foreground)]/58">{subtitle}</p>
+          ) : null}
+        </div>
+        {right ? <div className="shrink-0">{right}</div> : null}
+      </div>
+      <div className="px-5 py-5">{children}</div>
+    </div>
+  );
+}
+
+function TabButton({
+  active,
+  icon,
+  label,
+  onClick,
+}: {
+  active: boolean;
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={[
+        'inline-flex min-w-[108px] items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold transition-all',
+        active
+          ? 'bg-[color:var(--accent)] text-white shadow-lg shadow-[color:var(--accent)]/20'
+          : 'border border-[color:var(--border-soft)] bg-[color:var(--surface)] text-[color:var(--foreground)]/68 hover:border-[color:var(--border-strong)] hover:text-[color:var(--foreground)]',
+      ].join(' ')}
+    >
+      {icon}
+      <span>{label}</span>
+    </button>
+  );
+}
+
+function SoftActionButton({
+  children,
+  onClick,
+  danger = false,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+  danger?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={[
+        'inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition-all cursor-pointer',
+        danger
+          ? 'bg-rose-500/10 text-rose-600 hover:bg-rose-500/15'
+          : 'bg-[color:var(--surface-strong)] text-[color:var(--foreground)]/72 hover:bg-[color:var(--surface)]',
+      ].join(' ')}
+    >
+      {children}
+    </button>
+  );
+}
+
+export default function AdvancedStudyTools({
+  isOpen,
   onClose,
   bookId,
   chapter,
   verse,
-  selectedVerseText, // Texte du verset sélectionné
-  strongTokens // Tokens Strong pour le verset
-}: { 
-  isOpen: boolean; 
+  selectedVerseText,
+  strongTokens,
+}: {
+  isOpen: boolean;
   onClose: () => void;
   bookId: string;
   chapter: number;
   verse: number;
   selectedVerseText?: string;
   strongTokens?: StrongToken[];
-}) => {
-  const [activeTab, setActiveTab] = useState<'tags' | 'links' | 'bookmarks' | 'notes' | 'strong'>('tags');
+}) {
+  const [activeTab, setActiveTab] = useState<StudyTab>('tags');
+
   const [verseTags, setVerseTags] = useState<string[]>([]);
   const [customTagName, setCustomTagName] = useState('');
   const [tagColor, setTagColor] = useState('#FFD700');
-  const [links, setLinks] = useState<Array<{id: string; ref: string; description: string}>>([]);
+
+  const [links, setLinks] = useState<LinkItem[]>([]);
   const [newLink, setNewLink] = useState({ ref: '', description: '' });
-  const [bookmarks, setBookmarks] = useState<Array<{id: string; ref: string; title: string; timestamp: Date}>>([]);
+
+  const [bookmarks, setBookmarks] = useState<BookmarkItem[]>([]);
   const [bookmarkTitle, setBookmarkTitle] = useState('');
+
   const [verseNotes, setVerseNotes] = useState('');
+
   const [strongSearch, setStrongSearch] = useState('');
   const [strongResults, setStrongResults] = useState<any[]>([]);
-  const [verseWords, setVerseWords] = useState<any[]>([]);
+  const [verseWords, setVerseWords] = useState<VerseWordItem[]>([]);
+
   const [loading, setLoading] = useState(false);
+
   const [naveTopics, setNaveTopics] = useState<NaveTopic[]>([]);
   const [naveLoading, setNaveLoading] = useState(false);
   const [naveError, setNaveError] = useState<string | null>(null);
+
   const [treasuryRefs, setTreasuryRefs] = useState<TreasuryRef[]>([]);
   const [treasuryLoading, setTreasuryLoading] = useState(false);
   const [treasuryError, setTreasuryError] = useState<string | null>(null);
+
   const [mhSections, setMhSections] = useState<BibleCommentarySection[]>([]);
   const [mhLoading, setMhLoading] = useState(false);
   const [mhError, setMhError] = useState<string | null>(null);
+
   const [autoTagsApplied, setAutoTagsApplied] = useState(false);
+
+  const refKey = `${bookId}_${chapter}_${verse}`;
+  const verseLabel = `${bookId} ${chapter}:${verse}`;
 
   const handleNaveLinksClick = (event: MouseEvent<HTMLDivElement>) => {
     const target = event.target as HTMLElement;
@@ -54,47 +204,85 @@ const AdvancedStudyTools = ({
     }
   };
 
-  // Charger les données depuis localStorage
+  const saveChanges = useCallback(() => {
+    localStorage.setItem(`bible_tags_${refKey}`, JSON.stringify(verseTags));
+    localStorage.setItem(`bible_links_${refKey}`, JSON.stringify(links));
+    localStorage.setItem(`bible_notes_${refKey}`, verseNotes);
+  }, [refKey, verseNotes, verseTags, links]);
+
+  const closeWithSave = useCallback(() => {
+    saveChanges();
+    onClose();
+  }, [onClose, saveChanges]);
+
+  const loadVerseWords = useCallback(async (tokens: StrongToken[] | undefined) => {
+    setLoading(true);
+    try {
+      if (tokens && tokens.length > 0) {
+        const detailedWords = await Promise.all(
+          tokens.map(async (token) => {
+            const parsed = token.strong ? parseStrong(token.strong) : null;
+            let entry = null;
+
+            if (parsed) {
+              entry = await strongService.getEntry(parsed.id, parsed.lang);
+            }
+
+            return {
+              details: entry,
+              ...token,
+              strong_number: token.strong,
+              language: parsed?.lang || 'greek',
+              originalForm: token.w,
+            };
+          })
+        );
+        setVerseWords(detailedWords);
+      } else {
+        setVerseWords([]);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des mots Strong:', error);
+      setVerseWords([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (!isOpen) return;
 
-    const ref = `${bookId}_${chapter}_${verse}`;
-    
-    // Charger les tags
-    const savedTags = localStorage.getItem(`bible_tags_${ref}`);
-    if (savedTags) {
-      setVerseTags(JSON.parse(savedTags));
-    }
-    
-    // Charger les liens
-    const savedLinks = localStorage.getItem(`bible_links_${ref}`);
-    if (savedLinks) {
-      setLinks(JSON.parse(savedLinks));
-    }
-    
-    // Charger les signets
+    const savedTags = localStorage.getItem(`bible_tags_${refKey}`);
+    const savedLinks = localStorage.getItem(`bible_links_${refKey}`);
+    const savedNotes = localStorage.getItem(`bible_notes_${refKey}`);
     const savedBookmarks = localStorage.getItem('bible_bookmarks');
+
+    setVerseTags(savedTags ? JSON.parse(savedTags) : []);
+    setLinks(savedLinks ? JSON.parse(savedLinks) : []);
+    setVerseNotes(savedNotes || '');
+
     if (savedBookmarks) {
-      const parsed = JSON.parse(savedBookmarks);
-      setBookmarks(
-        parsed.map((bookmark: any) => ({
-          ...bookmark,
-          timestamp: new Date(bookmark.timestamp),
-        }))
-      );
+      try {
+        const parsed = JSON.parse(savedBookmarks);
+        setBookmarks(
+          parsed.map((bookmark: any) => ({
+            id: String(bookmark.id || Date.now()),
+            ref: String(bookmark.ref || ''),
+            title: String(bookmark.title || ''),
+            timestamp: new Date(bookmark.timestamp || Date.now()),
+          }))
+        );
+      } catch (e) {
+        setBookmarks([]);
+      }
+    } else {
+      setBookmarks([]);
     }
-    
-    // Charger les notes
-    const savedNotes = localStorage.getItem(`bible_notes_${ref}`);
-    if (savedNotes) {
-      setVerseNotes(savedNotes);
-    }
-    
-    // Charger les mots Strong du verset si on est dans l'onglet Strong
+
     if (activeTab === 'strong' && selectedVerseText) {
-      loadVerseWords(strongTokens);
+      void loadVerseWords(strongTokens);
     }
-  }, [isOpen, bookId, chapter, verse, activeTab, selectedVerseText, strongTokens]);
+  }, [isOpen, refKey, activeTab, selectedVerseText, strongTokens, loadVerseWords]);
 
   useEffect(() => {
     setAutoTagsApplied(false);
@@ -111,9 +299,7 @@ const AdvancedStudyTools = ({
         const res = await fetch(
           `/api/bible/nave?bookId=${encodeURIComponent(bookId)}&chapter=${chapter}&verse=${verse}`
         );
-        if (!res.ok) {
-          throw new Error(`Nave API error: ${res.status}`);
-        }
+        if (!res.ok) throw new Error(`Nave API error: ${res.status}`);
         const data = parseBibleNaveResponse(await res.json());
         if (!active) return;
         setNaveTopics(data.topics);
@@ -134,9 +320,7 @@ const AdvancedStudyTools = ({
         const res = await fetch(
           `/api/bible/treasury?bookId=${encodeURIComponent(bookId)}&chapter=${chapter}&verse=${verse}`
         );
-        if (!res.ok) {
-          throw new Error(`Treasury API error: ${res.status}`);
-        }
+        if (!res.ok) throw new Error(`Treasury API error: ${res.status}`);
         const data = parseBibleTreasuryResponse(await res.json());
         if (!active) return;
         setTreasuryRefs(extractTreasuryRefs(data.entries));
@@ -157,9 +341,7 @@ const AdvancedStudyTools = ({
         const res = await fetch(
           `/api/bible/commentary?bookId=${encodeURIComponent(bookId)}&chapter=${chapter}`
         );
-        if (!res.ok) {
-          throw new Error(`Bible commentary API error: ${res.status}`);
-        }
+        if (!res.ok) throw new Error(`Bible commentary API error: ${res.status}`);
         const data = parseBibleCommentaryResponse(await res.json());
         if (!active) return;
         setMhSections(data.sections);
@@ -173,9 +355,9 @@ const AdvancedStudyTools = ({
       }
     };
 
-    loadNave();
-    loadTreasury();
-    loadMatthewHenry();
+    void loadNave();
+    void loadTreasury();
+    void loadMatthewHenry();
 
     return () => {
       active = false;
@@ -183,114 +365,46 @@ const AdvancedStudyTools = ({
   }, [isOpen, bookId, chapter, verse]);
 
   useEffect(() => {
-    if (!isOpen) return;
-    if (autoTagsApplied) return;
-    if (naveTopics.length === 0) return;
+    if (!isOpen || autoTagsApplied || naveTopics.length === 0) return;
+
     setVerseTags((prev) => {
       if (prev.length > 0) return prev;
       const autoTags = naveTopics.slice(0, 6).map((topic) => `#8B5CF6:${topic.name}`);
       const unique = autoTags.filter((tag) => !prev.includes(tag));
       return [...prev, ...unique];
     });
+
     setAutoTagsApplied(true);
   }, [isOpen, naveTopics, autoTagsApplied]);
 
-  // Charger les mots Strong du verset sélectionné
-  const loadVerseWords = async (tokens: StrongToken[] | undefined) => {
-    setLoading(true);
-    try {
-      if (tokens && tokens.length > 0) {
-        // Si les tokens Strong sont fournis, les utiliser directement
-        const detailedWords = await Promise.all(
-          tokens.map(async (token) => {
-            // Parser le code Strong pour obtenir la langue et l'ID
-            const parsed = token.strong ? parseStrong(token.strong) : null;
-            let entry = null;
-            
-            if (parsed) {
-              entry = await strongService.getEntry(parsed.id, parsed.lang);
-            }
-            
-            return {
-              details: entry,
-              ...token,
-              strong_number: token.strong,
-              language: parsed?.lang || 'greek', // Valeur par défaut
-              original_word: token.w
-            };
-          })
-        );
-        
-        setVerseWords(detailedWords);
-      } else if (selectedVerseText) {
-        // Sinon, utiliser l'approche précédente (fallback)
-        setVerseWords([]);
-      }
-    } catch (error) {
-      console.error('Erreur lors du chargement des mots Strong:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Sauvegarder les modifications
-  const saveChanges = useCallback(() => {
-    const ref = `${bookId}_${chapter}_${verse}`;
-    
-    // Sauvegarder les tags
-    localStorage.setItem(`bible_tags_${ref}`, JSON.stringify(verseTags));
-    
-    // Sauvegarder les liens
-    localStorage.setItem(`bible_links_${ref}`, JSON.stringify(links));
-    
-    // Sauvegarder les notes
-    localStorage.setItem(`bible_notes_${ref}`, verseNotes);
-  }, [bookId, chapter, links, verse, verseNotes, verseTags]);
-
-  const closeWithSave = useCallback(() => {
-    saveChanges();
-    onClose();
-  }, [onClose, saveChanges]);
-
   useEffect(() => {
     if (!isOpen) return;
+
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
       event.preventDefault();
       closeWithSave();
     };
-    window.addEventListener('keydown', handleEscape);
-    return () => {
-      window.removeEventListener('keydown', handleEscape);
-    };
-  }, [isOpen, closeWithSave]);
 
-  // Gestion des tags
-  const predefinedTags = [
-    { name: 'Foi', color: '#FF6B6B' },
-    { name: 'Espérance', color: '#4ECDC4' },
-    { name: 'Amour', color: '#FFD166' },
-    { name: 'Prière', color: '#6A0572' },
-    { name: 'Guérison', color: '#1A936F' },
-    { name: 'Salvation', color: '#114B5F' },
-  ];
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [isOpen, closeWithSave]);
 
   const addTag = (tagName: string, color: string) => {
     const newTag = `${color}:${tagName}`;
     if (!verseTags.includes(newTag)) {
-      setVerseTags([...verseTags, newTag]);
+      setVerseTags((prev) => [...prev, newTag]);
     }
   };
 
   const removeTag = (tag: string) => {
-    setVerseTags(verseTags.filter(t => t !== tag));
+    setVerseTags((prev) => prev.filter((t) => t !== tag));
   };
 
   const addCustomTag = () => {
-    if (customTagName.trim()) {
-      addTag(customTagName, tagColor);
-      setCustomTagName('');
-    }
+    if (!customTagName.trim()) return;
+    addTag(customTagName.trim(), tagColor);
+    setCustomTagName('');
   };
 
   const addAllNaveTags = () => {
@@ -302,17 +416,17 @@ const AdvancedStudyTools = ({
     });
   };
 
-  // Gestion des liens
   const addLink = () => {
-    if (newLink.ref.trim() && newLink.description.trim()) {
-      const link = {
-        id: Date.now().toString(),
-        ref: newLink.ref,
-        description: newLink.description
-      };
-      setLinks([...links, link]);
-      setNewLink({ ref: '', description: '' });
-    }
+    if (!newLink.ref.trim() || !newLink.description.trim()) return;
+
+    const link = {
+      id: Date.now().toString(),
+      ref: newLink.ref.trim(),
+      description: newLink.description.trim(),
+    };
+
+    setLinks((prev) => [...prev, link]);
+    setNewLink({ ref: '', description: '' });
   };
 
   const addTreasuryLink = (refLabel: string) => {
@@ -323,324 +437,247 @@ const AdvancedStudyTools = ({
         {
           id: Date.now().toString(),
           ref: refLabel,
-          description: 'Référence Treasury'
-        }
+          description: 'Référence Treasury',
+        },
       ];
     });
   };
 
   const removeLink = (id: string) => {
-    setLinks(links.filter(link => link.id !== id));
+    setLinks((prev) => prev.filter((link) => link.id !== id));
   };
 
-  // Gestion des signets
   const addBookmark = () => {
-    if (bookmarkTitle.trim()) {
-      const bookmark = {
-        id: Date.now().toString(),
-        ref: `${bookId} ${chapter}:${verse}`,
-        title: bookmarkTitle,
-        timestamp: new Date()
-      };
-      const updatedBookmarks = [...bookmarks, bookmark];
-      setBookmarks(updatedBookmarks);
-      localStorage.setItem('bible_bookmarks', JSON.stringify(updatedBookmarks));
-      setBookmarkTitle('');
-    }
+    if (!bookmarkTitle.trim()) return;
+
+    const bookmark = {
+      id: Date.now().toString(),
+      ref: verseLabel,
+      title: bookmarkTitle.trim(),
+      timestamp: new Date(),
+    };
+
+    const updatedBookmarks = [...bookmarks, bookmark];
+    setBookmarks(updatedBookmarks);
+    localStorage.setItem('bible_bookmarks', JSON.stringify(updatedBookmarks));
+    setBookmarkTitle('');
   };
 
   const removeBookmark = (id: string) => {
-    const updatedBookmarks = bookmarks.filter(bookmark => bookmark.id !== id);
+    const updatedBookmarks = bookmarks.filter((bookmark) => bookmark.id !== id);
     setBookmarks(updatedBookmarks);
     localStorage.setItem('bible_bookmarks', JSON.stringify(updatedBookmarks));
   };
 
-  // Fonction pour rechercher dans les Strong numbers
   const searchStrong = async () => {
     if (!strongSearch.trim()) return;
-    
+
     setLoading(true);
     try {
-      const results = await strongService.searchEntries(strongSearch);
-      // Formater les résultats pour correspondre au nouveau format
-      const formattedResults = results.map(result => ({
+      const results = await strongService.searchEntries(strongSearch.trim());
+      const formattedResults = results.map((result) => ({
         ...result.entry,
         strong_number: result.number,
-        language: result.language
+        language: result.language,
       }));
       setStrongResults(formattedResults);
     } catch (error) {
       console.error('Erreur lors de la recherche Strong:', error);
+      setStrongResults([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const tabButtonClass = (tab: 'tags' | 'links' | 'bookmarks' | 'notes' | 'strong') =>
-    `flex-1 py-3 text-center font-medium min-w-[80px] transition-colors ${
-      activeTab === tab
-        ? 'border-b-2 accent-text'
-        : 'text-[color:var(--foreground)]/60 hover:text-[color:var(--foreground)]'
-    }`;
-
-  // Fonction pour obtenir les mots Strong du verset actuel
-  const getVerseWordsContent = () => {
-    if (loading) {
-      return (
-        <div className="flex justify-center items-center h-32">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: 'var(--accent)' }}></div>
-        </div>
-      );
-    }
-
-    if (!selectedVerseText) {
-      return (
-        <div className="text-center py-8 text-[color:var(--foreground)]/60">
-          <BookOpen className="mx-auto h-12 w-12 mb-4 opacity-50" />
-          <p>Sélectionnez un verset pour explorer les mots Strong correspondants</p>
-        </div>
-      );
-    }
-
-    if (verseWords.length === 0) {
-      return (
-        <div className="text-center py-8 text-[color:var(--foreground)]/60">
-          <p>Aucun mot Strong trouvé dans ce verset</p>
-          <p className="text-sm mt-2 text-[color:var(--foreground)]/50">Texte du verset: "{selectedVerseText}"</p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="space-y-4">
-        <div className="glass-panel rounded-xl p-4">
-          <h4 className="font-bold mb-2">Verset en cours</h4>
-          <p className="italic text-[color:var(--foreground)]/85">"{selectedVerseText}"</p>
-          <p className="text-sm text-[color:var(--foreground)]/60 mt-1">{bookId} {chapter}:{verse}</p>
-        </div>
-
-        <div>
-          <h4 className="font-bold mb-4">Mots clés du verset</h4>
-          <div className="space-y-3">
-            {verseWords.map((word, index) => (
-              <div key={index} className="glass-panel rounded-lg p-3">
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg font-bold">{word.originalForm || word.w || word.word}</span>
-                      {word.phonetic && (
-                        <span className="text-sm text-[color:var(--foreground)]/60">({word.phonetic})</span>
-                      )}
-                      {word.strong_number && (
-                        <span className="chip-soft text-xs accent-text">
-                          {word.strong_number}
-                        </span>
-                      )}
-                    </div>
-                    {word.details && (
-                      <div
-                        className="mt-2 text-[color:var(--foreground)]/85 [&_*]:text-[color:var(--foreground)]/85 [&_a]:accent-text [&_a]:underline"
-                        dangerouslySetInnerHTML={{ __html: word.details.definition || word.details.def || '' }}
-                      />
-                    )}
-                    {word.details && word.details.lsg && (
-                      <div className="mt-1 text-sm text-[color:var(--foreground)]/65">
-                        <strong>LSG:</strong> {word.details.lsg}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  };
+  const currentTabTitle = {
+    tags: 'Thèmes & classification',
+    links: 'Références liées',
+    bookmarks: 'Repères personnels',
+    notes: 'Notes d’étude',
+    strong: 'Concordance Strong',
+  }[activeTab];
 
   if (!isOpen) return null;
 
   return (
     <div
-      className="fixed inset-0 bg-black/55 backdrop-blur-[2px] flex items-center justify-center z-[17000] p-4"
+      className="fixed inset-0 z-[17000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-md"
       onClick={closeWithSave}
       role="dialog"
       aria-modal="true"
     >
       <div
-        className="bible-paper rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col text-[color:var(--foreground)]"
+        className="relative flex h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(180deg,#0f1117_0%,#121722_100%)] text-white shadow-[0_30px_100px_rgba(0,0,0,0.45)]"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="flex justify-between items-center p-4 border-b border-black/10 dark:border-white/10">
-          <h2 className="text-xl font-bold">Approfondir la Parole</h2>
-          <button 
-            onClick={closeWithSave}
-            className="btn-icon h-9 w-9"
-            aria-label="Fermer et sauvegarder"
-          >
-            <X size={20} />
-          </button>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(200,159,45,0.12),transparent_26%),radial-gradient(circle_at_bottom_right,rgba(56,125,255,0.10),transparent_22%)]" />
+
+        <div className="relative z-10 border-b border-white/10 px-5 py-5 sm:px-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-300">
+                <Sparkles size={12} />
+                Étude avancée
+              </div>
+              <h2 className="mt-3 text-2xl font-black tracking-tight text-white">
+                {currentTabTitle}
+              </h2>
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-white/60">
+                <span className="rounded-full bg-white/5 px-3 py-1 font-semibold">{verseLabel}</span>
+                {selectedVerseText ? (
+                  <span className="max-w-[720px] truncate text-white/45">
+                    “{selectedVerseText}”
+                  </span>
+                ) : null}
+              </div>
+            </div>
+
+            <button
+              onClick={closeWithSave}
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-white/10 bg-white/5 text-white/70 transition hover:bg-white/10 hover:text-white"
+              aria-label="Fermer et sauvegarder"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
-        <div
-          className="flex border-b overflow-x-auto border-black/10 dark:border-white/10"
-          style={{ borderBottomColor: 'var(--border-soft)' }}
-        >
-          <button
-            className={tabButtonClass('tags')}
-            style={activeTab === 'tags' ? { borderBottomColor: 'var(--accent)' } : undefined}
-            onClick={() => setActiveTab('tags')}
-          >
-            <Tag className="mx-auto mb-1" size={18} />
-            Thèmes
-          </button>
-          <button
-            className={tabButtonClass('links')}
-            style={activeTab === 'links' ? { borderBottomColor: 'var(--accent)' } : undefined}
-            onClick={() => setActiveTab('links')}
-          >
-            <LinkIcon className="mx-auto mb-1" size={18} />
-            Références
-          </button>
-          <button
-            className={tabButtonClass('bookmarks')}
-            style={activeTab === 'bookmarks' ? { borderBottomColor: 'var(--accent)' } : undefined}
-            onClick={() => setActiveTab('bookmarks')}
-          >
-            <Bookmark className="mx-auto mb-1" size={18} />
-            Repères
-          </button>
-          <button
-            className={tabButtonClass('notes')}
-            style={activeTab === 'notes' ? { borderBottomColor: 'var(--accent)' } : undefined}
-            onClick={() => setActiveTab('notes')}
-          >
-            <MessageSquare className="mx-auto mb-1" size={18} />
-            Notes
-          </button>
-          <button
-            className={tabButtonClass('strong')}
-            style={activeTab === 'strong' ? { borderBottomColor: 'var(--accent)' } : undefined}
-            onClick={() => {
+        <div className="relative z-10 border-b border-white/10 px-4 py-4 sm:px-6">
+          <div className="flex flex-wrap gap-2">
+            <TabButton active={activeTab === 'tags'} icon={<Tag size={16} />} label="Thèmes" onClick={() => setActiveTab('tags')} />
+            <TabButton active={activeTab === 'links'} icon={<LinkIcon size={16} />} label="Références" onClick={() => setActiveTab('links')} />
+            <TabButton active={activeTab === 'bookmarks'} icon={<Bookmark size={16} />} label="Repères" onClick={() => setActiveTab('bookmarks')} />
+            <TabButton active={activeTab === 'notes'} icon={<MessageSquare size={16} />} label="Notes" onClick={() => setActiveTab('notes')} />
+            <TabButton active={activeTab === 'strong'} icon={<BookText size={16} />} label="Strong" onClick={() => {
               setActiveTab('strong');
               if (selectedVerseText && verseWords.length === 0) {
-                loadVerseWords(strongTokens);
+                void loadVerseWords(strongTokens);
               }
-            }}
-          >
-            <BookText className="mx-auto mb-1" size={18} />
-            Strong
-          </button>
+            }} />
+          </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="relative z-10 flex-1 overflow-y-auto px-4 py-5 sm:px-6">
           {activeTab === 'tags' && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="font-bold text-lg mb-3">Thèmes suggérés</h3>
+            <div className="grid gap-5 lg:grid-cols-2">
+              <SectionCard
+                title="Thèmes rapides"
+                subtitle="Ajoutez des catégories visuelles pour classer ce verset."
+              >
                 <div className="flex flex-wrap gap-2">
-                  {predefinedTags.map((tag, index) => (
+                  {PREDEFINED_TAGS.map((tag) => (
                     <button
-                      key={index}
+                      key={tag.name}
                       type="button"
                       onClick={() => addTag(tag.name, tag.color)}
-                      className="px-3 py-2 rounded-full text-sm font-medium"
+                      className="rounded-full px-3 py-2 text-sm font-semibold transition hover:scale-[1.02] cursor-pointer"
                       style={{ backgroundColor: `${tag.color}20`, color: tag.color }}
                     >
                       {tag.name}
                     </button>
                   ))}
                 </div>
-              </div>
+              </SectionCard>
 
-              <div>
-                <h3 className="font-bold text-lg mb-3">Thèmes associés à ce verset</h3>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {verseTags.length > 0 ? (
-                    verseTags.map((tag, index) => {
-                      const [color, name] = tag.split(':');
-                      return (
-                        <span
-                          key={index}
-                          className="px-3 py-2 rounded-full text-sm font-medium flex items-center gap-2"
-                          style={{ backgroundColor: `${color}20`, color }}
-                        >
-                          {name}
-                          <button onClick={() => removeTag(tag)} className="ml-1">×</button>
-                        </span>
-                      );
-                    })
-                  ) : (
-                    <p className="text-[color:var(--foreground)]/60">Aucun thème pour ce verset</p>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <h3 className="font-bold text-lg mb-3">Ajouter un thème personnalisé</h3>
-                <div className="flex gap-2">
+              <SectionCard
+                title="Ajouter un thème personnalisé"
+                subtitle="Créez votre propre classification."
+              >
+                <div className="flex flex-col gap-3 sm:flex-row">
                   <input
                     type="color"
                     value={tagColor}
                     onChange={(e) => setTagColor(e.target.value)}
-                    className="w-12 h-10 border rounded cursor-pointer border-black/20 dark:border-white/20 bg-transparent"
+                    className="h-11 w-full rounded-2xl border border-white/10 bg-transparent sm:w-14 cursor-pointer"
                   />
                   <input
                     type="text"
                     value={customTagName}
                     onChange={(e) => setCustomTagName(e.target.value)}
                     placeholder="Nom du thème"
-                    className="input-field flex-1"
+                    className="h-11 flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 text-sm text-white outline-none placeholder:text-white/35"
                   />
                   <button
                     onClick={addCustomTag}
-                    className="btn-base btn-primary text-sm"
+                    className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-amber-400 px-5 text-sm font-bold text-black transition hover:scale-[1.02] cursor-pointer"
                   >
+                    <Plus size={16} />
                     Ajouter
                   </button>
                 </div>
-              </div>
+              </SectionCard>
 
-              <div>
-                <h3 className="font-bold text-lg mb-3">Thèmes Nave</h3>
-                {naveLoading && (
-                  <div className="text-sm text-[color:var(--foreground)]/60">Chargement des thèmes...</div>
-                )}
-                {naveError && !naveLoading && (
-                  <div className="text-sm text-red-400">{naveError}</div>
-                )}
-                {!naveLoading && !naveError && naveTopics.length === 0 && (
-                  <div className="text-sm text-[color:var(--foreground)]/60">Aucun thème trouvé pour ce verset.</div>
-                )}
-                {!naveLoading && !naveError && naveTopics.length > 0 && (
-                  <div className="space-y-2">
-                    <div className="flex justify-end">
-                      <button
-                        type="button"
-                        onClick={addAllNaveTags}
-                        className="chip-soft text-xs accent-text"
-                      >
-                        Ajouter tous
-                      </button>
-                    </div>
-                    {naveTopics.map((topic) => (
-                      <details key={topic.name_lower} className="glass-panel rounded-lg p-3">
-                        <summary className="cursor-pointer font-medium flex items-center justify-between">
-                          <span>{topic.name}</span>
-                          <button
-                            type="button"
-                            onClick={(event) => {
-                              event.preventDefault();
-                              event.stopPropagation();
-                              addTag(topic.name, '#8B5CF6');
-                            }}
-                            className="chip-soft text-xs accent-text"
-                          >
-                            Ajouter tag
+              <SectionCard
+                title="Thèmes associés à ce verset"
+                subtitle="Vos thèmes déjà reliés à cette référence."
+              >
+                {verseTags.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {verseTags.map((tag) => {
+                      const [color, name] = tag.split(':');
+                      return (
+                        <span
+                          key={tag}
+                          className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold"
+                          style={{ backgroundColor: `${color}20`, color }}
+                        >
+                          {name}
+                          <button onClick={() => removeTag(tag)} className="text-current/80 hover:text-current cursor-pointer p-0.5">
+                            ×
                           </button>
+                        </span>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-sm text-white/55">Aucun thème enregistré pour ce verset.</p>
+                )}
+              </SectionCard>
+
+              <SectionCard
+                title="Thèmes Nave"
+                subtitle="Suggestions bibliques liées à ce verset."
+                right={
+                  naveTopics.length > 0 ? (
+                    <button
+                      type="button"
+                      onClick={addAllNaveTags}
+                      className="rounded-full bg-white/8 px-3 py-1.5 text-xs font-bold text-amber-300 hover:bg-white/12 cursor-pointer"
+                    >
+                      Ajouter tous
+                    </button>
+                  ) : null
+                }
+              >
+                {naveLoading ? (
+                  <p className="text-sm text-white/55">Chargement des thèmes...</p>
+                ) : naveError ? (
+                  <p className="text-sm text-rose-300">{naveError}</p>
+                ) : naveTopics.length === 0 ? (
+                  <p className="text-sm text-white/55">Aucun thème trouvé pour ce verset.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {naveTopics.map((topic) => (
+                      <details key={topic.name_lower} className="group rounded-2xl border border-white/8 bg-white/5 p-4">
+                        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-semibold text-white">
+                          <span>{topic.name}</span>
+                          <div className="flex items-center gap-3">
+                             <button
+                                type="button"
+                                onClick={(event) => {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                addTag(topic.name, '#8B5CF6');
+                                }}
+                                className="rounded-full bg-violet-500/15 px-3 py-1 text-xs font-bold text-violet-300 hover:bg-violet-500/25"
+                            >
+                                Ajouter
+                            </button>
+                             <ChevronDown size={14} className="text-white/30 transition-transform group-open:rotate-180" />
+                          </div>
                         </summary>
                         <div
-                          className="mt-2 text-sm text-[color:var(--foreground)]/75 [&_a]:accent-text [&_a]:underline"
+                          className="mt-3 text-sm leading-6 text-white/72 [&_a]:text-amber-300 [&_a]:underline"
                           onClick={handleNaveLinksClick}
                           dangerouslySetInnerHTML={{ __html: topic.description }}
                         />
@@ -648,82 +685,92 @@ const AdvancedStudyTools = ({
                     ))}
                   </div>
                 )}
-              </div>
+              </SectionCard>
             </div>
           )}
 
           {activeTab === 'links' && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="font-bold text-lg mb-3">Ajouter une référence liée</h3>
+            <div className="grid gap-5 lg:grid-cols-2">
+              <SectionCard
+                title="Ajouter une référence liée"
+                subtitle="Créez vos propres ponts entre passages."
+              >
                 <div className="space-y-3">
                   <input
                     type="text"
                     value={newLink.ref}
-                    onChange={(e) => setNewLink({...newLink, ref: e.target.value})}
-                    placeholder="Référence (ex: Rom 3:23, Jn 3:16)"
-                    className="input-field w-full"
+                    onChange={(e) => setNewLink({ ...newLink, ref: e.target.value })}
+                    placeholder="Référence (ex: Rom 3:23)"
+                    className="h-11 w-full rounded-2xl border border-white/10 bg-white/5 px-4 text-sm text-white outline-none placeholder:text-white/35"
                   />
                   <textarea
                     value={newLink.description}
-                    onChange={(e) => setNewLink({...newLink, description: e.target.value})}
+                    onChange={(e) => setNewLink({ ...newLink, description: e.target.value })}
                     placeholder="Description du lien"
-                    className="input-field w-full"
-                    rows={2}
+                    rows={3}
+                    className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-white/35"
                   />
                   <button
                     onClick={addLink}
-                    className="btn-base btn-primary text-sm"
+                    className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-amber-400 px-5 text-sm font-bold text-black transition hover:scale-[1.02] cursor-pointer"
                   >
+                    <Plus size={16} />
                     Ajouter le lien
                   </button>
                 </div>
-              </div>
+              </SectionCard>
 
-              <div>
-                <h3 className="font-bold text-lg mb-3">Références enregistrées</h3>
+              <SectionCard
+                title="Références enregistrées"
+                subtitle="Vos liens personnels sur ce verset."
+              >
                 {links.length > 0 ? (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {links.map((link) => (
-                      <div key={link.id} className="p-3 glass-panel rounded-lg flex justify-between items-start">
+                      <div
+                        key={link.id}
+                        className="flex items-start justify-between gap-4 rounded-2xl border border-white/8 bg-white/5 p-4"
+                      >
                         <div>
-                          <div className="font-medium">{link.ref}</div>
-                          <div className="text-sm text-[color:var(--foreground)]/65">{link.description}</div>
+                          <div className="font-bold text-white">{link.ref}</div>
+                          <div className="mt-1 text-sm leading-6 text-white/65">{link.description}</div>
                         </div>
-                        <button 
-                          onClick={() => removeLink(link.id)}
-                          className="text-red-400 hover:text-red-300"
-                        >
-                          ×
-                        </button>
+                        <SoftActionButton danger onClick={() => removeLink(link.id)}>
+                          Supprimer
+                        </SoftActionButton>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-[color:var(--foreground)]/60">Aucune référence pour ce verset</p>
+                  <p className="text-sm text-white/55">Aucune référence enregistrée pour ce verset.</p>
                 )}
-              </div>
+              </SectionCard>
 
-              <div>
-                <h3 className="font-bold text-lg mb-3">Références croisées</h3>
-                {treasuryLoading && (
-                  <div className="text-sm text-[color:var(--foreground)]/60">Chargement des références...</div>
-                )}
-                {treasuryError && !treasuryLoading && (
-                  <div className="text-sm text-red-400">{treasuryError}</div>
-                )}
-                {!treasuryLoading && !treasuryError && treasuryRefs.length === 0 && (
-                  <div className="text-sm text-[color:var(--foreground)]/60">Aucune référence trouvée pour ce verset.</div>
-                )}
-                {!treasuryLoading && !treasuryError && treasuryRefs.length > 0 && (
+              <SectionCard
+                title="Références croisées"
+                subtitle="Issues du Treasury of Scripture Knowledge."
+              >
+                {treasuryLoading ? (
+                  <p className="text-sm text-white/55">Chargement des références...</p>
+                ) : treasuryError ? (
+                  <p className="text-sm text-rose-300">{treasuryError}</p>
+                ) : treasuryRefs.length === 0 ? (
+                  <p className="text-sm text-white/55">Aucune référence trouvée pour ce verset.</p>
+                ) : (
                   <div className="space-y-2">
                     {treasuryRefs.map((ref) => (
-                      <div key={ref.id} className="flex items-center justify-between glass-panel rounded-lg p-3">
-                        <div className="font-medium">{ref.label}</div>
+                      <div
+                        key={ref.id}
+                        className="flex items-center justify-between gap-4 rounded-2xl border border-white/8 bg-white/5 p-4"
+                      >
+                        <div className="flex items-center gap-2 font-semibold text-white">
+                          <ChevronRight size={15} className="text-amber-300" />
+                          {ref.label}
+                        </div>
                         <button
                           type="button"
                           onClick={() => addTreasuryLink(ref.label)}
-                          className="chip-soft text-xs accent-text"
+                          className="rounded-full bg-white/8 px-3 py-1.5 text-xs font-bold text-amber-300 hover:bg-white/12 cursor-pointer"
                         >
                           Ajouter
                         </button>
@@ -731,133 +778,255 @@ const AdvancedStudyTools = ({
                     ))}
                   </div>
                 )}
-              </div>
+              </SectionCard>
             </div>
           )}
 
           {activeTab === 'bookmarks' && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="font-bold text-lg mb-3">Ajouter un repère</h3>
-                <div className="flex gap-2">
+            <div className="grid gap-5 lg:grid-cols-2">
+              <SectionCard
+                title="Créer un repère"
+                subtitle="Enregistrez ce verset dans votre bibliothèque personnelle."
+              >
+                <div className="flex flex-col gap-3 sm:flex-row">
                   <input
                     type="text"
                     value={bookmarkTitle}
                     onChange={(e) => setBookmarkTitle(e.target.value)}
                     placeholder="Nom du repère"
-                    className="input-field flex-1"
+                    className="h-11 flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 text-sm text-white outline-none placeholder:text-white/35"
                   />
                   <button
                     onClick={addBookmark}
-                    className="btn-base btn-primary text-sm"
+                    className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-amber-400 px-5 text-sm font-bold text-black transition hover:scale-[1.02] cursor-pointer"
                   >
+                    <Bookmark size={16} />
                     Enregistrer
                   </button>
                 </div>
-              </div>
+              </SectionCard>
 
-              <div>
-                <h3 className="font-bold text-lg mb-3">Vos repères</h3>
+              <SectionCard
+                title="Vos repères"
+                subtitle="Tous vos passages marqués."
+              >
                 {bookmarks.length > 0 ? (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {bookmarks.map((bookmark) => (
-                      <div key={bookmark.id} className="p-3 glass-panel rounded-lg flex justify-between items-start">
+                      <div
+                        key={bookmark.id}
+                        className="flex items-start justify-between gap-4 rounded-2xl border border-white/8 bg-white/5 p-4"
+                      >
                         <div>
-                          <div className="font-medium">{bookmark.title}</div>
-                          <div className="text-sm text-[color:var(--foreground)]/65">{bookmark.ref} - {bookmark.timestamp.toLocaleDateString()}</div>
+                          <div className="font-bold text-white">{bookmark.title}</div>
+                          <div className="mt-1 text-sm text-white/62">
+                            {bookmark.ref} • {bookmark.timestamp.toLocaleDateString()}
+                          </div>
                         </div>
-                        <button 
-                          onClick={() => removeBookmark(bookmark.id)}
-                          className="text-red-400 hover:text-red-300"
-                        >
-                          ×
-                        </button>
+                        <SoftActionButton danger onClick={() => removeBookmark(bookmark.id)}>
+                          Supprimer
+                        </SoftActionButton>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-[color:var(--foreground)]/60">Aucun repère enregistré</p>
+                  <p className="text-sm text-white/55">Aucun repère enregistré.</p>
                 )}
-              </div>
+              </SectionCard>
             </div>
           )}
 
           {activeTab === 'notes' && (
-            <div className="space-y-4">
-              <h3 className="font-bold text-lg">Notes sur ce verset</h3>
-              <textarea
-                value={verseNotes}
-                onChange={(e) => setVerseNotes(e.target.value)}
-                placeholder="Écris ici ce que ce verset t'éclaire, t'enseigne ou te rappelle..."
-                className="input-field w-full h-64 p-4 rounded-lg"
-              />
-              <div className="text-sm text-[color:var(--foreground)]/60">
-                Référence: {bookId} {chapter}:{verse}
-              </div>
+            <div className="grid gap-5 xl:grid-cols-2">
+              <SectionCard
+                title="Notes sur ce verset"
+                subtitle={`Référence active : ${verseLabel}`}
+              >
+                <div className="relative">
+                    <PenSquare size={16} className="absolute top-4 left-4 text-white/20" />
+                    <textarea
+                    value={verseNotes}
+                    onChange={(e) => setVerseNotes(e.target.value)}
+                    placeholder="Écris ici ce que ce verset t’enseigne, t’éclaire ou te rappelle..."
+                    className="min-h-[320px] w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-4 pl-12 text-sm leading-6 text-white outline-none transition-all focus:border-amber-400/30 focus:bg-white/10 placeholder:text-white/35"
+                    />
+                </div>
+              </SectionCard>
 
-              <div className="pt-4 border-t border-black/10 dark:border-white/10">
-                <h3 className="font-bold text-lg mb-3">Commentaire</h3>
-                {mhLoading && (
-                  <div className="text-sm text-[color:var(--foreground)]/60">Chargement du commentaire...</div>
-                )}
-                {mhError && !mhLoading && (
-                  <div className="text-sm text-red-400">{mhError}</div>
-                )}
-                {!mhLoading && !mhError && mhSections.length === 0 && (
-                  <div className="text-sm text-[color:var(--foreground)]/60">Aucun commentaire pour ce chapitre.</div>
-                )}
-                {!mhLoading && !mhError && mhSections.length > 0 && (
-                  <div className="space-y-3 text-sm text-[color:var(--foreground)]/75">
+              <SectionCard
+                title="Commentaire"
+                subtitle="Aide exégétique et observations complémentaires."
+              >
+                {mhLoading ? (
+                  <p className="text-sm text-white/55">Chargement du commentaire...</p>
+                ) : mhError ? (
+                  <p className="text-sm text-rose-300">{mhError}</p>
+                ) : mhSections.length === 0 ? (
+                  <p className="text-sm text-white/55">Aucun commentaire pour ce chapitre.</p>
+                ) : (
+                  <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
                     {mhSections.map((section) => (
                       <div
                         key={section.key}
-                        className="glass-panel rounded-lg p-3 [&_*]:text-[color:var(--foreground)]/75 [&_a]:accent-text [&_a]:underline"
+                        className="rounded-2xl border border-white/8 bg-white/5 p-4 text-sm leading-6 text-white/75 [&_*]:text-white/75 [&_a]:text-amber-300 [&_a]:underline"
                         dangerouslySetInnerHTML={{ __html: section.html }}
                       />
                     ))}
                   </div>
                 )}
-              </div>
+              </SectionCard>
             </div>
           )}
 
           {activeTab === 'strong' && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="font-bold text-lg mb-3">Explorer la concordance Strong</h3>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={strongSearch}
-                    onChange={(e) => setStrongSearch(e.target.value)}
-                    placeholder="Rechercher un mot, un numéro Strong ou une translittération..."
-                    className="input-field flex-1"
-                  />
-                  <button
-                    onClick={searchStrong}
-                    className="btn-base btn-primary text-sm"
-                  >
-                    <Search size={18} />
-                  </button>
-                </div>
-              </div>
+            <div className="space-y-5">
+              <SectionCard
+                title="Explorer la concordance Strong"
+                subtitle="Analyses grammaticales et racines originales du verset."
+              >
+                {loading ? (
+                  <div className="flex h-32 items-center justify-center">
+                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-amber-300" />
+                  </div>
+                ) : !selectedVerseText ? (
+                  <div className="py-8 text-center text-white/55">
+                    <BookOpen className="mx-auto mb-4 h-12 w-12 opacity-40" />
+                    <p>Sélectionnez un verset pour explorer les mots Strong correspondants.</p>
+                  </div>
+                ) : verseWords.length === 0 ? (
+                  <div className="py-8 text-center text-white/55">
+                    <p>Aucun mot Strong trouvé dans ce verset.</p>
+                    <p className="mt-2 text-sm text-white/40">“{selectedVerseText}”</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="rounded-2xl border border-amber-400/10 bg-amber-400/5 p-4">
+                      <div className="text-sm italic leading-6 text-white/82">“{selectedVerseText}”</div>
+                      <div className="mt-2 text-xs font-bold uppercase tracking-[0.14em] text-amber-300/40">
+                        {verseLabel}
+                      </div>
+                    </div>
 
-              {getVerseWordsContent()}
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {verseWords.map((word, index) => (
+                        <div
+                          key={`${word.strong_number || word.originalForm || word.w || index}-${index}`}
+                          className="flex flex-col rounded-2xl border border-white/8 bg-white/5 p-4 transition-all hover:bg-white/10"
+                        >
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                                <span className="text-lg font-black text-white">
+                                {word.originalForm || word.w || word.word}
+                                </span>
+                                {word.phonetic ? (
+                                <span className="text-sm text-white/55">({word.phonetic})</span>
+                                ) : null}
+                            </div>
+                            {word.strong_number ? (
+                              <span className="rounded-full bg-amber-400/15 px-2.5 py-1 text-[11px] font-bold text-amber-300">
+                                {word.strong_number}
+                              </span>
+                            ) : null}
+                          </div>
+
+                          {word.details ? (
+                            <div className="mt-3 flex-1">
+                              <div
+                                className="text-xs leading-5 text-white/70 [&_*]:text-white/70 [&_a]:text-amber-300 [&_a]:underline"
+                                dangerouslySetInnerHTML={{
+                                  __html: word.details.definition || word.details.def || '',
+                                }}
+                              />
+                              {word.details.lsg ? (
+                                <div className="mt-3 pt-3 border-t border-white/5 text-xs text-white/50">
+                                  <strong className="text-white/70 mr-2">LSG :</strong> {word.details.lsg}
+                                </div>
+                              ) : null}
+                            </div>
+                          ) : (
+                            <p className="mt-3 text-xs text-white/45">Définition non disponible localement.</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </SectionCard>
+
+              {strongResults.length > 0 || strongSearch ? (
+                  <SectionCard
+                    title="Recherche avancée"
+                    subtitle="Trouvez un terme spécifique dans la concordance."
+                  >
+                  <div className="flex flex-col gap-3 sm:flex-row mb-6">
+                    <input
+                        type="text"
+                        value={strongSearch}
+                        onChange={(e) => setStrongSearch(e.target.value)}
+                        placeholder="Ex: agape, hesed, G26..."
+                        className="h-11 flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 text-sm text-white outline-none placeholder:text-white/35"
+                    />
+                    <button
+                        onClick={searchStrong}
+                        className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-amber-400 px-5 text-sm font-bold text-black transition hover:scale-[1.02] cursor-pointer"
+                    >
+                        <Search size={16} />
+                        Chercher
+                    </button>
+                    </div>
+
+                    {strongResults.length > 0 ? (
+                        <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                        {strongResults.map((result, index) => (
+                            <div
+                            key={`${result.strong_number || result.number || index}-${index}`}
+                            className="rounded-2xl border border-white/8 bg-white/5 p-4"
+                            >
+                            <div className="flex flex-wrap items-center gap-2">
+                                <span className="font-black text-amber-300">{result.strong_number || result.number}</span>
+                                {result.transliteration ? (
+                                <span className="text-sm font-bold text-white/80">{result.transliteration}</span>
+                                ) : null}
+                            </div>
+                            <div className="mt-2 text-xs leading-5 text-white/60">
+                                {result.definition || result.gloss || 'Aucune définition disponible.'}
+                            </div>
+                            </div>
+                        ))}
+                        </div>
+                    ) : strongSearch && (
+                        <div className="text-center py-6 text-sm text-white/40">
+                             Lancez la recherche pour voir les résultats.
+                        </div>
+                    )}
+                  </SectionCard>
+              ) : null}
             </div>
           )}
         </div>
 
-        <div className="p-4 border-t border-black/10 dark:border-white/10 flex justify-end">
-          <button
-            onClick={closeWithSave}
-            className="btn-base btn-primary text-sm"
-          >
-            Enregistrer et fermer
-          </button>
+        <div className="relative z-10 flex items-center justify-between gap-4 border-t border-white/10 px-5 py-4 sm:px-6">
+          <div className="flex items-center gap-2 text-xs text-white/45">
+            <CheckCircle2 size={14} className="text-emerald-400" />
+            <span>Sauvegarde automatique active</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onClose}
+              className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/72 transition hover:bg-white/10 hover:text-white cursor-pointer"
+            >
+              Annuler
+            </button>
+            <button
+              onClick={closeWithSave}
+              className="rounded-2xl bg-amber-400 px-6 py-3 text-sm font-extrabold text-black transition hover:scale-[1.02] cursor-pointer shadow-lg shadow-amber-400/20"
+            >
+              Enregistrer l’étude
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
-};
-
-export default AdvancedStudyTools;
+}
