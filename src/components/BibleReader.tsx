@@ -3093,7 +3093,7 @@ export default function BibleReader({
           setMirrorError(null);
           setMirrorModalOpen(true);
           setMirrorLoading(true);
-          graceService.getSpiritInsight(ref, selectedVerse.text)
+          graceService.analyzeVerse(selectedVerse.text, ref)
             .then(res => {
               if (res.error) {
                 setMirrorError(res.error);
