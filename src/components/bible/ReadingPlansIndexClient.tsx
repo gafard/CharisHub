@@ -251,9 +251,8 @@ export default function ReadingPlansIndexClient() {
                 Retour à la Parole
               </Link>
 
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#161c35]/5 text-[#c89f2d]">
-                  <Sparkles size={24} />
-                </div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#161c35]/5 text-[#c89f2d]">
+                <Sparkles size={24} />
               </div>
             </div>
 
@@ -267,6 +266,7 @@ export default function ReadingPlansIndexClient() {
               </button>
             ) : null}
           </div>
+        </div>
 
           <div className="mt-8 flex flex-wrap gap-2">
             <button
@@ -299,7 +299,6 @@ export default function ReadingPlansIndexClient() {
               );
             })}
           </div>
-        </div>
 
         <div className="relative z-10 px-4 pb-6 pt-5 sm:px-6 lg:px-8 lg:pb-10 lg:pt-8">
           <div className="relative mx-auto w-full max-w-[1380px] lg:grid lg:grid-cols-[minmax(0,1fr)_420px] lg:items-center lg:gap-8 xl:grid-cols-[minmax(0,1fr)_470px] xl:gap-10">
