@@ -2597,6 +2597,8 @@ export default function BibleReader({
         }
         break;
       case 'mirror': {
+        setStudyBarOpen(false);
+        setRadarOpen(false);
         setMirrorError(null);
         setMirrorModalOpen(true);
         setMirrorLoading(true);
@@ -3090,6 +3092,7 @@ export default function BibleReader({
         onMirror={() => {
           if (!selectedVerse) return;
           const ref = `${book.name} ${chapter}:${selectedVerse.number}`;
+          setStudyBarOpen(false);
           setMirrorError(null);
           setMirrorModalOpen(true);
           setMirrorLoading(true);
