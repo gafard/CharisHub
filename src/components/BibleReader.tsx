@@ -2608,7 +2608,7 @@ export default function BibleReader({
             }
             setMirrorLoading(false);
           })
-          .catch(err => {
+          .catch((err: unknown) => {
             setMirrorError(err instanceof Error ? err.message : 'Éclairage indisponible');
             setMirrorLoading(false);
           });
