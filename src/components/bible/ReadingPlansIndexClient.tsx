@@ -251,20 +251,9 @@ export default function ReadingPlansIndexClient() {
                 Retour à la Parole
               </Link>
 
-              <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-[#eadfca] bg-white/70 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-[#b88922] shadow-sm">
-                  <Sparkles size={12} />
-                  Parcours guidés
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#161c35]/5 text-[#c89f2d]">
+                  <Sparkles size={24} />
                 </div>
-
-                <h1 className="mt-4 font-display text-[34px] font-black leading-[0.96] tracking-tight text-[#161c35] sm:text-[44px] lg:text-[52px]">
-                  Bâtissez une
-                  <span className="block text-[#c89f2d]">discipline de Parole</span>
-                </h1>
-
-                <p className="mt-4 max-w-[44ch] text-[15px] leading-relaxed text-[#161c35]/62 sm:text-[16px]">
-                  Choisissez un parcours, avancez jour après jour, et gardez votre progression synchronisée avec votre compte.
-                </p>
               </div>
             </div>
 

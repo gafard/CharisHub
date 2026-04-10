@@ -75,12 +75,12 @@ function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="overflow-hidden rounded-[24px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]/92 shadow-[0_12px_32px_rgba(16,24,40,0.06)]">
-      <div className="flex items-start justify-between gap-4 border-b border-[color:var(--border-soft)] px-5 py-4">
+    <div className="overflow-hidden rounded-[24px] border border-white/10 bg-white/5 shadow-[0_12px_32px_rgba(0,0,0,0.12)]">
+      <div className="flex items-start justify-between gap-4 border-b border-white/10 px-5 py-4">
         <div>
-          <h3 className="text-sm font-extrabold text-[color:var(--foreground)]">{title}</h3>
+          <h3 className="text-sm font-extrabold text-white">{title}</h3>
           {subtitle ? (
-            <p className="mt-1 text-xs leading-5 text-[color:var(--foreground)]/58">{subtitle}</p>
+            <p className="mt-1 text-xs leading-5 text-white/50">{subtitle}</p>
           ) : null}
         </div>
         {right ? <div className="shrink-0">{right}</div> : null}
@@ -108,8 +108,8 @@ function TabButton({
       className={[
         'inline-flex min-w-[108px] items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold transition-all',
         active
-          ? 'bg-[color:var(--accent)] text-white shadow-lg shadow-[color:var(--accent)]/20'
-          : 'border border-[color:var(--border-soft)] bg-[color:var(--surface)] text-[color:var(--foreground)]/68 hover:border-[color:var(--border-strong)] hover:text-[color:var(--foreground)]',
+          ? 'bg-amber-400 text-black shadow-lg shadow-amber-400/20'
+          : 'border border-white/10 bg-white/5 text-white/60 hover:border-white/20 hover:text-white',
       ].join(' ')}
     >
       {icon}
@@ -134,8 +134,8 @@ function SoftActionButton({
       className={[
         'inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition-all cursor-pointer',
         danger
-          ? 'bg-rose-500/10 text-rose-600 hover:bg-rose-500/15'
-          : 'bg-[color:var(--surface-strong)] text-[color:var(--foreground)]/72 hover:bg-[color:var(--surface)]',
+          ? 'bg-rose-500/15 text-rose-400 hover:bg-rose-500/25'
+          : 'bg-white/8 text-white/70 hover:bg-white/15 hover:text-white',
       ].join(' ')}
     >
       {children}
