@@ -367,7 +367,6 @@ export default function ReadingPlansIndexClient() {
                               entry={entry}
                               completion={getPlanCompletion(entry.plan.id)}
                               reducedMotion={Boolean(reducedMotion)}
-                              priority={isSelected}
                               side={isSelected ? 'center' : offset < 0 ? 'left' : 'right'}
                             />
                           </div>

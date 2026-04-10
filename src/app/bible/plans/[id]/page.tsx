@@ -87,7 +87,6 @@ export default function ReadingPlanDetail({ params }: { params: Promise<{ id: st
               entry={entry}
               completion={progress ? Math.round((progress.completedDays.length / entry.plan.days.length) * 100) : 0}
               reducedMotion={false}
-              priority
               side="center"
             />
 
