@@ -306,6 +306,8 @@ export default function ReflectionQuestions({
       const data = (await res.json()) as Partial<AiQuestions>;
       if (requestId !== aiRequestRef.current) return;
 
+      console.log('[ReflectionQuestions] Received AI data:', data);
+
       setAiQuestions({
         q1: data.q1 || DEFAULT_AI_QUESTIONS.q1,
         q1_suggestions: data.q1_suggestions || [],
@@ -331,6 +333,7 @@ export default function ReflectionQuestions({
   useEffect(() => {
     // Skip fetch if we already have preloaded questions for this focus context
     if (preloadedQuestions) {
+      console.log('[ReflectionQuestions] Applying preloaded questions:', preloadedQuestions);
       setAiQuestions(preloadedQuestions);
       setAiLoading(false);
       return;

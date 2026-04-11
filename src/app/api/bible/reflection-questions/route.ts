@@ -24,6 +24,9 @@ interface ReflectionQuestionsOutput {
 }
 
 function ensureStringArray(value: unknown): string[] {
+  if (typeof value === 'string') {
+    return value.split(/[,;\n]/).map(s => s.trim()).filter(Boolean);
+  }
   if (!Array.isArray(value)) return [];
   return value
     .filter((item): item is string => typeof item === 'string')
@@ -34,17 +37,23 @@ function ensureStringArray(value: unknown): string[] {
 function normalizeOutput(raw: unknown): ReflectionQuestionsOutput | null {
   if (!raw || typeof raw !== 'object') return null;
   const r = raw as Record<string, unknown>;
-  const fields = ['q1', 'q2', 'q3', 'q4'];
-  if (!fields.every((f) => typeof r[f] === 'string' && (r[f] as string).trim())) return null;
+  
+  const getQ = (key: string): string => {
+    const val = r[key];
+    if (typeof val === 'string' && val.trim()) return val.trim();
+    // Fallback aux questions par défaut si une clé spécifique manque
+    const def = (DEFAULT_QUESTIONS as Record<string, any>)[key];
+    return typeof def === 'string' ? def : '';
+  };
 
   return {
-    q1: (r.q1 as string).trim(),
+    q1: getQ('q1'),
     q1_suggestions: ensureStringArray(r.q1_suggestions).slice(0, 3),
-    q2: (r.q2 as string).trim(),
+    q2: getQ('q2'),
     q2_suggestions: ensureStringArray(r.q2_suggestions).slice(0, 3),
-    q3: (r.q3 as string).trim(),
+    q3: getQ('q3'),
     q3_suggestions: ensureStringArray(r.q3_suggestions).slice(0, 3),
-    q4: (r.q4 as string).trim(),
+    q4: getQ('q4'),
     q4_suggestions: ensureStringArray(r.q4_suggestions).slice(0, 3),
   };
 }
@@ -101,15 +110,17 @@ Les suggestions doivent être:
 - Directement liées au texte de ${label}
 
 RÈGLES STRICTES:
-- Réponds UNIQUEMENT avec un JSON valide respectant cette structure:
+- Réponds UNIQUEMENT avec un JSON valide.
+- Ne rajoute aucun texte avant ou après le JSON.
+- Respecte exactement cette structure:
 {
-  "q1": "...",
-  "q1_suggestions": ["...", "...", "..."],
-  "q2": "...",
+  "q1": "Une question profonde sur Dieu...",
+  "q1_suggestions": ["Suggestion 1", "Suggestion 2", "Suggestion 3"],
+  "q2": "Une question sur le ressenti...",
   "q2_suggestions": ["...", "...", "..."],
-  "q3": "...",
+  "q3": "Une question sur l'action...",
   "q3_suggestions": ["...", "...", "..."],
-  "q4": "...",
+  "q4": "Une question sur la vérité...",
   "q4_suggestions": ["...", "...", "..."]
 }`;
 }
