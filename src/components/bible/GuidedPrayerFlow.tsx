@@ -192,21 +192,6 @@ export default function GuidedPrayerFlow({
     setFinished(true);
   }, [currentIndex, getSessionDuration, resetStep, setIsRunning, steps.length, stopTimer]);
 
-  const handleApplySuggestion = useCallback(
-    (value: string) => {
-      setSteps((prev) => {
-        const next = [...prev];
-        const currentNote = next[currentIndex]?.userNote?.trim() || '';
-        next[currentIndex] = {
-          ...next[currentIndex],
-          userNote: currentNote ? `${currentNote}\n\n${value}` : value,
-        };
-        return next;
-      });
-    },
-    [currentIndex]
-  );
-
   const handleChangeNote = useCallback(
     (value: string) => {
       setSteps((prev) => {
@@ -360,7 +345,6 @@ export default function GuidedPrayerFlow({
                 onToggleSounds={() => setShowSounds((prev) => !prev)}
                 onSelectSound={selectSound}
                 onChangeNote={handleChangeNote}
-                onApplySuggestion={handleApplySuggestion}
                 onSkip={goToNextStep}
                 onValidate={handleValidateStep}
               />
