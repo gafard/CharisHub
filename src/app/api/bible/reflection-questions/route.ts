@@ -12,30 +12,23 @@ interface ReflectionQuestionsInput {
   planCategory?: string;
 }
 
-interface ReflectionQuestionsOutput {
+iinterface ReflectionQuestionsOutput {
   q1: string;
+  q1_suggestions: string[];
   q2: string;
+  q2_suggestions: string[];
   q3: string;
+  q3_suggestions: string[];
   q4: string;
+  q4_suggestions: string[];
 }
 
-function compactErrorText(value: string, max = 300): string {
-  const s = value.replace(/\s+/g, ' ').trim();
-  return s.length > max ? `${s.slice(0, max)}...` : s;
-}
-
-function extractJsonObject(raw: string): unknown | null {
-  const trimmed = raw.trim();
-  const withoutFence = trimmed.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
-  for (const candidate of [trimmed, withoutFence]) {
-    try { return JSON.parse(candidate); } catch { /* ignore */ }
-    const s = candidate.indexOf('{');
-    const e = candidate.lastIndexOf('}');
-    if (s !== -1 && e > s) {
-      try { return JSON.parse(candidate.slice(s, e + 1)); } catch { /* ignore */ }
-    }
-  }
-  return null;
+function ensureStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((item): item is string => typeof item === 'string')
+    .map((s) => s.trim())
+    .filter(Boolean);
 }
 
 function normalizeOutput(raw: unknown): ReflectionQuestionsOutput | null {
@@ -43,11 +36,16 @@ function normalizeOutput(raw: unknown): ReflectionQuestionsOutput | null {
   const r = raw as Record<string, unknown>;
   const fields = ['q1', 'q2', 'q3', 'q4'];
   if (!fields.every((f) => typeof r[f] === 'string' && (r[f] as string).trim())) return null;
+
   return {
     q1: (r.q1 as string).trim(),
+    q1_suggestions: ensureStringArray(r.q1_suggestions).slice(0, 3),
     q2: (r.q2 as string).trim(),
+    q2_suggestions: ensureStringArray(r.q2_suggestions).slice(0, 3),
     q3: (r.q3 as string).trim(),
+    q3_suggestions: ensureStringArray(r.q3_suggestions).slice(0, 3),
     q4: (r.q4 as string).trim(),
+    q4_suggestions: ensureStringArray(r.q4_suggestions).slice(0, 3),
   };
 }
 
@@ -57,9 +55,13 @@ function normalizeOutput(raw: unknown): ReflectionQuestionsOutput | null {
  */
 const DEFAULT_QUESTIONS: ReflectionQuestionsOutput = {
   q1: 'Que révèle ce chapitre sur Dieu ou sur Jésus ?',
-  q2: 'Qu\'est-ce qui me frappe, me dérange ou m\'éclaire ici ?',
-  q3: 'Y a-t-il un appel concret pour ma vie aujourd\'hui ?',
+  q1_suggestions: [],
+  q2: "Qu'est-ce qui me frappe, me dérange ou m'éclaire ici ?",
+  q2_suggestions: [],
+  q3: "Y a-t-il un appel concret pour ma vie aujourd'hui ?",
+  q3_suggestions: [],
   q4: 'Quelle vérité dois-je retenir ou méditer davantage ?',
+  q4_suggestions: [],
 };
 
 function buildPrompt(input: ReflectionQuestionsInput): string {
@@ -79,36 +81,41 @@ function buildPrompt(input: ReflectionQuestionsInput): string {
   })() : '';
 
   return `Tu es un accompagnateur spirituel chrétien, formé à l'herméneutique biblique et à l'accompagnement pastoral.
-Ta mission est d'adapter 4 questions de réflexion personnelle au passage biblique que le croyant vient de lire.
+Ta mission est d'adapter 4 questions de réflexion personnelle au passage biblique que le croyant vient de lire, ET de proposer 3 suggestions de réponses très courtes pour chaque question.
 
 Passage: **${label}**
 ${passageText ? `\nTexte du passage:\n"${passageText.slice(0, 4000)}"\n` : ''}
 ${passageThemes ? `\nThèmes identifiés dans ce passage: ${passageThemes}\n` : ''}
 ${categoryContext ? `\nContexte du plan: ${categoryContext}\n` : ''}
 
-Les 4 questions doivent suivre CETTE LOGIQUE (toujours la même structure, mais adaptée au passage):
+Les 4 questions doivent suivre CETTE LOGIQUE:
+1. **q1** (focus sur DIEU): Que révèle ce texte sur Dieu/Jésus?
+2. **q2** (focus sur L'IMPACT): Qu'est-ce qui me frappe ou m'éclaire?
+3. **q3** (focus sur L'ACTION): Quel pas de foi pour aujourd'hui?
+4. **q4** (focus sur LA VÉRITÉ): Quelle promesse ou vérité retenir?
 
-1. **q1** (focus sur DIEU): Que révèle ce passage sur le caractère, la nature ou l'action de Dieu/Jésus? 
-   → Adapter: mentionner un attribut de Dieu visible dans le texte (ex: sa fidélité, sa grâce, sa puissance, son amour)
-
-2. **q2** (focus sur L'IMPACT PERSONNEL): Qu'est-ce qui me frappe, me dérange, me console ou m'éclaire dans ce texte?
-   → Adapter: pointer un verset, une image ou un contraste du passage qui interpelle directement
-
-3. **q3** (focus sur L'ACTION CONCRÈTE): Y a-t-il un appel, un changement ou un pas de foi pour ma vie aujourd'hui?
-   → Adapter: relier à un commandement, un exemple ou une exhortation du texte
-
-4. **q4** (focus sur LA VÉRITÉ À RETENIR): Quelle vérité, promesse ou assurance dois-je retenir et méditer?
-   → Adapter: extraire une promesse, un principe ou une vérité centrale du passage
+Pour CHAQUE question, propose aussi **3 suggestions de réponses** (q1_suggestions, q2_suggestions, etc.).
+Les suggestions doivent être:
+- Très courtes (5 à 10 mots)
+- Personnelles ("Je vois que...", "Cela me rappelle...", "Je veux...")
+- Variées et percutantes
 
 RÈGLES STRICTES:
-- Chaque question doit faire 1 à 2 phrases maximum
-- Garder le ton bienveillant, pastoral et centré sur la grâce
-- NE PAS poser de questions théoriques ou académiques — toujours orienté vers la vie avec Dieu
-- NE PAS moraliser ni culpabiliser — pointer vers Christ et Sa grâce
-- Rédiger en français, à la 2e personne du singulier ("tu") ou forme impersonnelle
-- Les questions doivent être PROFONDES mais ACCESSIBLES
+- Ton bienveillant et pastoral, centré sur la grâce.
+- Réponds UNIQUEMENT avec un JSON valide.
 
-Réponds UNIQUEMENT avec un JSON valide:
+{
+  "q1": "...",
+  "q1_suggestions": ["...", "...", "..."],
+  "q2": "...",
+  "q2_suggestions": ["...", "...", "..."],
+  "q3": "...",
+  "q3_suggestions": ["...", "...", "..."],
+  "q4": "...",
+  "q4_suggestions": ["...", "...", "..."]
+}`;
+}
+n JSON valide:
 {
   "q1": "...",
   "q2": "...",

@@ -36,16 +36,24 @@ type FocusContext = {
 
 type AiQuestions = {
   q1: string;
+  q1_suggestions: string[];
   q2: string;
+  q2_suggestions: string[];
   q3: string;
+  q3_suggestions: string[];
   q4: string;
+  q4_suggestions: string[];
 };
 
 const DEFAULT_AI_QUESTIONS: AiQuestions = {
   q1: 'Que révèle ce chapitre sur Dieu ou sur Jésus ?',
+  q1_suggestions: [],
   q2: "Qu'est-ce qui me frappe, me dérange ou m'éclaire ici ?",
+  q2_suggestions: [],
   q3: "Y a-t-il un appel concret pour ma vie aujourd'hui ?",
+  q3_suggestions: [],
   q4: 'Quelle vérité dois-je retenir ou méditer davantage ?',
+  q4_suggestions: [],
 };
 
 interface ReflectionQuestionsProps {
@@ -86,6 +94,7 @@ function ReflectionQuestionCard({
   id,
   text,
   value,
+  suggestions = [],
   expanded,
   loading,
   onToggle,
@@ -95,6 +104,7 @@ function ReflectionQuestionCard({
   id: string;
   text: string;
   value: string;
+  suggestions?: string[];
   expanded: boolean;
   loading: boolean;
   onToggle: () => void;
@@ -146,6 +156,24 @@ function ReflectionQuestionCard({
 
       {expanded ? (
         <div className="border-t border-white/8 px-4 pb-4 pt-3 sm:px-5">
+          {suggestions.length > 0 && (
+            <div className="mb-4 flex flex-wrap gap-2">
+              {suggestions.map((suggestion, i) => (
+                <button
+                  key={`${id}-sug-${i}`}
+                  type="button"
+                  onClick={() => {
+                    const nextVal = value.trim() ? `${value.trim()} ${suggestion}` : suggestion;
+                    onChange(nextVal);
+                  }}
+                  className="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-left text-[12px] leading-tight text-amber-200/90 transition-all hover:border-amber-400/30 hover:bg-amber-400/10 active:scale-95"
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          )}
+
           <div className="relative overflow-hidden rounded-[18px] border border-white/8 bg-[rgba(255,255,255,0.04)]">
             <PenLine
               size={15}
@@ -205,10 +233,10 @@ export default function ReflectionQuestions({
 
   const questions = useMemo(
     () => [
-      { id: 'q1' as const, text: aiQuestions.q1 },
-      { id: 'q2' as const, text: aiQuestions.q2 },
-      { id: 'q3' as const, text: aiQuestions.q3 },
-      { id: 'q4' as const, text: aiQuestions.q4 },
+      { id: 'q1' as const, text: aiQuestions.q1, suggestions: aiQuestions.q1_suggestions },
+      { id: 'q2' as const, text: aiQuestions.q2, suggestions: aiQuestions.q2_suggestions },
+      { id: 'q3' as const, text: aiQuestions.q3, suggestions: aiQuestions.q3_suggestions },
+      { id: 'q4' as const, text: aiQuestions.q4, suggestions: aiQuestions.q4_suggestions },
     ],
     [aiQuestions],
   );
@@ -269,9 +297,13 @@ export default function ReflectionQuestions({
 
       setAiQuestions({
         q1: data.q1 || DEFAULT_AI_QUESTIONS.q1,
+        q1_suggestions: data.q1_suggestions || [],
         q2: data.q2 || DEFAULT_AI_QUESTIONS.q2,
+        q2_suggestions: data.q2_suggestions || [],
         q3: data.q3 || DEFAULT_AI_QUESTIONS.q3,
+        q3_suggestions: data.q3_suggestions || [],
         q4: data.q4 || DEFAULT_AI_QUESTIONS.q4,
+        q4_suggestions: data.q4_suggestions || [],
       });
     } catch (err) {
       logger.warn('[ReflectionQuestions] AI fetch failed, using defaults:', err);
@@ -388,6 +420,7 @@ export default function ReflectionQuestions({
             index={index}
             id={question.id}
             text={question.text}
+            suggestions={question.suggestions}
             value={answers[question.id] ?? ''}
             expanded={expandedQuestion === question.id}
             loading={aiLoading}
