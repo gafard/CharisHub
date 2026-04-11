@@ -1,6 +1,7 @@
 'use client';
 
 import logger from '@/lib/logger';
+import { Haptics } from '@/lib/haptics';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   BookMarked,
@@ -164,6 +165,7 @@ function ReflectionQuestionCard({
                   key={`${id}-sug-${i}`}
                   type="button"
                   onClick={() => {
+                    Haptics.light();
                     const nextVal = value.trim() ? `${value.trim()} ${suggestion}` : suggestion;
                     onChange(nextVal);
                   }}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Haptics } from '@/lib/haptics';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   CloudRain,
@@ -178,6 +179,7 @@ export default function GuidedPrayerFlow({
 
   const goToNextStep = useCallback(() => {
     if (currentIndex < steps.length - 1) {
+      Haptics.medium();
       setCurrentIndex((prev) => prev + 1);
       resetStep();
       return;
@@ -237,6 +239,7 @@ export default function GuidedPrayerFlow({
     if (finishing) return;
 
     setFinishing(true);
+    Haptics.success();
     stopTimer();
     stopAudio();
 
