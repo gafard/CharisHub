@@ -34,6 +34,19 @@ export interface PrayerFlowSession {
     totalDurationSec: number;
 }
 
+export interface PrayerAIResponse {
+  adoration: string;
+  adoration_suggestions: string[];
+  repentance: string;
+  repentance_suggestions: string[];
+  gratitude: string;
+  gratitude_suggestions: string[];
+  intercession: string;
+  intercession_suggestions: string[];
+  engagement: string;
+  engagement_suggestions: string[];
+}
+
 function makeId(): string {
     if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID();
     return `pf_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -247,7 +260,7 @@ export function buildPrayerSteps(
     dailyPromptAnswers: Record<string, string>,
     passageText?: string,
     reflectionInsights: string[] = [],
-    aiPrompts?: Record<string, string>,
+    aiPrompts?: PrayerAIResponse,
 ): PrayerFlowStep[] {
     const chapterLabel = readings.length ? formatDayReadingsLabel(readings) : 'la lecture du jour';
 

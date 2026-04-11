@@ -21,7 +21,11 @@ import {
 } from '../../lib/readingPlans';
 import ReflectionQuestions from './ReflectionQuestions';
 import GuidedPrayerFlow from './GuidedPrayerFlow';
-import { buildPrayerSteps, type PrayerFlowStep } from '../../lib/prayerFlowStore';
+import {
+  buildPrayerSteps,
+  type PrayerFlowStep,
+  type PrayerAIResponse,
+} from '../../lib/prayerFlowStore';
 import {
   getDayDailyPrompts,
   getOrderedChapterReflections,
@@ -241,7 +245,7 @@ export default function ReflectionSheet({
     const dailyPrompts = getDayDailyPrompts(planId, dayIndex);
     const insights = getReflectionInsights(planId, dayIndex);
 
-    let aiPrompts: Record<string, string> | null = null;
+    let aiPrompts: PrayerAIResponse | null = null;
     const canCallAI = insights.length > 0 || passageText.length > 0;
 
     if (canCallAI) {
