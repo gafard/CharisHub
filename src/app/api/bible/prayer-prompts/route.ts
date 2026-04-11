@@ -48,7 +48,10 @@ function normalizeOutput(raw: unknown): PrayerPromptsOutput | null {
     const fields = ['adoration', 'repentance', 'gratitude', 'intercession', 'engagement'];
     if (!fields.every((f) => typeof r[f] === 'string' && (r[f] as string).trim())) return null;
 
-    const getSug = (f: string) => Array.isArray(r[`${f}_suggestions`]) ? r[`${f}_suggestions`] : [];
+    const getSug = (f: string): string[] => {
+        const val = r[`${f}_suggestions`];
+        return Array.isArray(val) ? (val as string[]) : [];
+    };
 
     return {
         adoration: (r.adoration as string).trim(),
