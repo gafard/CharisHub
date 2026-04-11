@@ -35,16 +35,16 @@ export interface PrayerFlowSession {
 }
 
 export interface PrayerAIResponse {
-  adoration: string;
-  adoration_suggestions: string[];
-  repentance: string;
-  repentance_suggestions: string[];
-  gratitude: string;
-  gratitude_suggestions: string[];
-  intercession: string;
-  intercession_suggestions: string[];
-  engagement: string;
-  engagement_suggestions: string[];
+  adoration?: string;
+  adoration_suggestions?: string[];
+  repentance?: string;
+  repentance_suggestions?: string[];
+  gratitude?: string;
+  gratitude_suggestions?: string[];
+  intercession?: string;
+  intercession_suggestions?: string[];
+  engagement?: string;
+  engagement_suggestions?: string[];
 }
 
 function makeId(): string {
@@ -280,7 +280,7 @@ export function buildPrayerSteps(
         : '';
 
     // Helper: pick AI prompt if available, otherwise fall back to static
-    const ai = aiPrompts ?? {} as any;
+    const ai = aiPrompts ?? {};
 
     return [
         {
