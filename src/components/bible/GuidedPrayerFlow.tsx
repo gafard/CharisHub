@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
     X, Play, Pause, Check, Volume2, VolumeX, SkipForward,
     CloudRain, TreePine, Sunrise, Waves, Music, Leaf, Wind,
-    Heart, Droplets, Smile, Users, Target, Sun, Info
+    Heart, Droplets, Smile, Users, Target, Sun, Info, Sparkles
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { formatDayReadingsLabel, type PlanReading } from '../../lib/readingPlans';
@@ -21,6 +21,9 @@ const AMBIENT_SOUNDS = [
     { id: 'eastern', label: 'Orient', icon: Music, url: '/sounds/eastern.mp3' },
     { id: 'harvest', label: 'Récolte', icon: Leaf, url: '/sounds/harvest.mp3' },
     { id: 'celtica', label: 'Celtique', icon: Leaf, url: '/sounds/celtica.mp3' },
+    { id: 'yt1', label: 'Louange Profonde', icon: Music, url: 'vr-YcsE-GtQ', isYoutube: true },
+    { id: 'yt2', label: 'Atmosphère de Prière', icon: Music, url: 'I2WRVecbIfM', isYoutube: true },
+    { id: 'yt3', label: 'Soif de Dieu', icon: Music, url: 'Xh2uSvSQaRo', isYoutube: true },
 ];
 
 const STEP_TARGET_SEC = 120;
@@ -168,6 +171,18 @@ export default function GuidedPrayerFlow({
         }
     }, [currentIndex, steps.length]);
 
+    const handleApplySuggestion = (suggestion: string) => {
+        setSteps((prev) => {
+            const u = [...prev];
+            const currentNote = u[currentIndex].userNote;
+            const newNote = currentNote.trim() 
+                ? `${currentNote}\n\n${suggestion}`
+                : suggestion;
+            u[currentIndex] = { ...u[currentIndex], userNote: newNote };
+            return u;
+        });
+    };
+
     const handleValidateStep = useCallback(() => {
         setSteps((prev) => {
             const u = [...prev];
@@ -176,6 +191,8 @@ export default function GuidedPrayerFlow({
         });
         handleNext();
     }, [currentIndex, elapsed, handleNext]);
+
+    const isTargetReached = elapsed >= STEP_TARGET_SEC;
 
     const handleFinish = useCallback(() => {
         if (finishing) return;
@@ -204,8 +221,21 @@ export default function GuidedPrayerFlow({
     const circleC = 2 * Math.PI * circleR;
     const dashOffset = circleC * (1 - Math.min(elapsed / STEP_TARGET_SEC, 1));
 
+    const selectedSound = AMBIENT_SOUNDS.find(s => s.id === ambientId);
+
     return (
-        <div className="fixed inset-0 z-[20001] flex items-center justify-center overflow-hidden">
+        <div className="fixed inset-0 z-[20001] flex flex-col items-center overflow-y-auto pb-10">
+            {/* Background YouTube Music Handler */}
+            {isRunning && selectedSound?.isYoutube && (
+                <div className="hidden pointer-events-none opacity-0">
+                    <iframe
+                        width="1"
+                        height="1"
+                        src={`https://www.youtube.com/embed/${selectedSound.url}?autoplay=1&loop=1&playlist=${selectedSound.url}`}
+                        allow="autoplay"
+                    />
+                </div>
+            )}
             <AnimatePresence>
                 <motion.div
                     initial={{ opacity: 0 }}
@@ -232,7 +262,7 @@ export default function GuidedPrayerFlow({
             <motion.div
                 initial={{ opacity: 0, scale: 0.98, y: 15 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                className="relative flex h-full w-full max-w-2xl flex-col bg-transparent px-6 py-8 sm:px-8 sm:py-10"
+                className="relative flex w-full max-w-2xl flex-col bg-transparent px-6 py-8 sm:px-8 sm:py-10"
             >
                 {/* Header Section */}
                 <div className="mb-10 flex items-start justify-between gap-6">
@@ -356,14 +386,36 @@ export default function GuidedPrayerFlow({
                             >
                                 {/* Prompt Card Premium */}
                                 <div className="group relative overflow-hidden rounded-[42px] border border-white/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.06),rgba(255,255,255,0.01))] p-10 shadow-2xl transition-all hover:border-white/20">
-                                    <div className="absolute top-0 right-0 h-40 w-40 rounded-full blur-[80px]" style={{ backgroundColor: `${theme.accent}15` }} />
-                                    <div className="absolute -bottom-6 -left-6 h-6 w-32 rounded-full blur-2xl" style={{ backgroundColor: theme.accent }} />
+                                    <div className="relative z-10 space-y-6">
+                                        <div className="space-y-4">
+                                            <div className="h-0.5 w-12 rounded-full opacity-30" style={{ backgroundColor: theme.accent }} />
+                                            <p className="whitespace-pre-line text-2xl font-black leading-relaxed tracking-tight text-white sm:text-3xl">
+                                                {currentStep?.prompt}
+                                            </p>
+                                        </div>
 
-                                    <div className="relative z-10 space-y-4">
-                                        <div className="h-0.5 w-12 rounded-full opacity-30" style={{ backgroundColor: theme.accent }} />
-                                        <p className="whitespace-pre-line text-2xl font-black leading-relaxed tracking-tight text-white sm:text-3xl">
-                                            {currentStep?.prompt}
-                                        </p>
+                                        {/* Suggestions d'élans */}
+                                        {currentStep?.suggestions?.length > 0 && (
+                                            <div className="space-y-3">
+                                                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/30">
+                                                    <Sparkles size={10} className="text-amber-400" />
+                                                    Suggéré pour vous
+                                                </div>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {currentStep.suggestions.map((s, idx) => (
+                                                        <motion.button
+                                                            key={idx}
+                                                            onClick={() => handleApplySuggestion(s)}
+                                                            className="rounded-xl border border-white/5 bg-white/[0.04] px-3.5 py-2 text-left text-[11px] font-medium leading-relaxed text-white/60 transition-all hover:border-white/20 hover:bg-white/[0.08] hover:text-white"
+                                                            whileHover={{ scale: 1.02, y: -1 }}
+                                                            whileTap={{ scale: 0.98 }}
+                                                        >
+                                                            {s}
+                                                        </motion.button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
@@ -487,6 +539,13 @@ export default function GuidedPrayerFlow({
                                     >
                                         <Check size={20} strokeWidth={4} />
                                         <span>{currentIndex === steps.length - 1 ? 'Terminer' : 'Amen, suivant'}</span>
+                                        {isTargetReached && (
+                                            <motion.div
+                                                className="absolute inset-0 rounded-[inherit] bg-white/20"
+                                                animate={{ opacity: [0, 0.4, 0] }}
+                                                transition={{ duration: 1.5, repeat: Infinity }}
+                                            />
+                                        )}
                                     </button>
                                 </div>
                             </motion.div>

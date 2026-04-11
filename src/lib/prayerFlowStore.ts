@@ -15,6 +15,7 @@ export interface PrayerFlowStep {
     emoji: string;
     label: string;
     prompt: string;
+    suggestions: string[];
     userNote: string;
     completed: boolean;
     durationSec: number;
@@ -271,6 +272,7 @@ export function buildPrayerSteps(
             prompt: ai.adoration || (themes
                 ? `Ce passage révèle ${themes.godAttribute}.\n\nPrenez un moment pour louer Dieu pour qui Il est, tel que vous l'avez découvert dans ${chapterLabel}.${reflectionEcho}`
                 : `D'après ${chapterLabel}, pour quoi pouvez-vous louer et adorer Dieu ?${reflectionEcho}`),
+            suggestions: ai.adoration_suggestions || [],
             userNote: '',
             completed: false,
             durationSec: 0,
@@ -279,12 +281,13 @@ export function buildPrayerSteps(
             type: 'repentance',
             emoji: '🔄',
             label: 'Repentance',
-            prompt: ai.repentance || (dailyPromptAnswers['b1']?.trim()
-                ? `Votre réflexion : "${dailyPromptAnswers['b1'].trim()}"\n\nApportez cela devant Dieu dans la repentance.`
+            prompt: ai.repentance || (dailyPromptAnswers['p2']?.trim()
+                ? `Votre réflexion : "${dailyPromptAnswers['p2'].trim()}"\n\nApportez cela devant Dieu dans la repentance.`
                 : themes
                     ? `Ce passage nous met en garde contre ${themes.challenge}.\n\nY a-t-il quelque chose dont vous devez vous repentir ?${reflectionEcho}`
                     : `Y a-t-il quelque chose dont vous devez vous repentir après cette lecture ?${reflectionEcho}`),
-            userNote: dailyPromptAnswers['b1']?.trim() || '',
+            suggestions: ai.repentance_suggestions || [],
+            userNote: dailyPromptAnswers['p2']?.trim() || '',
             completed: false,
             durationSec: 0,
         },
@@ -292,12 +295,13 @@ export function buildPrayerSteps(
             type: 'gratitude',
             emoji: '🙏',
             label: 'Action de grâce',
-            prompt: ai.gratitude || (dailyPromptAnswers['b3']?.trim()
-                ? `Votre réflexion : "${dailyPromptAnswers['b3'].trim()}"\n\nRemerciez Dieu pour cela.`
+            prompt: ai.gratitude || (dailyPromptAnswers['p3']?.trim()
+                ? `Votre réflexion : "${dailyPromptAnswers['p3'].trim()}"\n\nRemerciez Dieu pour cela.`
                 : themes
                     ? `Ce passage parle de ${themes.blessing}.\n\nRemerciez Dieu pour cette grâce dans votre vie.${reflectionEcho}`
                     : `Y a-t-il quelque chose pour laquelle remercier et louer Dieu dans ce passage ?${reflectionEcho}`),
-            userNote: dailyPromptAnswers['b3']?.trim() || '',
+            suggestions: ai.gratitude_suggestions || [],
+            userNote: dailyPromptAnswers['p3']?.trim() || '',
             completed: false,
             durationSec: 0,
         },
@@ -305,12 +309,13 @@ export function buildPrayerSteps(
             type: 'intercession',
             emoji: '🤲',
             label: 'Intercession',
-            prompt: ai.intercession || (dailyPromptAnswers['b4']?.trim()
-                ? `Votre demande : "${dailyPromptAnswers['b4'].trim()}"\n\nPrésentez cette demande à Dieu.`
+            prompt: ai.intercession || (dailyPromptAnswers['p4']?.trim()
+                ? `Votre demande : "${dailyPromptAnswers['p4'].trim()}"\n\nPrésentez cette demande à Dieu.`
                 : themes
                     ? `En lien avec ${chapterLabel}, priez pour ${themes.person}.${reflectionEcho}`
                     : `En lien avec ${chapterLabel}, priez pour quelqu'un ou pour une situation qui vous tient à cœur.${reflectionEcho}`),
-            userNote: dailyPromptAnswers['b4']?.trim() || '',
+            suggestions: ai.intercession_suggestions || [],
+            userNote: dailyPromptAnswers['p4']?.trim() || '',
             completed: false,
             durationSec: 0,
         },
@@ -318,10 +323,11 @@ export function buildPrayerSteps(
             type: 'engagement',
             emoji: '🎯',
             label: 'Engagement',
-            prompt: ai.engagement || (dailyPromptAnswers['b2']?.trim()
-                ? `Votre réflexion : "${dailyPromptAnswers['b2'].trim()}"\n\nQuelle action concrète allez-vous entreprendre aujourd'hui ?`
+            prompt: ai.engagement || (dailyPromptAnswers['p5']?.trim()
+                ? `Votre réflexion : "${dailyPromptAnswers['p5'].trim()}"\n\nQuelle action concrète allez-vous entreprendre aujourd'hui ?`
                 : `Quelle action concrète allez-vous entreprendre en réponse à cette lecture ?${reflectionEcho}`),
-            userNote: dailyPromptAnswers['b2']?.trim() || '',
+            suggestions: ai.engagement_suggestions || [],
+            userNote: dailyPromptAnswers['p5']?.trim() || '',
             completed: false,
             durationSec: 0,
         },
