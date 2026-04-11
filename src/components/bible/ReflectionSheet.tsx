@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowRight,
   BookOpen,
@@ -66,6 +66,7 @@ function getFocusContext(
 
   const lastReading = readings[readings.length - 1];
   const lastChapter = lastReading?.chapters[lastReading.chapters.length - 1];
+
   if (!lastReading || typeof lastChapter !== 'number') return null;
 
   return {
@@ -92,22 +93,32 @@ export default function ReflectionSheet({
   const [showPrayerFlow, setShowPrayerFlow] = useState(false);
   const [prayerSteps, setPrayerSteps] = useState<PrayerFlowStep[]>([]);
   const [syncTick, setSyncTick] = useState(0);
+  const [loadingPrayer, setLoadingPrayer] = useState(false);
+
+  const prayerRequestRef = useRef(0);
 
   const focus = useMemo(
     () => getFocusContext(readings, activeReading, activeChapter),
     [activeChapter, activeReading, readings],
   );
-  const readingSummary = readings.length ? formatDayReadingsLabel(readings) : 'Lecture du jour';
-  
+
+  const readingSummary = useMemo(
+    () => (readings.length ? formatDayReadingsLabel(readings) : 'Lecture du jour'),
+    [readings],
+  );
+
   const chapterReflections = useMemo(
     () => getOrderedChapterReflections(planId, dayIndex, readings),
     [dayIndex, planId, readings, syncTick],
   );
-  
-  const priorReflections = focus
-    ? chapterReflections.filter((entry) => !(entry.readingId === focus.reading.id && entry.chapter === focus.chapter))
-    : chapterReflections;
-  
+
+  const priorReflections = useMemo(() => {
+    if (!focus) return chapterReflections;
+    return chapterReflections.filter(
+      (entry) => !(entry.readingId === focus.reading.id && entry.chapter === focus.chapter),
+    );
+  }, [chapterReflections, focus]);
+
   const reflectionInsights = useMemo(
     () => getReflectionInsights(planId, dayIndex),
     [dayIndex, planId, syncTick],
@@ -116,68 +127,126 @@ export default function ReflectionSheet({
   const passageText = useMemo(() => {
     return verses
       .flatMap((section) =>
-        section.chapters.flatMap((chapter) =>
-          chapter.verses.map((verse) => verse.text)
-        )
+        section.chapters.flatMap((chapterData) =>
+          chapterData.verses.map((verse) => verse.text),
+        ),
       )
-      .join(' ');
+      .join(' ')
+      .trim();
   }, [verses]);
 
   useEffect(() => {
     if (!isOpen) {
       setVerses([]);
       setVersesExpanded(false);
+      setShowPrayerFlow(false);
+      setPrayerSteps([]);
+      setLoadingVerses(false);
+      setLoadingPrayer(false);
       return;
     }
 
+    if (finalChapter) {
+      setVersesExpanded(true);
+    }
+  }, [isOpen, finalChapter]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isOpen]);
+
+  const loadVerses = useCallback(async () => {
+    if (!isOpen) return;
+    if (!finalChapter && !versesExpanded) return;
+
+    let cancelled = false;
+    setLoadingVerses(true);
+
+    try {
+      const bible = await loadLocalBible('LSG');
+      if (cancelled) return;
+
+      const sections: VerseSection[] = readings.map((reading) => {
+        const catalogBook = getBookById(reading.bookId);
+        const searchName = (catalogBook?.name || reading.bookName).toLowerCase();
+
+        const book = bible.books.find((entry) => {
+          const bookName = entry.name.toLowerCase();
+          return (
+            bookName === searchName ||
+            bookName === reading.bookName.toLowerCase() ||
+            bookName.startsWith(searchName.substring(0, 4))
+          );
+        });
+
+        return {
+          reading,
+          chapters: reading.chapters.map((chapterNumber) => {
+            const chapterData = book?.chapters.find((entry) => entry.chapter === chapterNumber);
+            return {
+              chapter: chapterNumber,
+              verses: chapterData?.verses || [],
+            };
+          }),
+        };
+      });
+
+      if (!cancelled) {
+        setVerses(sections);
+      }
+    } catch (error) {
+      console.error('Failed to load verses', error);
+      if (!cancelled) {
+        setVerses([]);
+      }
+    } finally {
+      if (!cancelled) {
+        setLoadingVerses(false);
+      }
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [finalChapter, isOpen, readings, versesExpanded]);
+
+  useEffect(() => {
+    if (!isOpen) return;
     if (!finalChapter && !versesExpanded) return;
     if (verses.length > 0) return;
 
-    setLoadingVerses(true);
+    let disposed = false;
+
     (async () => {
-      try {
-        const bible = await loadLocalBible('LSG');
-        const sections = readings.map((reading) => {
-          const catalogBook = getBookById(reading.bookId);
-          const searchName = catalogBook?.name?.toLowerCase() || reading.bookName.toLowerCase();
-          const book = bible.books.find((entry) => {
-            const bookName = entry.name.toLowerCase();
-            return (
-              bookName === searchName
-              || bookName === reading.bookName.toLowerCase()
-              || bookName.startsWith(searchName.substring(0, 4))
-            );
-          });
-
-          return {
-            reading,
-            chapters: reading.chapters.map((chapterNumber) => {
-              const chapter = book?.chapters.find((entry) => entry.chapter === chapterNumber);
-              return { chapter: chapterNumber, verses: chapter?.verses || [] };
-            }),
-          };
-        });
-
-        setVerses(sections);
-      } catch (error) {
-        console.error('Failed to load verses', error);
-      } finally {
-        setLoadingVerses(false);
-      }
+      await loadVerses();
     })();
-  }, [finalChapter, isOpen, readings, verses.length, versesExpanded]);
 
-  const [loadingPrayer, setLoadingPrayer] = useState(false);
+    return () => {
+      disposed = true;
+      void disposed;
+    };
+  }, [isOpen, finalChapter, versesExpanded, verses.length, loadVerses]);
 
   const handleStartPrayer = useCallback(async () => {
+    if (loadingPrayer) return;
+
+    const requestId = ++prayerRequestRef.current;
     const dailyPrompts = getDayDailyPrompts(planId, dayIndex);
     const insights = getReflectionInsights(planId, dayIndex);
 
     let aiPrompts: Record<string, string> | null = null;
-    const canCallAI = insights.length > 0 || passageText.trim().length > 0;
+    const canCallAI = insights.length > 0 || passageText.length > 0;
 
     if (canCallAI) {
       setLoadingPrayer(true);
+
       try {
         const res = await fetch('/api/bible/prayer-prompts', {
           method: 'POST',
@@ -189,18 +258,30 @@ export default function ReflectionSheet({
             passageThemes: undefined,
           }),
         });
+
         if (res.ok) {
           const data = await res.json();
-          if (data.adoration && data.repentance && data.gratitude && data.intercession && data.engagement) {
+
+          if (
+            data?.adoration &&
+            data?.repentance &&
+            data?.gratitude &&
+            data?.intercession &&
+            data?.engagement
+          ) {
             aiPrompts = data;
           }
         }
       } catch (error) {
         console.error('AI Prayer failed, falling back to static', error);
       } finally {
-        setLoadingPrayer(false);
+        if (prayerRequestRef.current === requestId) {
+          setLoadingPrayer(false);
+        }
       }
     }
+
+    if (prayerRequestRef.current !== requestId) return;
 
     const steps = buildPrayerSteps(
       readings,
@@ -209,9 +290,10 @@ export default function ReflectionSheet({
       insights,
       aiPrompts ?? undefined,
     );
+
     setPrayerSteps(steps);
     setShowPrayerFlow(true);
-  }, [dayIndex, passageText, planId, readingSummary, readings]);
+  }, [dayIndex, loadingPrayer, passageText, planId, readingSummary, readings]);
 
   const handlePrayerComplete = useCallback(() => {
     markPrayerCompleted(planId, dayIndex);
@@ -220,14 +302,21 @@ export default function ReflectionSheet({
     onClose();
   }, [dayIndex, onClose, onComplete, planId]);
 
+  const handleOverlayClose = useCallback(() => {
+    if (showPrayerFlow) return;
+    onClose();
+  }, [onClose, showPrayerFlow]);
+
   if (!isOpen) return null;
 
   return (
     <>
       <div className="fixed inset-0 z-[20000] flex items-end justify-center px-0 sm:items-center sm:px-4">
-        <div className="absolute inset-0 bg-black/72 backdrop-blur-xl" onClick={onClose} />
+        <div
+          className="absolute inset-0 bg-black/72 backdrop-blur-xl"
+          onClick={handleOverlayClose}
+        />
 
-        {/* Use conditional rendering instead of just CSS to prevent focus conflicts and layers overhead */}
         {!showPrayerFlow ? (
           <div className="relative flex h-[92vh] w-full flex-col overflow-hidden rounded-t-[34px] border border-white/10 bg-[linear-gradient(180deg,#1c1c1f_0%,#151518_52%,#0e0f11_100%)] text-white shadow-[0_40px_140px_rgba(0,0,0,0.55)] sm:h-auto sm:max-h-[88vh] sm:max-w-5xl sm:rounded-[36px]">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(240,194,123,0.18),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(78,180,255,0.12),transparent_18%)]" />
@@ -238,9 +327,11 @@ export default function ReflectionSheet({
                   <Sun size={13} className="text-amber-400" />
                   {finalChapter ? 'Miroir de Grâce' : 'Cœur à Cœur'}
                 </div>
+
                 <h2 className="mt-4 font-display text-[28px] font-bold leading-[0.95] text-[#fff7ec] sm:text-[36px]">
                   {focus ? `${focus.reading.bookName} ${focus.chapter}` : 'Méditation'}
                 </h2>
+
                 <p className="mt-2 max-w-[56ch] text-[13px] leading-relaxed text-[rgba(255,240,222,0.66)] sm:text-[14px]">
                   {finalChapter
                     ? 'Félicitations pour votre lecture. Prenez maintenant un temps sacré pour sceller cette Parole par la prière et la méditation.'
@@ -260,7 +351,6 @@ export default function ReflectionSheet({
 
             <div className="relative z-10 flex-1 overflow-y-auto px-5 pb-6 pt-5 sm:px-7 sm:pb-7">
               <div className="grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-                {/* Left Column: Biblical Content */}
                 <div className="space-y-5">
                   <section className="overflow-hidden rounded-[28px] border border-[rgba(246,225,192,0.12)] bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] shadow-[0_24px_70px_rgba(0,0,0,0.22)]">
                     <button
@@ -274,22 +364,27 @@ export default function ReflectionSheet({
                         </div>
                         <div>
                           <p className="text-[15px] font-semibold text-[#fff7ec]">Revoir les passages</p>
-                          <p className="mt-1 text-[12px] text-[rgba(255,240,222,0.62)]">{readingSummary}</p>
+                          <p className="mt-1 text-[12px] text-[rgba(255,240,222,0.62)]">
+                            {readingSummary}
+                          </p>
                         </div>
                       </div>
+
                       <div className="rounded-full border border-white/10 bg-white/[0.05] p-1.5 text-[rgba(255,240,222,0.62)]">
                         {versesExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
                       </div>
                     </button>
 
                     {versesExpanded ? (
-                      <div className="border-t border-white/8 px-4 pb-5 pt-4 sm:px-5 bg-black/10">
+                      <div className="border-t border-white/8 bg-black/10 px-4 pb-5 pt-4 sm:px-5">
                         {loadingVerses ? (
                           <div className="flex items-center justify-center py-8">
                             <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/15 border-t-[rgba(255,240,222,0.82)]" />
                           </div>
                         ) : verses.length === 0 ? (
-                          <p className="py-4 text-[13px] text-[rgba(255,240,222,0.56)]">Passage non disponible hors-ligne.</p>
+                          <p className="py-4 text-[13px] text-[rgba(255,240,222,0.56)]">
+                            Passage non disponible hors-ligne.
+                          </p>
                         ) : (
                           <div className="space-y-5">
                             {verses.map((section) => (
@@ -300,17 +395,26 @@ export default function ReflectionSheet({
                                 <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[rgba(255,240,222,0.58)]">
                                   {formatReadingLabel(section.reading)}
                                 </div>
+
                                 {section.chapters.map((chapterData) => (
-                                  <div key={`${section.reading.id}-${chapterData.chapter}`} className="mt-4 first:mt-3">
+                                  <div
+                                    key={`${section.reading.id}-${chapterData.chapter}`}
+                                    className="mt-4 first:mt-3"
+                                  >
                                     {section.reading.chapters.length > 1 ? (
                                       <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[rgba(255,240,222,0.48)]">
                                         Chapitre {chapterData.chapter}
                                       </div>
                                     ) : null}
+
                                     <div className="text-[14px] leading-8 text-[rgba(255,247,236,0.84)]">
                                       {chapterData.verses.map((verse) => (
-                                        <span key={`${section.reading.id}-${chapterData.chapter}-${verse.verse}`}>
-                                          <sup className="mr-1 text-[10px] font-bold text-[rgba(240,194,123,0.78)]">{verse.verse}</sup>
+                                        <span
+                                          key={`${section.reading.id}-${chapterData.chapter}-${verse.verse}`}
+                                        >
+                                          <sup className="mr-1 text-[10px] font-bold text-[rgba(240,194,123,0.78)]">
+                                            {verse.verse}
+                                          </sup>
                                           {verse.text}{' '}
                                         </span>
                                       ))}
@@ -332,16 +436,22 @@ export default function ReflectionSheet({
                           <Layers3 size={16} />
                         </div>
                         <div>
-                          <p className="text-[15px] font-semibold text-[#fff7ec]">Échos des chapitres précédents</p>
+                          <p className="text-[15px] font-semibold text-[#fff7ec]">
+                            Échos des chapitres précédents
+                          </p>
                           <p className="mt-1 text-[12px] text-[rgba(255,240,222,0.62)]">
-                            {priorReflections.length} chapitre{priorReflections.length > 1 ? 's' : ''} déjà médité{priorReflections.length > 1 ? 's' : ''}
+                            {priorReflections.length} chapitre
+                            {priorReflections.length > 1 ? 's' : ''} déjà médité
+                            {priorReflections.length > 1 ? 's' : ''}
                           </p>
                         </div>
                       </div>
 
                       <div className="mt-4 grid gap-3">
                         {priorReflections.map((entry) => {
-                          const excerpt = Object.values(entry.answers).map((value) => value.trim()).find(Boolean);
+                          const excerpt = Object.values(entry.answers)
+                            .map((value) => value.trim())
+                            .find(Boolean);
 
                           return (
                             <div
@@ -352,11 +462,13 @@ export default function ReflectionSheet({
                                 <p className="text-[13px] font-semibold text-[#fff7ec]">
                                   {entry.bookName} {entry.chapter}
                                 </p>
+
                                 <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300/18 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-200">
                                   <CheckCircle2 size={12} />
                                   Sauvegardé
                                 </span>
                               </div>
+
                               <p className="mt-2 text-[13px] leading-relaxed text-[rgba(255,240,222,0.68)]">
                                 {excerpt || 'Réflexion enregistrée pour ce chapitre.'}
                               </p>
@@ -368,10 +480,8 @@ export default function ReflectionSheet({
                   ) : null}
                 </div>
 
-                {/* Right Column: Introspective Content */}
-                <div className="space-y-5 lg:sticky lg:top-7 self-start">
+                <div className="space-y-5 self-start lg:sticky lg:top-7">
                   <ReflectionQuestions
-                    key={`${planId}-${dayIndex}-${focus?.reading.id ?? 'none'}-${focus?.chapter ?? 'none'}-${finalChapter ? 'final' : 'chapter'}`}
                     planId={planId}
                     dayIndex={dayIndex}
                     readings={readings}
@@ -387,28 +497,32 @@ export default function ReflectionSheet({
                       <div className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-amber-400">
                         <Flame size={18} />
                       </div>
+
                       <div>
                         <p className="text-[15px] font-semibold text-[#fff7ec]">
                           {finalChapter ? 'Passer à la prière' : 'Continuer votre journée'}
                         </p>
                         <p className="mt-1 text-[12px] text-[rgba(255,240,222,0.62)]">
                           {finalChapter
-                            ? `Vos échos spirituels serviront de base à la prière guidée.`
+                            ? 'Vos échos spirituels serviront de base à la prière guidée.'
                             : 'Votre réflexion est gardée pour la synthèse finale du jour.'}
                         </p>
                       </div>
                     </div>
 
-                    {finalChapter && (
+                    {finalChapter ? (
                       <div className="mt-4 flex flex-wrap gap-2">
                         <span className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[rgba(255,240,222,0.72)]">
-                          {chapterReflections.length} chapitre{chapterReflections.length > 1 ? 's' : ''}
+                          {chapterReflections.length} chapitre
+                          {chapterReflections.length > 1 ? 's' : ''}
                         </span>
+
                         <span className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[rgba(255,240,222,0.72)]">
-                          {reflectionInsights.length} insight{reflectionInsights.length > 1 ? 's' : ''}
+                          {reflectionInsights.length} insight
+                          {reflectionInsights.length > 1 ? 's' : ''}
                         </span>
                       </div>
-                    )}
+                    ) : null}
 
                     <div className="mt-5 flex flex-col gap-3 sm:flex-row">
                       <button
@@ -425,11 +539,15 @@ export default function ReflectionSheet({
                       <button
                         type="button"
                         disabled={loadingPrayer}
-                        onClick={finalChapter ? handleStartPrayer : () => {
-                          onComplete();
-                          onClose();
-                        }}
-                        className={`inline-flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-full bg-[#fff7ef] px-4 text-[12px] font-semibold uppercase tracking-[0.18em] text-[#160d0a] shadow-[0_16px_40px_rgba(0,0,0,0.22)] transition-all hover:scale-[1.01] active:scale-[0.985] disabled:opacity-60 disabled:pointer-events-none`}
+                        onClick={
+                          finalChapter
+                            ? handleStartPrayer
+                            : () => {
+                                onComplete();
+                                onClose();
+                              }
+                        }
+                        className="inline-flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-full bg-[#fff7ef] px-4 text-[12px] font-semibold uppercase tracking-[0.18em] text-[#160d0a] shadow-[0_16px_40px_rgba(0,0,0,0.22)] transition-all hover:scale-[1.01] active:scale-[0.985] disabled:pointer-events-none disabled:opacity-60"
                       >
                         {loadingPrayer ? (
                           <>
@@ -455,14 +573,10 @@ export default function ReflectionSheet({
               </div>
             </div>
           </div>
-        ) : (
-          /* Render nothing here when showPrayerFlow is true, GuidedPrayerFlow will be on top */
-          null
-        )}
+        ) : null}
       </div>
 
       <GuidedPrayerFlow
-        key={`${showPrayerFlow ? 'open' : 'closed'}-${planId}-${dayIndex}`}
         isOpen={showPrayerFlow}
         steps={prayerSteps}
         planId={planId}
