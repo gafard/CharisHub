@@ -99,20 +99,19 @@ export default function ReadingPlanWidget({
             const alreadyDone = activePlan.completedChaptersByDay?.[activePlan.todayIndex]?.[matchingReading.id]?.includes(currentChapter);
             if (!alreadyDone) {
                 toggleReadingChapterComplete(activePlan.planId, activePlan.todayIndex, matchingReading.id, currentChapter);
+            }
 
-                const chapterEntry = getDayChapterEntry(todayDay, matchingReading.id, currentChapter);
-                const alreadyReflected = hasChapterReflection(activePlan.planId, activePlan.todayIndex, matchingReading.id, currentChapter);
+            const chapterEntry = getDayChapterEntry(todayDay, matchingReading.id, currentChapter);
 
-                if (chapterEntry && !alreadyReflected) {
-                    setReflectionContext({
-                        planId: activePlan.planId,
-                        dayIndex: activePlan.todayIndex,
-                        readings: todayDay.readings,
-                        activeReading: matchingReading,
-                        activeChapter: currentChapter,
-                        finalChapter: chapterEntry.order === chapterEntry.total - 1,
-                    });
-                }
+            if (chapterEntry) {
+                setReflectionContext({
+                    planId: activePlan.planId,
+                    dayIndex: activePlan.todayIndex,
+                    readings: todayDay.readings,
+                    activeReading: matchingReading,
+                    activeChapter: currentChapter,
+                    finalChapter: chapterEntry.order === chapterEntry.total - 1,
+                });
             }
 
             refreshPlanState();
