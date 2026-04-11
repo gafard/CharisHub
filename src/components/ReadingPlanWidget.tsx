@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowUpRight, Sun } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import logger from '../lib/logger';
 import ReflectionSheet from './bible/ReflectionSheet';
 import {
     countDayChapters,
@@ -13,6 +14,7 @@ import {
     isTodayCompleted,
     getPlanProgress,
     toggleReadingChapterComplete,
+    findReadingPlan,
     type PlanReading,
 } from '../lib/readingPlans';
 import {
@@ -23,17 +25,34 @@ import {
     PlanSymbol,
 } from './bible/readingPlanUi';
 import { hasChapterReflection } from '../lib/readingPlanReflectionStore';
+import { BIBLE_BOOKS } from '../lib/bibleCatalog';
+
+// On redéfinit AiQuestions ici pour plus de sûreté ou on l'importe si possible.
+// Puisqu'il est défini dans ReflectionQuestions.tsx, on va le dupliquer ici ou le passer en Any si besoin.
+type AiQuestions = {
+    q1: string; q1_suggestions: string[];
+    q2: string; q2_suggestions: string[];
+    q3: string; q3_suggestions: string[];
+    q4: string; q4_suggestions: string[];
+};
 
 interface ReadingPlanWidgetProps {
     triggerReflection?: number;
     currentBookId?: string;
     currentChapter?: number;
+    passageText?: string;
+}
+
+function getBookDisplayName(bookId: string): string {
+    const book = BIBLE_BOOKS.find((b) => b.id === bookId);
+    return book?.name || bookId;
 }
 
 export default function ReadingPlanWidget({
     triggerReflection,
     currentBookId,
     currentChapter,
+    passageText,
 }: ReadingPlanWidgetProps) {
     const router = useRouter();
     const reducedMotion = useReducedMotion();
@@ -48,7 +67,10 @@ export default function ReadingPlanWidget({
         activeChapter: number;
         finalChapter: boolean;
     } | null>(null);
+    const [preloadedQuestions, setPreloadedQuestions] = useState<AiQuestions | null>(null);
+
     const lastReflectionTrigger = useRef(0);
+    const lastPreloadKey = useRef('');
 
     const refreshPlanState = useCallback(() => {
         const nextActivePlan = getActivePlan();
@@ -64,6 +86,51 @@ export default function ReadingPlanWidget({
 
         return () => cancelAnimationFrame(frame);
     }, [refreshPlanState]);
+
+    // PREFETCH LOGIC
+    useEffect(() => {
+        if (!activePlan || !currentBookId || !currentChapter || !passageText) return;
+
+        const preloadKey = `${activePlan.planId}:${activePlan.todayIndex}:${currentBookId}:${currentChapter}`;
+        if (lastPreloadKey.current === preloadKey) return;
+
+        const todayDay = activePlan.plan.days[activePlan.todayIndex];
+        const matchingReading = todayDay?.readings.find((reading) =>
+            reading.bookId === currentBookId && reading.chapters.includes(currentChapter),
+        );
+
+        if (!matchingReading) return;
+
+        lastPreloadKey.current = preloadKey;
+        setPreloadedQuestions(null); // Reset while loading
+
+        void (async () => {
+            try {
+                const plan = findReadingPlan(activePlan.planId);
+                const bookName = getBookDisplayName(currentBookId);
+
+                const res = await fetch('/api/bible/reflection-questions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        bookName,
+                        chapter: currentChapter,
+                        passageText: passageText.slice(0, 4000),
+                        planCategory: plan?.category,
+                    }),
+                });
+
+                if (res.ok) {
+                    const data = await res.json() as AiQuestions;
+                    if (lastPreloadKey.current === preloadKey) {
+                        setPreloadedQuestions(data);
+                    }
+                }
+            } catch (err) {
+                logger.warn('[ReadingPlanWidget] Prefetch failed:', err);
+            }
+        })();
+    }, [activePlan, currentBookId, currentChapter, passageText]);
 
     useEffect(() => {
         if (typeof window === 'undefined') return undefined;
@@ -265,6 +332,7 @@ export default function ReadingPlanWidget({
                     activeReading={reflectionContext.activeReading}
                     activeChapter={reflectionContext.activeChapter}
                     finalChapter={reflectionContext.finalChapter}
+                    preloadedQuestions={preloadedQuestions ?? undefined}
                 />
             ) : null}
         </>

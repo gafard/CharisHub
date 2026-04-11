@@ -43,6 +43,13 @@ type FocusContext = {
   chapter: number;
 };
 
+type AiQuestions = {
+  q1: string; q1_suggestions: string[];
+  q2: string; q2_suggestions: string[];
+  q3: string; q3_suggestions: string[];
+  q4: string; q4_suggestions: string[];
+};
+
 interface ReflectionSheetProps {
   isOpen: boolean;
   onClose: () => void;
@@ -54,6 +61,7 @@ interface ReflectionSheetProps {
   activeReading?: PlanReading | null;
   activeChapter?: number | null;
   finalChapter?: boolean;
+  preloadedQuestions?: AiQuestions;
 }
 
 function getFocusContext(
@@ -90,6 +98,7 @@ export default function ReflectionSheet({
   activeReading,
   activeChapter,
   finalChapter = false,
+  preloadedQuestions,
 }: ReflectionSheetProps) {
   const [verses, setVerses] = useState<VerseSection[]>([]);
   const [versesExpanded, setVersesExpanded] = useState(false);
@@ -493,6 +502,7 @@ export default function ReflectionSheet({
                     activeChapter={focus?.chapter}
                     finalChapter={finalChapter}
                     passageText={passageText}
+                    preloadedQuestions={preloadedQuestions}
                     onStateChange={() => setSyncTick((value) => value + 1)}
                   />
 

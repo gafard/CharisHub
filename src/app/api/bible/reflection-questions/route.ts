@@ -12,7 +12,7 @@ interface ReflectionQuestionsInput {
   planCategory?: string;
 }
 
-iinterface ReflectionQuestionsOutput {
+interface ReflectionQuestionsOutput {
   q1: string;
   q1_suggestions: string[];
   q2: string;
@@ -81,7 +81,7 @@ function buildPrompt(input: ReflectionQuestionsInput): string {
   })() : '';
 
   return `Tu es un accompagnateur spirituel chrétien, formé à l'herméneutique biblique et à l'accompagnement pastoral.
-Ta mission est d'adapter 4 questions de réflexion personnelle au passage biblique que le croyant vient de lire, ET de proposer 3 suggestions de réponses très courtes pour chaque question.
+Ta mission est d'adapter 4 questions de réflexion personnelle au passage biblique que le croyant vient de lire, ET de proposer pour chaque question 3 suggestions de réponses très courtes (chips).
 
 Passage: **${label}**
 ${passageText ? `\nTexte du passage:\n"${passageText.slice(0, 4000)}"\n` : ''}
@@ -94,16 +94,14 @@ Les 4 questions doivent suivre CETTE LOGIQUE:
 3. **q3** (focus sur L'ACTION): Quel pas de foi pour aujourd'hui?
 4. **q4** (focus sur LA VÉRITÉ): Quelle promesse ou vérité retenir?
 
-Pour CHAQUE question, propose aussi **3 suggestions de réponses** (q1_suggestions, q2_suggestions, etc.).
+Pour CHAQUE question (q1, q2, q3, q4), propose aussi un tableau de **3 suggestions de réponses** nommés q1_suggestions, q2_suggestions, etc.
 Les suggestions doivent être:
-- Très courtes (5 à 10 mots)
-- Personnelles ("Je vois que...", "Cela me rappelle...", "Je veux...")
-- Variées et percutantes
+- Très courtes (2 à 8 mots)
+- Écrites à la première personne ("Je...", "Seigneur, je...")
+- Directement liées au texte de ${label}
 
 RÈGLES STRICTES:
-- Ton bienveillant et pastoral, centré sur la grâce.
-- Réponds UNIQUEMENT avec un JSON valide.
-
+- Réponds UNIQUEMENT avec un JSON valide respectant cette structure:
 {
   "q1": "...",
   "q1_suggestions": ["...", "...", "..."],
@@ -113,14 +111,6 @@ RÈGLES STRICTES:
   "q3_suggestions": ["...", "...", "..."],
   "q4": "...",
   "q4_suggestions": ["...", "...", "..."]
-}`;
-}
-n JSON valide:
-{
-  "q1": "...",
-  "q2": "...",
-  "q3": "...",
-  "q4": "..."
 }`;
 }
 
@@ -224,4 +214,31 @@ export async function POST(req: Request) {
     logger.error('[reflection-questions] error:', message);
     return NextResponse.json({ error: compactErrorText(message) }, { status: 500 });
   }
+}
+
+function compactErrorText(value: string, max = 300): string {
+  const s = value.replace(/\s+/g, ' ').trim();
+  return s.length > max ? `${s.slice(0, max)}...` : s;
+}
+
+function extractJsonObject(raw: string): unknown | null {
+  const trimmed = raw.trim();
+  const withoutFence = trimmed.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+  for (const candidate of [trimmed, withoutFence]) {
+    try {
+      return JSON.parse(candidate);
+    } catch {
+      /* ignore */
+    }
+    const s = candidate.indexOf('{');
+    const e = candidate.lastIndexOf('}');
+    if (s !== -1 && e > s) {
+      try {
+        return JSON.parse(candidate.slice(s, e + 1));
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+  return null;
 }

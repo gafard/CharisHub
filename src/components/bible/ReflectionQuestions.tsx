@@ -64,6 +64,7 @@ interface ReflectionQuestionsProps {
   activeChapter?: number | null;
   finalChapter?: boolean;
   passageText?: string;
+  preloadedQuestions?: AiQuestions;
   onStateChange?: () => void;
 }
 
@@ -200,6 +201,7 @@ export default function ReflectionQuestions({
   activeChapter,
   finalChapter = false,
   passageText,
+  preloadedQuestions,
   onStateChange,
 }: ReflectionQuestionsProps) {
   const focus = useMemo(
@@ -222,7 +224,17 @@ export default function ReflectionQuestions({
     return `${planId}:${dayIndex}:${focus.reading.id}:${focus.chapter}`;
   }, [focus, planId, dayIndex]);
 
-  const [aiQuestions, setAiQuestions] = useState<AiQuestions>(DEFAULT_AI_QUESTIONS);
+  const [showDailyPrompts, setShowDailyPrompts] = useState(finalChapter);
+
+  // Initialize with preloaded questions if available
+  const [aiQuestions, setAiQuestions] = useState<AiQuestions>(() => {
+    if (preloadedQuestions) {
+      logger.info('[ReflectionQuestions] Using preloaded questions');
+      return preloadedQuestions;
+    }
+    return DEFAULT_AI_QUESTIONS;
+  });
+
   const [aiLoading, setAiLoading] = useState(false);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [dailyAnswers, setDailyAnswers] = useState<Record<string, string>>({});
@@ -318,8 +330,14 @@ export default function ReflectionQuestions({
   }, [focus, passageText, planId]);
 
   useEffect(() => {
+    // Skip fetch if we already have preloaded questions for this focus context
+    if (preloadedQuestions) {
+      setAiQuestions(preloadedQuestions);
+      setAiLoading(false);
+      return;
+    }
     void fetchAiQuestions();
-  }, [fetchAiQuestions]);
+  }, [fetchAiQuestions, preloadedQuestions]);
 
   const saveChapterAnswer = useCallback(
     (nextAnswers: Record<string, string>) => {

@@ -2867,11 +2867,19 @@ export default function BibleReader({
 
 
         {!embedded && (
-          <ReadingPlanWidget
-            triggerReflection={triggerReflection}
-            currentBookId={book.id}
-            currentChapter={chapter}
-          />
+          <>
+            {(() => {
+              const chapterText = visibleVerses.map(v => v.text).join(' ').trim();
+              return (
+                <ReadingPlanWidget
+                  triggerReflection={triggerReflection}
+                  currentBookId={book.id}
+                  currentChapter={chapter}
+                  passageText={chapterText}
+                />
+              );
+            })()}
+          </>
         )}
 
         <div
