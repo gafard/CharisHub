@@ -254,6 +254,11 @@ function extractThemes(text: string): { godAttribute: string; challenge: string;
     return { godAttribute, challenge, blessing, person };
 }
 
+function ensureStringArray(value: unknown): string[] {
+    if (!Array.isArray(value)) return [];
+    return value.filter((item): item is string => typeof item === 'string');
+}
+
 /** Build the 5 PRIAM steps from reflection answers + passage text */
 export function buildPrayerSteps(
     readings: PlanReading[],
@@ -275,7 +280,7 @@ export function buildPrayerSteps(
         : '';
 
     // Helper: pick AI prompt if available, otherwise fall back to static
-    const ai = aiPrompts ?? {};
+    const ai = aiPrompts ?? {} as any;
 
     return [
         {
@@ -285,7 +290,7 @@ export function buildPrayerSteps(
             prompt: ai.adoration || (themes
                 ? `Ce passage révèle ${themes.godAttribute}.\n\nPrenez un moment pour louer Dieu pour qui Il est, tel que vous l'avez découvert dans ${chapterLabel}.${reflectionEcho}`
                 : `D'après ${chapterLabel}, pour quoi pouvez-vous louer et adorer Dieu ?${reflectionEcho}`),
-            suggestions: ai.adoration_suggestions || [],
+            suggestions: ensureStringArray(ai.adoration_suggestions),
             userNote: '',
             completed: false,
             durationSec: 0,
@@ -298,8 +303,8 @@ export function buildPrayerSteps(
                 ? `Votre réflexion : "${dailyPromptAnswers['p2'].trim()}"\n\nApportez cela devant Dieu dans la repentance.`
                 : themes
                     ? `Ce passage nous met en garde contre ${themes.challenge}.\n\nY a-t-il quelque chose dont vous devez vous repentir ?${reflectionEcho}`
-                    : `Y a-t-il quelque chose dont vous devez vous repentir après cette lecture ?${reflectionEcho}`),
-            suggestions: ai.repentance_suggestions || [],
+                    : `Y a-t-index quelque chose dont vous devez vous repentir après cette lecture ?${reflectionEcho}`),
+            suggestions: ensureStringArray(ai.repentance_suggestions),
             userNote: dailyPromptAnswers['p2']?.trim() || '',
             completed: false,
             durationSec: 0,
@@ -313,7 +318,7 @@ export function buildPrayerSteps(
                 : themes
                     ? `Ce passage parle de ${themes.blessing}.\n\nRemerciez Dieu pour cette grâce dans votre vie.${reflectionEcho}`
                     : `Y a-t-il quelque chose pour laquelle remercier et louer Dieu dans ce passage ?${reflectionEcho}`),
-            suggestions: ai.gratitude_suggestions || [],
+            suggestions: ensureStringArray(ai.gratitude_suggestions),
             userNote: dailyPromptAnswers['p3']?.trim() || '',
             completed: false,
             durationSec: 0,
@@ -327,7 +332,7 @@ export function buildPrayerSteps(
                 : themes
                     ? `En lien avec ${chapterLabel}, priez pour ${themes.person}.${reflectionEcho}`
                     : `En lien avec ${chapterLabel}, priez pour quelqu'un ou pour une situation qui vous tient à cœur.${reflectionEcho}`),
-            suggestions: ai.intercession_suggestions || [],
+            suggestions: ensureStringArray(ai.intercession_suggestions),
             userNote: dailyPromptAnswers['p4']?.trim() || '',
             completed: false,
             durationSec: 0,
@@ -339,7 +344,7 @@ export function buildPrayerSteps(
             prompt: ai.engagement || (dailyPromptAnswers['p5']?.trim()
                 ? `Votre réflexion : "${dailyPromptAnswers['p5'].trim()}"\n\nQuelle action concrète allez-vous entreprendre aujourd'hui ?`
                 : `Quelle action concrète allez-vous entreprendre en réponse à cette lecture ?${reflectionEcho}`),
-            suggestions: ai.engagement_suggestions || [],
+            suggestions: ensureStringArray(ai.engagement_suggestions),
             userNote: dailyPromptAnswers['p5']?.trim() || '',
             completed: false,
             durationSec: 0,
