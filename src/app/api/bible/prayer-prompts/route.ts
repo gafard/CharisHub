@@ -12,15 +12,10 @@ interface PrayerPromptInput {
 
 interface PrayerPromptsOutput {
     adoration: string;
-    adoration_suggestions: string[];
     repentance: string;
-    repentance_suggestions: string[];
     gratitude: string;
-    gratitude_suggestions: string[];
     intercession: string;
-    intercession_suggestions: string[];
     engagement: string;
-    engagement_suggestions: string[];
 }
 
 function compactErrorText(value: string, max = 300): string {
@@ -48,22 +43,12 @@ function normalizeOutput(raw: unknown): PrayerPromptsOutput | null {
     const fields = ['adoration', 'repentance', 'gratitude', 'intercession', 'engagement'];
     if (!fields.every((f) => typeof r[f] === 'string' && (r[f] as string).trim())) return null;
 
-    const getSug = (f: string): string[] => {
-        const val = r[`${f}_suggestions`];
-        return Array.isArray(val) ? (val as string[]) : [];
-    };
-
     return {
         adoration: (r.adoration as string).trim(),
-        adoration_suggestions: getSug('adoration'),
         repentance: (r.repentance as string).trim(),
-        repentance_suggestions: getSug('repentance'),
         gratitude: (r.gratitude as string).trim(),
-        gratitude_suggestions: getSug('gratitude'),
         intercession: (r.intercession as string).trim(),
-        intercession_suggestions: getSug('intercession'),
         engagement: (r.engagement as string).trim(),
-        engagement_suggestions: getSug('engagement'),
     };
 }
 
@@ -79,33 +64,16 @@ Ta mission est d'aider un croyant à transformer sa lecture biblique du passage 
 Ne te présente JAMAIS comme une machine ou une IA. Tu es un frère/une sœur en Christ qui aide à la méditation.
 N'utilise pas de termes comme "Analyse", "Génération", ou "Résultat". Parle d'"Écho", de "Révélation" ou d'"Éclairage".
 
-${passageText ? `Voici le texte du passage :\n"${passageText.slice(0, 3000)}"\n` : ''}
-${passageThemes ? `Thèmes principaux identifiés (Boussole) : ${passageThemes}\n` : ''}
-${insightLines}
-
-Crée 5 invitations à prier (Adoration, Repentance, Gratitude, Intercession, Engagement).
-Pour chaque phase (ex: adoration), génère :
-1. Une **invitation principale** (le "prompt") : 2 à 3 phrases fluides, tutoyant Dieu ou invitant au calme, rédigée à la 2e personne du pluriel ("vous").
-2. Trois **suggestions courtes** (les "suggestions") : des débuts de phrases ou des élans de prière (1 phrase chacun) que le croyant peut choisir d'utiliser pour démarrer sa propre prière.
-
-RÈGLES POUR LES SUGGESTIONS :
-- Si le croyant a laissé des réflexions (notes), au moins une des suggestions DOIT être une reformulation spirituelle et profonde de sa pensée pour l'aider à la transformer en prière.
-- Elles doivent être variées et s'appuyer sur le texte biblique ${chapterLabel}.
-- Elles servent d'inspiration ("inspirations d'élans").
-- Style : intime, sincère, profond, s'adressant à Dieu.
+Style : intime, sincère, profond, s'adressant à Dieu.
+Renseigne-toi sur le texte biblique ${chapterLabel} et les réflexions du croyant pour créer des invitations à prier très adaptées.
 
 Réponds UNIQUEMENT avec un JSON valide :
 {
   "adoration": "...",
-  "adoration_suggestions": ["...", "...", "..."],
   "repentance": "...",
-  "repentance_suggestions": ["...", "...", "..."],
   "gratitude": "...",
-  "gratitude_suggestions": ["...", "...", "..."],
   "intercession": "...",
-  "intercession_suggestions": ["...", "...", "..."],
-  "engagement": "...",
-  "engagement_suggestions": ["...", "...", "..."]
+  "engagement": "..."
 }`;
 }
 
@@ -168,17 +136,12 @@ function fallbackPrompts(input: PrayerPromptInput): PrayerPromptsOutput {
     const first = input.reflectionInsights[0]?.slice(0, 60) || '';
     return {
         adoration: `À travers ${label}, Dieu vous a révélé quelque chose de Sa grandeur. Prenez un moment pour Le louer pour qui Il est.`,
-        adoration_suggestions: ["Loué sois-tu pour ta majesté.", "Ton nom est grand au-dessus de tout.", "Merci pour ta présence glorieuse."],
         repentance: first
             ? `Vous avez noté : "${first}...". Apportez humblement cela à Dieu dans la repentance.`
             : `Y a-t-il quelque chose dans ${label} qui vous invite à la repentance ? Offrez-le à Dieu.`,
-        repentance_suggestions: ["Pardonne mes manques d'amour.", "Je reviens vers toi de tout mon cœur.", "Éclaire mes zones d'ombre."],
         gratitude: `Remerciez Dieu pour les vérités que ${label} vous a révélées aujourd'hui.`,
-        gratitude_suggestions: ["Merci pour ta grâce infinie.", "Je te rends grâce pour ta parole.", "Béni soit ton nom pour tes bienfaits."],
         intercession: `À la lumière de ${label}, priez pour quelqu'un qui a besoin de cette grâce.`,
-        intercession_suggestions: ["Je te confie mes proches.", "Prie pour ceux qui souffrent.", "Interviens dans cette situation."],
         engagement: `Quelle décision concrète prendrez-vous aujourd'hui en réponse à ${label} ?`,
-        engagement_suggestions: ["Je m'engage à suivre ta voix.", "Aide-moi à agir avec justice.", "Je veux vivre pour toi aujourd'hui."],
     };
 }
 

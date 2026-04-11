@@ -15,7 +15,6 @@ export interface PrayerFlowStep {
     emoji: string;
     label: string;
     prompt: string;
-    suggestions: string[];
     userNote: string;
     completed: boolean;
     durationSec: number;
@@ -36,15 +35,10 @@ export interface PrayerFlowSession {
 
 export interface PrayerAIResponse {
   adoration?: string;
-  adoration_suggestions?: string[];
   repentance?: string;
-  repentance_suggestions?: string[];
   gratitude?: string;
-  gratitude_suggestions?: string[];
   intercession?: string;
-  intercession_suggestions?: string[];
   engagement?: string;
-  engagement_suggestions?: string[];
 }
 
 function makeId(): string {
@@ -290,7 +284,6 @@ export function buildPrayerSteps(
             prompt: ai.adoration || (themes
                 ? `Ce passage révèle ${themes.godAttribute}.\n\nPrenez un moment pour louer Dieu pour qui Il est, tel que vous l'avez découvert dans ${chapterLabel}.${reflectionEcho}`
                 : `D'après ${chapterLabel}, pour quoi pouvez-vous louer et adorer Dieu ?${reflectionEcho}`),
-            suggestions: ensureStringArray(ai.adoration_suggestions),
             userNote: '',
             completed: false,
             durationSec: 0,
@@ -304,7 +297,6 @@ export function buildPrayerSteps(
                 : themes
                     ? `Ce passage nous met en garde contre ${themes.challenge}.\n\nY a-t-il quelque chose dont vous devez vous repentir ?${reflectionEcho}`
                     : `Y a-t-index quelque chose dont vous devez vous repentir après cette lecture ?${reflectionEcho}`),
-            suggestions: ensureStringArray(ai.repentance_suggestions),
             userNote: dailyPromptAnswers['p2']?.trim() || '',
             completed: false,
             durationSec: 0,
@@ -318,7 +310,6 @@ export function buildPrayerSteps(
                 : themes
                     ? `Ce passage parle de ${themes.blessing}.\n\nRemerciez Dieu pour cette grâce dans votre vie.${reflectionEcho}`
                     : `Y a-t-il quelque chose pour laquelle remercier et louer Dieu dans ce passage ?${reflectionEcho}`),
-            suggestions: ensureStringArray(ai.gratitude_suggestions),
             userNote: dailyPromptAnswers['p3']?.trim() || '',
             completed: false,
             durationSec: 0,
@@ -332,7 +323,6 @@ export function buildPrayerSteps(
                 : themes
                     ? `En lien avec ${chapterLabel}, priez pour ${themes.person}.${reflectionEcho}`
                     : `En lien avec ${chapterLabel}, priez pour quelqu'un ou pour une situation qui vous tient à cœur.${reflectionEcho}`),
-            suggestions: ensureStringArray(ai.intercession_suggestions),
             userNote: dailyPromptAnswers['p4']?.trim() || '',
             completed: false,
             durationSec: 0,
@@ -344,7 +334,6 @@ export function buildPrayerSteps(
             prompt: ai.engagement || (dailyPromptAnswers['p5']?.trim()
                 ? `Votre réflexion : "${dailyPromptAnswers['p5'].trim()}"\n\nQuelle action concrète allez-vous entreprendre aujourd'hui ?`
                 : `Quelle action concrète allez-vous entreprendre en réponse à cette lecture ?${reflectionEcho}`),
-            suggestions: ensureStringArray(ai.engagement_suggestions),
             userNote: dailyPromptAnswers['p5']?.trim() || '',
             completed: false,
             durationSec: 0,
