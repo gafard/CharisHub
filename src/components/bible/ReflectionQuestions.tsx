@@ -239,7 +239,6 @@ export default function ReflectionQuestions({
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [dailyAnswers, setDailyAnswers] = useState<Record<string, string>>({});
   const [expandedQuestion, setExpandedQuestion] = useState<string | null>(null);
-  const [showDailyPrompts, setShowDailyPrompts] = useState(finalChapter);
 
   const aiRequestRef = useRef(0);
 
