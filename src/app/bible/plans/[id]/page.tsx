@@ -40,7 +40,7 @@ export default function ReadingPlanDetail({ params }: { params: Promise<{ id: st
       <StudyAppShell>
         <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
           <h2 className="text-2xl font-bold">Plan introuvable</h2>
-          <button onClick={() => router.push('/bible/plans')} className="mt-4 text-[#c89f2d]">
+          <button onClick={() => router.push('/bible/plans')} className="mt-4 text-accent">
             Retour au catalogue
           </button>
         </div>
@@ -74,7 +74,7 @@ export default function ReadingPlanDetail({ params }: { params: Promise<{ id: st
       <div className="mx-auto max-w-5xl">
         <button
           onClick={() => router.push('/bible/plans')}
-          className="group mb-8 flex items-center gap-2 text-sm font-bold text-[#1a2142]/50 transition-colors hover:text-[#c89f2d]"
+          className="group mb-8 flex items-center gap-2 text-sm font-bold text-muted transition-colors hover:text-accent"
         >
           <ChevronLeft size={18} className="transition-transform group-hover:-translate-x-1" />
           Tous les plans
@@ -93,7 +93,7 @@ export default function ReadingPlanDetail({ params }: { params: Promise<{ id: st
             <div className="mt-8 flex flex-col gap-3">
               <button
                 onClick={handleStart}
-                className="flex w-full items-center justify-center gap-3 rounded-2xl bg-[#c89f2d] py-4 font-display text-lg font-black text-white shadow-xl shadow-[#c89f2d]/20 transition-transform active:scale-95"
+                className="flex w-full items-center justify-center gap-3 rounded-2xl bg-accent py-4 font-display text-lg font-black text-white shadow-xl shadow-accent/20 transition-transform active:scale-95"
               >
                 {isStarted ? (isCompleted ? 'Relire ce plan' : todayDone ? 'Retour au texte' : "Continuer aujourd'hui") : 'Commencer le parcours'}
                 <Play size={20} fill="currentColor" />
@@ -102,7 +102,7 @@ export default function ReadingPlanDetail({ params }: { params: Promise<{ id: st
               {isStarted && (
                 <button
                   onClick={handleReset}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#e8ebf1] py-3 text-sm font-bold text-[#1a2142]/40 transition-colors hover:border-red-100 hover:bg-red-50 hover:text-red-500"
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border-soft py-3 text-sm font-bold text-muted transition-colors hover:border-red-100 hover:bg-red-50 hover:text-red-500"
                 >
                   <RotateCcw size={16} />
                   Réinitialiser la progression
@@ -114,22 +114,22 @@ export default function ReadingPlanDetail({ params }: { params: Promise<{ id: st
           {/* Details & Days List */}
           <div className="flex-1">
             <section className="mb-12">
-              <h2 className="font-display text-3xl font-black text-[#141b37]">À propos de ce plan</h2>
-              <p className="mt-6 text-lg leading-relaxed text-[#1a2142]/70">
+              <h2 className="font-display text-3xl font-black text-foreground">À propos de ce plan</h2>
+              <p className="mt-6 text-lg leading-relaxed text-muted">
                 {entry.presentation.art.focus}
               </p>
               <div className="mt-8 flex flex-wrap gap-4">
-                <div className="flex items-center gap-2 rounded-2xl bg-white/60 p-4 border border-[#e8ebf1] shadow-sm">
-                  <Calendar className="text-[#c89f2d]" size={20} />
+                <div className="flex items-center gap-2 rounded-2xl bg-surface-strong/60 p-4 border border-border-soft shadow-sm">
+                  <Calendar className="text-accent" size={20} />
                   <div>
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-[#1a2142]/40">Durée</div>
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-muted">Durée</div>
                     <div className="text-sm font-bold">{entry.plan.days.length} jours</div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 rounded-2xl bg-white/60 p-4 border border-[#e8ebf1] shadow-sm">
-                  <Bookmark className="text-[#c89f2d]" size={20} />
+                <div className="flex items-center gap-2 rounded-2xl bg-surface-strong/60 p-4 border border-border-soft shadow-sm">
+                  <Bookmark className="text-accent" size={20} />
                   <div>
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-[#1a2142]/40">Style</div>
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-muted">Style</div>
                     <div className="text-sm font-bold uppercase">{entry.presentation.cadence}</div>
                   </div>
                 </div>
@@ -138,7 +138,7 @@ export default function ReadingPlanDetail({ params }: { params: Promise<{ id: st
 
             <section>
               <div className="mb-6 flex items-center justify-between">
-                <h2 className="font-display text-2xl font-bold text-[#141b37]">Programme</h2>
+                <h2 className="font-display text-2xl font-bold text-foreground">Programme</h2>
               </div>
 
               <div className="space-y-3">
@@ -151,29 +151,29 @@ export default function ReadingPlanDetail({ params }: { params: Promise<{ id: st
                       key={idx}
                       className={`relative flex items-center gap-4 rounded-2xl border p-4 transition-all ${
                         isDayDone
-                          ? 'border-[#c89f2d]/20 bg-[#c89f2d]/5'
+                          ? 'border-accent/20 bg-accent/5'
                           : isCurrentlyToday
-                          ? 'border-[#c89f2d] bg-surface shadow-md'
-                          : 'border-[#e8ebf1] bg-white/40'
+                          ? 'border-accent bg-surface shadow-md'
+                          : 'border-border-soft bg-surface-strong/40'
                       }`}
                     >
                       <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl font-bold ${
-                        isDayDone ? 'bg-[#c89f2d] text-white' : 'bg-[#1a2142]/5 text-[#1a2142]/40'
+                        isDayDone ? 'bg-accent text-white' : 'bg-foreground/5 text-muted'
                       }`}>
                         {isDayDone ? <CheckCircle2 size={20} /> : idx + 1}
                       </div>
 
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold uppercase tracking-widest text-[#1a2142]/40">Jour {idx + 1}</span>
+                          <span className="text-xs font-bold uppercase tracking-widest text-muted">Jour {idx + 1}</span>
                           {isCurrentlyToday && (
-                            <span className="rounded-full bg-[#141b37] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white">AUJOURD'HUI</span>
+                            <span className="rounded-full bg-foreground px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-background">AUJOURD'HUI</span>
                           )}
                         </div>
-                        <div className="mt-1 truncate font-bold text-[#141b37]">
+                        <div className="mt-1 truncate font-bold text-foreground">
                           {formatDayReadingsLabel(day.readings)}
                         </div>
-                        <div className="text-[11px] text-[#1a2142]/60">
+                        <div className="text-[11px] text-muted">
                            {countDayChapters(day)} chapitres à méditer
                         </div>
                       </div>

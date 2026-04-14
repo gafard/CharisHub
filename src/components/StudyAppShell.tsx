@@ -52,17 +52,17 @@ export default function StudyAppShell({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <div className="relative min-h-screen bg-[#FCF9F3] text-[#1a2142]">
+    <div className="relative min-h-screen bg-background text-foreground">
       <div className="grace-particles" />
 
-      <header className="sticky top-0 z-40 border-b border-[#e8ebf1] bg-white/70 backdrop-blur-2xl">
+      <header className="sticky top-0 z-40 border-b border-border-soft bg-surface/70 backdrop-blur-2xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 sm:px-8">
           <div className="min-w-0">
             <Link href="/" className="group inline-flex items-center gap-3 rounded-full text-left transition-transform active:scale-95">
               <img src="/images/Logo.webp" alt="CharisHub Logo" className="h-[46px] w-auto object-contain drop-shadow-sm transition-transform group-hover:scale-105" />
               <span className="flex flex-col items-start leading-[1.05]">
-                <span className="block text-[26px] font-black tracking-tight font-display text-[#141b37]">CharisHub</span>
-                <span className="block text-[9px] font-bold uppercase tracking-[0.15em] text-[#c89f2d]">
+                <span className="block text-[26px] font-black tracking-tight font-display text-foreground">CharisHub</span>
+                <span className="block text-[9px] font-bold uppercase tracking-[0.15em] text-accent">
                   Connectés par la grâce
                 </span>
               </span>
@@ -81,8 +81,8 @@ export default function StudyAppShell({ children }: { children: ReactNode }) {
                     className={[
                       'inline-flex items-center gap-2 rounded-full border px-5 py-2.5 text-xs font-bold transition-all',
                       active
-                        ? 'border-[#c89f2d]/30 bg-[#fdfaf3] text-[#b78616] shadow-sm'
-                        : 'border-transparent bg-transparent text-[#1a2142]/60 hover:text-[#1a2142] hover:bg-[#1a2142]/5',
+                        ? 'border-accent/30 bg-accent/5 text-accent shadow-sm'
+                        : 'border-transparent bg-transparent text-muted hover:text-foreground hover:bg-foreground/5',
                     ].join(' ')}
                   >
                     <Icon size={16} />
@@ -132,8 +132,8 @@ export default function StudyAppShell({ children }: { children: ReactNode }) {
                 className={[
                   'group relative flex flex-1 flex-col items-center justify-center gap-1.5 rounded-[2rem] py-3 transition-all duration-300 active:scale-90',
                   active
-                    ? 'text-[#b78616]'
-                    : 'text-[#1a2142]/40 hover:text-[#1a2142]/60 dark:text-white/40 dark:hover:text-white/60',
+                    ? 'text-accent'
+                    : 'text-muted hover:text-foreground/60 dark:text-white/40 dark:hover:text-white/60',
                 ].join(' ')}
               >
                 {/* Slidding Indicator Background */}

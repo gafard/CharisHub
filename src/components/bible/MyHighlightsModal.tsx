@@ -79,36 +79,36 @@ export default function MyHighlightsModal({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[15000] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="w-full h-[85vh] sm:h-auto sm:max-h-[85vh] sm:max-w-2xl bg-[#0a0a0a] border border-white/10 sm:rounded-3xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-8 duration-300 shadow-2xl">
+    <div className="fixed inset-0 z-[15000] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="w-full h-[85vh] sm:h-auto sm:max-h-[85vh] sm:max-w-2xl bg-background border border-border-soft sm:rounded-3xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-8 duration-300 shadow-2xl">
 
-                <div className="p-4 sm:p-6 border-b border-white/10 flex items-center justify-between bg-[#121212]">
+                <div className="p-4 sm:p-6 border-b border-border-soft flex items-center justify-between bg-surface">
                     <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-[#d9f94a]/10 flex items-center justify-center text-[#d9f94a]">
+                        <div className="h-10 w-10 rounded-full bg-accent/10 flex items-center justify-center text-accent">
                             <BookOpen size={20} />
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold text-white tracking-tight">Mes Surlignages</h2>
-                            <p className="text-xs text-white/50">{flatHighlights.length} verset(s) sauvegardé(s)</p>
+                            <h2 className="text-xl font-bold text-foreground tracking-tight">Mes Surlignages</h2>
+                            <p className="text-xs text-muted/50">{flatHighlights.length} verset(s) sauvegardé(s)</p>
                         </div>
                     </div>
                     <button
                         onClick={onClose}
-                        className="h-10 w-10 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-colors"
+                        className="h-10 w-10 flex items-center justify-center rounded-full bg-foreground/5 hover:bg-foreground/10 text-muted transition-colors"
                     >
                         <X size={20} />
                     </button>
                 </div>
 
-                <div className="p-4 border-b border-white/10 bg-[#0a0a0a]">
+                <div className="px-4 py-3 sm:px-6 bg-surface-strong/50 border-b border-border-soft">
                     <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" size={16} />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={16} />
                         <input
                             type="text"
-                            placeholder="Rechercher un livre, un chapitre..."
+                            placeholder="Rechercher un verset..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-white/40 focus:outline-none focus:border-[#d9f94a]/50 focus:ring-1 focus:ring-[#d9f94a]/50 transition-all"
+                            className="w-full pl-10 pr-4 py-2 bg-surface border border-border-soft rounded-xl text-sm font-medium focus:outline-none focus:border-accent/40 placeholder:text-muted/40"
                         />
                     </div>
                 </div>
@@ -116,46 +116,41 @@ export default function MyHighlightsModal({
                 <div className="flex-1 overflow-y-auto p-4 space-y-3">
                     {filteredHighlights.length === 0 ? (
                         <div className="h-full flex flex-col items-center justify-center text-center p-8 opacity-50">
-                            <BookOpen size={48} className="mb-4 text-white/20" />
-                            <p className="text-lg font-semibold text-white mb-1">Aucun surlignage</p>
-                            <p className="text-sm text-white/60">
+                            <BookOpen size={48} className="mb-4 text-foreground/20" />
+                            <p className="text-lg font-semibold text-foreground mb-1">Aucun surlignage</p>
+                            <p className="text-sm text-muted">
                                 {search ? 'Aucun résultat pour cette recherche.' : 'Surlignez des versets pendant votre lecture pour les retrouver ici.'}
                             </p>
                         </div>
                     ) : (
-                        filteredHighlights.map((highlight, idx) => {
-                            // Map color names to Tailwind background classes for the dot indicator
-                            const colorMaps: Record<HighlightColor, string> = {
-                                yellow: 'bg-yellow-400',
-                                green: 'bg-emerald-400',
-                                pink: 'bg-pink-400',
-                                blue: 'bg-sky-400',
-                                orange: 'bg-orange-400',
-                                purple: 'bg-purple-400',
-                            };
-
+                        filteredHighlights.map((h, idx) => {
                             return (
                                 <div
-                                    key={`${highlight.refKey}-${highlight.verse}-${idx}`}
-                                    className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group"
+                                    key={`${h.refKey}-${h.verse}-${idx}`}
+                                    className="flex items-center rounded-2xl bg-surface-strong border border-border-soft overflow-hidden group"
                                 >
-                                    <div className={`w-3 h-3 rounded-full ${colorMaps[highlight.color]} shadow-[0_0_10px_rgba(255,255,255,0.2)]`} />
-
-                                    <div className="flex-1 cursor-pointer" onClick={() => {
-                                        onNavigate(highlight.bookId, highlight.chapter, highlight.verse);
-                                        onClose();
-                                    }}>
-                                        <h3 className="font-bold text-white text-base group-hover:text-[#d9f94a] transition-colors">
-                                            {highlight.displayRef}
-                                        </h3>
-                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            onNavigate(h.bookId, h.chapter, h.verse);
+                                            onClose();
+                                        }}
+                                        className="flex-1 flex flex-col items-start p-4 hover:bg-surface-strong/80 transition-colors"
+                                    >
+                                        <span className="text-sm font-bold text-foreground">{h.displayRef}</span>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <div className={`h-2 w-2 rounded-full bg-${h.color}-400`} />
+                                            <span className="text-[10px] uppercase tracking-wider text-muted font-bold">
+                                                Surligné en {h.color}
+                                            </span>
+                                        </div>
+                                    </button>
 
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            onRemoveHighlight(highlight.refKey, highlight.verse);
+                                            onRemoveHighlight(h.refKey, h.verse);
                                         }}
-                                        className="p-2 rounded-full hover:bg-white/10 text-white/40 hover:text-rose-400 transition-colors opacity-0 group-hover:opacity-100 sm:opacity-100"
+                                        className="p-4 hover:bg-rose-500/10 text-muted/40 hover:text-rose-400 transition-colors"
                                         title="Supprimer ce surlignage"
                                     >
                                         <Trash2 size={16} />

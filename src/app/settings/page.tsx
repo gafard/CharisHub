@@ -19,7 +19,7 @@ export default function SettingsPage() {
               </div>
               <div className="min-w-0">
                 <div className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-600/70">Croissance Spirituelle</div>
-                <h3 className="mt-0.5 text-xl font-black tracking-tight text-[#141b37]">Mon Intimité</h3>
+                <h3 className="mt-0.5 text-xl font-black tracking-tight text-foreground">Mon Intimité</h3>
                 <p className="mt-1 text-sm text-[#141b37]/50 max-lg:hidden">
                   Retrouve tes statistiques de prière, tes pépites et ton historique d'étude en un coup d'œil.
                 </p>

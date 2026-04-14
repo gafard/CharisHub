@@ -232,26 +232,26 @@ export default function ReadingPlansIndexClient() {
 
   return (
     <>
-      <div className="relative overflow-hidden rounded-[40px] border border-[#ece8df] bg-[linear-gradient(180deg,#fffefb_0%,#fbf8f1_50%,#f6f1e8_100%)] text-[#161c35] shadow-[0_40px_120px_rgba(22,28,53,0.10)]">
-        <div className="pointer-events-none absolute inset-0 opacity-[0.03] mix-blend-multiply" style={{ backgroundImage: 'radial-gradient(#161c35 0.8px, transparent 1px)', backgroundSize: '24px 24px' }} />
+      <div className="relative overflow-hidden rounded-[40px] border border-border-soft bg-surface text-foreground shadow-[0_40px_120px_rgba(22,28,53,0.10)]">
+        <div className="pointer-events-none absolute inset-0 opacity-[0.03] mix-blend-multiply" style={{ backgroundImage: 'radial-gradient(var(--foreground) 0.8px, transparent 1px)', backgroundSize: '24px 24px' }} />
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(200,159,45,0.10),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(56,125,255,0.06),transparent_20%)]" />
         <div
           className="pointer-events-none absolute -top-20 left-1/2 h-[260px] w-[260px] -translate-x-1/2 rounded-full blur-[110px]"
           style={{ background: selectedEntry.presentation.theme.accentSoft }}
         />
 
-        <div className="relative z-10 border-b border-[#ece8df] px-5 py-6 sm:px-8 lg:px-10">
+        <div className="relative z-10 border-b border-border-soft px-5 py-6 sm:px-8 lg:px-10">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div className="space-y-3">
               <Link
                 href="/bible"
-                className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.22em] text-[#161c35]/40 transition-colors hover:text-[#c89f2d]"
+                className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.22em] text-muted transition-colors hover:text-accent"
               >
                 <ArrowLeft size={14} />
                 Retour à la Parole
               </Link>
 
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#161c35]/5 text-[#c89f2d]">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-foreground/5 text-accent">
                 <Sparkles size={24} />
               </div>
             </div>
@@ -259,7 +259,7 @@ export default function ReadingPlansIndexClient() {
             {activePlanId ? (
               <button
                 onClick={() => handleStartPlan(activePlanId)}
-                className="inline-flex items-center gap-2 rounded-full bg-[#161c35] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.18em] text-white shadow-lg shadow-[#161c35]/15 transition-transform hover:scale-105 active:scale-95"
+                className="inline-flex items-center gap-2 rounded-full bg-foreground text-background px-5 py-3 text-[11px] font-bold uppercase tracking-[0.18em] shadow-lg transition-transform hover:scale-105 active:scale-95"
               >
                 Continuer le parcours
                 <ArrowUpRight size={15} />
@@ -274,8 +274,8 @@ export default function ReadingPlansIndexClient() {
               onClick={() => setSelectedCategory('all')}
               className={`rounded-full px-5 py-2.5 text-[10px] font-bold uppercase tracking-[0.18em] transition-all ${
                 selectedCategory === 'all'
-                  ? 'bg-[#c89f2d] text-white shadow-md shadow-[#c89f2d]/20'
-                  : 'bg-[#161c35]/5 text-[#161c35]/50 hover:bg-[#161c35]/10'
+                  ? 'bg-accent text-white shadow-md shadow-accent/20'
+                  : 'bg-foreground/5 text-muted hover:bg-foreground/10'
               }`}
             >
               Tous
@@ -290,8 +290,8 @@ export default function ReadingPlansIndexClient() {
                   onClick={() => setSelectedCategory(group.id)}
                   className={`rounded-full px-5 py-2.5 text-[10px] font-bold uppercase tracking-[0.18em] transition-all ${
                     isActive
-                      ? 'bg-[#c89f2d] text-white shadow-md shadow-[#c89f2d]/20'
-                      : 'bg-[#161c35]/5 text-[#161c35]/50 hover:bg-[#161c35]/10'
+                      ? 'bg-accent text-white shadow-md shadow-accent/20'
+                      : 'bg-foreground/5 text-muted hover:bg-foreground/10'
                   }`}
                 >
                   {group.label}
@@ -373,17 +373,17 @@ export default function ReadingPlansIndexClient() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.36, ease: ENTRY_EASE }}
             >
-              <div className="overflow-hidden rounded-[34px] border border-[#ece8df] bg-white/90 shadow-[0_25px_60px_rgba(22,28,53,0.08)] backdrop-blur-sm">
+              <div className="overflow-hidden rounded-[34px] border border-border-soft bg-surface shadow-[0_25px_60px_rgba(22,28,53,0.08)] backdrop-blur-sm">
                 <div className="relative px-6 py-6 sm:px-8 sm:py-8 lg:text-left">
                   <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[linear-gradient(180deg,rgba(200,159,45,0.08),rgba(255,255,255,0))]" />
 
                   <div className="relative">
                     <div className="flex items-center justify-center gap-2 lg:justify-start">
-                      <span className="rounded-full bg-[#161c35]/5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.22em] text-[#161c35]/40">
+                      <span className="rounded-full bg-foreground/5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.22em] text-muted">
                         {selectedIndex + 1} / {pickerEntries.length}
                       </span>
                       {!isLoggedIn ? (
-                        <span className="inline-flex items-center gap-1 rounded-full border border-[#eadfca] bg-[#fff8ec] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#b88922]">
+                        <span className="inline-flex items-center gap-1 rounded-full border border-border-soft bg-accent/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-accent">
                           <Lock size={11} />
                           Connexion requise
                         </span>
@@ -411,47 +411,47 @@ export default function ReadingPlansIndexClient() {
                       })}
                     </div>
 
-                    <h2 className="mt-6 font-display text-[32px] font-black leading-[1.02] tracking-tight text-[#161c35] sm:text-[42px] lg:text-[48px] xl:text-[52px]">
+                    <h2 className="mt-6 font-display text-[32px] font-black leading-[1.02] tracking-tight text-foreground sm:text-[42px] lg:text-[48px] xl:text-[52px]">
                       {selectedEntry.plan.name}
                     </h2>
 
-                    <p className="mx-auto mt-4 max-w-[32ch] text-[14px] leading-relaxed text-[#161c35]/60 sm:text-[15px] lg:mx-0 lg:max-w-[24ch] lg:text-[17px]">
+                    <p className="mx-auto mt-4 max-w-[32ch] text-[14px] leading-relaxed text-muted sm:text-[15px] lg:mx-0 lg:max-w-[24ch] lg:text-[17px]">
                       {selectedEntry.presentation.art.focus}
                     </p>
 
                     <div className="mt-6 grid gap-3">
-                      <div className="rounded-[24px] border border-[#ece8df] bg-[#fcfaf6] px-4 py-4">
-                        <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-[#b88922]">
+                      <div className="rounded-[24px] border border-border-soft bg-surface-strong px-4 py-4">
+                        <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-accent">
                           <TimerReset size={13} />
                           Rythme
                         </div>
-                        <p className="mt-2 text-sm font-semibold text-[#161c35]">
+                        <p className="mt-2 text-sm font-semibold text-foreground">
                           {selectedEntry.presentation.cadence}
                         </p>
                       </div>
 
-                      <div className="rounded-[24px] border border-[#ece8df] bg-surface px-4 py-4">
-                        <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-[#161c35]/45">
+                      <div className="rounded-[24px] border border-border-soft bg-surface px-4 py-4">
+                        <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-muted">
                           <CheckCircle2 size={13} />
                           Progression
                         </div>
-                        <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-[#161c35]/8">
+                        <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-foreground/5">
                           <div
-                            className="h-full rounded-full bg-[linear-gradient(90deg,#c89f2d,#e0b44b)] transition-all duration-500"
+                            className="h-full rounded-full bg-gradient-to-r from-accent to-accent/80 transition-all duration-500"
                             style={{ width: `${completion}%` }}
                           />
                         </div>
-                        <p className="mt-2 text-sm font-semibold text-[#161c35]">
+                        <p className="mt-2 text-sm font-semibold text-foreground">
                           {completion}% complété
                         </p>
                       </div>
 
-                      <div className="rounded-[24px] border border-[#ece8df] bg-surface px-4 py-4">
-                        <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-[#161c35]/45">
+                      <div className="rounded-[24px] border border-border-soft bg-surface px-4 py-4">
+                        <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-muted">
                           <BookOpen size={13} />
                           Expérience
                         </div>
-                        <p className="mt-2 text-sm leading-relaxed text-[#161c35]/68">
+                        <p className="mt-2 text-sm leading-relaxed text-muted">
                           Reprenez exactement là où vous vous êtes arrêté, avec une progression liée à votre compte.
                         </p>
                       </div>
@@ -460,7 +460,7 @@ export default function ReadingPlansIndexClient() {
                     <motion.button
                       type="button"
                       onClick={() => handleStartPlan(selectedEntry.plan.id)}
-                      className="mt-8 inline-flex w-full items-center justify-center gap-3 rounded-full bg-[#161c35] px-7 py-4 text-[14px] font-bold uppercase tracking-widest text-white shadow-xl shadow-[#161c35]/20 lg:text-[15px]"
+                      className="mt-8 inline-flex w-full items-center justify-center gap-3 rounded-full bg-foreground px-7 py-4 text-[14px] font-bold uppercase tracking-widest text-background shadow-xl lg:text-[15px]"
                       whileHover={reducedMotion ? undefined : { y: -4, scale: 1.02 }}
                       whileTap={reducedMotion ? undefined : { scale: 0.985 }}
                     >
@@ -469,7 +469,7 @@ export default function ReadingPlansIndexClient() {
                     </motion.button>
 
                     {!isLoggedIn ? (
-                      <p className="mt-3 text-center text-[12px] leading-relaxed text-[#161c35]/45 lg:text-left">
+                      <p className="mt-3 text-center text-[12px] leading-relaxed text-muted lg:text-left">
                         Connectez-vous pour sauvegarder votre avancée, reprendre vos lectures sur tous vos appareils et garder votre discipline enracinée.
                       </p>
                     ) : null}

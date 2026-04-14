@@ -320,6 +320,11 @@ textarea {
     radial-gradient(circle at 85% 85%, rgba(58, 125, 255, 0.1) 0%, transparent 40%);
 }
 
+.dark .grace-particles {
+  background-image: radial-gradient(circle, rgba(212, 175, 55, 0.08) 1px, transparent 1px);
+  opacity: 0.25;
+}
+
 /* Smooth scrolling for rails */
 * {
   scroll-behavior: smooth;
@@ -849,13 +854,13 @@ html[data-data-saver="1"] .hero-float {
 }
 
 .bible-paper {
-  background: #fdf9f1;
+  background: var(--surface-strong);
   background-image:
     radial-gradient(rgba(120, 90, 40, 0.08) 0.6px, transparent 0.6px),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(253, 249, 241, 0.9));
+    linear-gradient(180deg, var(--surface), var(--surface-strong));
   background-size: 26px 26px, auto;
-  border: 1px solid #eadfcd;
-  box-shadow: 0 16px 40px rgba(34, 24, 12, 0.08);
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-soft);
   position: relative;
   overflow: hidden;
 }
@@ -1016,7 +1021,6 @@ html[data-data-saver="1"] .hero-float {
 /* on va piloter la hauteur via --lh (ex: 30px, 32px, 34px...) */
 .verse-paper {
   --lh: 34px;
-  /* fallback */
   position: relative;
   border-radius: 24px;
   overflow-x: hidden;
@@ -1025,22 +1029,19 @@ html[data-data-saver="1"] .hero-float {
   -webkit-overflow-scrolling: touch;
 
   background:
-    /* LIGNAGE (1px) + espacement = --lh */
     repeating-linear-gradient(to bottom,
-      rgba(20, 20, 20, 0.07) 0px,
-      rgba(20, 20, 20, 0.07) 1px,
+      var(--foreground) 0.07 0px,
+      var(--foreground) 0.07 1px,
       transparent 1px,
       transparent var(--lh)),
-    /* Quadrillage vertical léger */
     repeating-linear-gradient(to right,
-      rgba(20, 20, 20, 0.035) 0px,
-      rgba(20, 20, 20, 0.035) 1px,
+      var(--foreground) 0.035 0px,
+      var(--foreground) 0.035 1px,
       transparent 1px,
       transparent 34px),
-    /* Papier */
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.66));
+    linear-gradient(to bottom, var(--surface), var(--surface-strong));
 
-  border: 1px solid rgba(233, 222, 201, 0.95);
+  border: 1px solid var(--border-soft);
 }
 
 .verse-paper::before {
@@ -1086,7 +1087,7 @@ html[data-data-saver="1"] .hero-float {
 
 /* Texte du verset */
 .verse-text {
-  color: rgba(17, 24, 39, 0.92);
+  color: var(--foreground);
   font-size: 14px;
   line-height: 1.85;
 }

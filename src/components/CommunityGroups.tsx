@@ -172,9 +172,9 @@ function GroupTile({
       className={[
         "relative shrink-0 w-[240px] sm:w-[260px]",
         "overflow-hidden rounded-3xl border border-border-soft",
-        "bg-surface-strong/95 p-4 text-left",
+        "bg-surface-strong/90 p-4 text-left",
         "shadow-[0_14px_34px_rgba(0,0,0,0.22)]",
-        "hover:border-border-strong active:scale-[0.99] transition-all",
+        "hover:border-accent/30 active:scale-[0.99] transition-all",
         accent.border,
       ].join(" ")}
     >
@@ -281,7 +281,7 @@ function GroupCard({
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
 
           <div className="absolute left-5 top-5 flex flex-wrap gap-2">
-            <span className="rounded-full bg-white/90 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#161c35] shadow-sm backdrop-blur-md">
+            <span className="rounded-full bg-white/90 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-foreground shadow-sm backdrop-blur-md">
               {typeLabel}
             </span>
 
@@ -305,7 +305,7 @@ function GroupCard({
           </div>
 
           <div className="pl-24 min-h-[50px]">
-            <h3 className="line-clamp-1 text-2xl font-black tracking-tight text-[#161c35]">
+            <h3 className="line-clamp-1 text-2xl font-black tracking-tight text-foreground">
               {group.name}
             </h3>
             <p className="mt-0.5 text-xs font-bold text-[#b78616]/70 uppercase tracking-wide">
@@ -329,21 +329,21 @@ function GroupCard({
           {/* Stats Grid */}
           <div className="mt-6 grid grid-cols-3 gap-2 border-t border-[#f0f2f5] pt-5">
             <div className="text-center border-r border-[#f0f2f5]">
-              <div className="text-base font-black text-[#161c35]">
+              <div className="text-base font-black text-foreground">
                 {group.members_count || 0}
               </div>
               <div className="text-[9px] font-black uppercase tracking-tighter text-[#98a2b3]">Membres</div>
             </div>
 
             <div className="text-center border-r border-[#f0f2f5]">
-              <div className="text-base font-black text-[#161c35] truncate px-1">
+              <div className="text-base font-black text-foreground truncate px-1">
                 {nextCall}
               </div>
               <div className="text-[9px] font-black uppercase tracking-tighter text-[#98a2b3]">Prochain Live</div>
             </div>
 
             <div className="text-center">
-              <div className="text-base font-black text-[#161c35]">
+              <div className="text-base font-black text-foreground">
                 {group.is_paid ? 'Premium' : 'Gratuit'}
               </div>
               <div className="text-[9px] font-black uppercase tracking-tighter text-[#98a2b3]">Accès</div>
@@ -465,25 +465,25 @@ function GroupDetailTabs({
           <button
             type="button"
             onClick={onCloseGroupPage}
-            className="grid h-10 w-10 place-items-center rounded-xl border border-[#e6e8ec] bg-surface text-[#667085] transition hover:text-[#101828] hover:border-[#d0d5dd]"
+            className="grid h-10 w-10 place-items-center rounded-xl border border-border-soft bg-surface text-muted transition hover:text-foreground hover:border-border-strong"
           >
             ←
           </button>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black uppercase tracking-[0.14em] text-[#c89f2d]">
+              <span className="text-[10px] font-black uppercase tracking-[0.14em] text-accent">
                 {renderTypeLabel(selectedGroup.group_type)}
               </span>
               {selectedGroup.is_paid && (
-                <span className="h-1 w-1 rounded-full bg-[#cbd5e1]" />
+                <span className="h-1 w-1 rounded-full bg-border-soft" />
               )}
               {selectedGroup.is_paid && (
-                <span className="text-[10px] font-black uppercase tracking-[0.14em] text-[#b54708]">
+                <span className="text-[10px] font-black uppercase tracking-[0.14em] text-rose-500">
                   FORMATION PAYANTE
                 </span>
               )}
             </div>
-            <h1 className="text-xl font-black tracking-tight text-[#101828] sm:text-2xl">
+            <h1 className="text-xl font-black tracking-tight text-foreground sm:text-2xl">
               {selectedGroup.name}
             </h1>
           </div>
@@ -493,7 +493,7 @@ function GroupDetailTabs({
           <button
             type="button"
             onClick={() => onShareGroup(selectedGroup.id)}
-            className="inline-flex h-10 items-center gap-2 rounded-xl border border-[#e6e8ec] bg-surface px-4 text-xs font-bold text-[#667085] transition hover:text-[#101828]"
+            className="inline-flex h-10 items-center gap-2 rounded-xl border border-border-soft bg-surface px-4 text-xs font-bold text-muted transition hover:text-foreground"
           >
             <Link2 size={14} />
             Partager l'espace
@@ -502,12 +502,12 @@ function GroupDetailTabs({
       </div>
 
       {/* 2. Bandeau Session / Live */}
-      <div className="overflow-hidden rounded-[32px] border border-[#e9eaeb] bg-surface shadow-[0_12px_30px_rgba(16,24,40,0.04)]">
+      <div className="overflow-hidden rounded-[32px] border border-border-soft bg-surface shadow-[0_12px_30px_rgba(16,24,40,0.04)]">
         <div className="flex flex-col lg:flex-row lg:items-stretch">
           <div className="flex-1 p-6 sm:p-8">
             <div className="flex items-center gap-3">
               {hasLiveCall ? (
-                <div className="flex items-center gap-2 rounded-full bg-rose-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-rose-600">
+                <div className="flex items-center gap-2 rounded-full bg-rose-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-rose-500">
                   <span className="h-2 w-2 animate-pulse rounded-full bg-rose-500" />
                   Session en direct
                 </div>
@@ -518,11 +518,11 @@ function GroupDetailTabs({
               )}
             </div>
 
-            <h2 className="mt-4 text-2xl font-black tracking-tight text-[#101828]">
+            <h2 className="mt-4 text-2xl font-black tracking-tight text-foreground">
               {hasLiveCall ? "Rejoignez l'enseignement en cours" : (selectedGroup.next_call_at ? formatWhen(selectedGroup.next_call_at) : 'Aucun rendez-vous planifié')}
             </h2>
 
-            <p className="mt-2 text-sm leading-6 text-[#667085]">
+            <p className="mt-2 text-sm leading-6 text-muted">
               {hasLiveCall
                 ? "Plusieurs membres sont déjà connectés. Entrez dans la salle pour participer à la session biblique."
                 : "Consultez le déroulé de la session dans l'onglet Programme pour vous préparer."
@@ -530,13 +530,13 @@ function GroupDetailTabs({
             </p>
           </div>
 
-          <div className="flex flex-col justify-center border-t border-[#f2f4f7] bg-[#fcfcfd] p-6 lg:w-[280px] lg:border-l lg:border-t-0 sm:p-8">
+          <div className="flex flex-col justify-center border-t border-border-soft bg-surface-strong p-6 lg:w-[280px] lg:border-l lg:border-t-0 sm:p-8">
             {isAdmin ? (
               <button
                 type="button"
                 onClick={() => void onStartGroupCall()}
                 disabled={callBusy}
-                className="w-full rounded-2xl bg-[#161c35] px-6 py-4 text-sm font-black text-white shadow-[0_12px_24px_rgba(22,28,53,0.15)] transition hover:translate-y-[-1px] disabled:opacity-60"
+                className="w-full rounded-2xl bg-foreground text-background px-6 py-4 text-sm font-black shadow-[0_12px_24px_rgba(22,28,53,0.15)] transition hover:translate-y-[-1px] disabled:opacity-60"
               >
                 {callBusy ? <Loader2 size={16} className="animate-spin" /> : (hasLiveCall ? "Ouvrir la salle" : "Lancer la session")}
               </button>
@@ -556,7 +556,7 @@ function GroupDetailTabs({
                   </div>
                 )
               ) : (
-                <div className="text-center text-xs font-bold text-[#c89f2d]">
+                <div className="text-center text-xs font-bold text-accent">
                   Rejoins l'espace pour participer
                 </div>
               )
@@ -570,8 +570,8 @@ function GroupDetailTabs({
         
         {/* Colonne GAUCHE (Main Content) */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="overflow-hidden rounded-[32px] border border-[#e9eaeb] bg-surface shadow-[0_12px_24px_rgba(16,24,40,0.03)]">
-            <div className="flex border-b border-[#f2f4f7] bg-[#fcfcfd]/50">
+          <div className="overflow-hidden rounded-[32px] border border-border-soft bg-surface shadow-[0_12px_24px_rgba(16,24,40,0.03)]">
+            <div className="flex border-b border-border-soft bg-surface-strong/50">
               {[
                 { key: 'salon', label: 'Salon' },
                 { key: 'programme', label: 'Programme' },
@@ -582,13 +582,13 @@ function GroupDetailTabs({
                   onClick={() => setActiveTab(tab.key as any)}
                   className={`relative px-8 py-4 text-xs font-black uppercase tracking-[0.14em] transition ${
                     activeTab === tab.key
-                      ? 'text-[#161c35]'
-                      : 'text-[#98a2b3] hover:text-[#667085]'
+                      ? 'text-foreground'
+                      : 'text-muted/60 hover:text-muted'
                   }`}
                 >
                   {tab.label}
                   {activeTab === tab.key && (
-                    <div className="absolute bottom-0 left-8 right-8 h-1 rounded-t-full bg-[#161c35]" />
+                    <div className="absolute bottom-0 left-8 right-8 h-1 rounded-t-full bg-accent" />
                   )}
                 </button>
               ))}
@@ -598,22 +598,22 @@ function GroupDetailTabs({
               {activeTab === 'salon' && (
                 !selectedGroup.joined ? (
                   <div className="p-8 text-center">
-                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#f9fafb] text-2xl">
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-surface-strong text-2xl">
                       🔒
                     </div>
-                    <h3 className="mt-4 font-black text-[#101828]">Salon réservé aux membres</h3>
-                    <p className="mt-2 text-sm text-[#667085]">
+                    <h3 className="mt-4 font-black text-foreground">Salon réservé aux membres</h3>
+                    <p className="mt-2 text-sm text-muted">
                       Rejoignez cet espace pour participer aux échanges et poser vos questions.
                     </p>
                   </div>
                 ) : (
                   currentUserStatus === 'pending' ? (
                     <div className="p-8 text-center">
-                      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#fffbeb] text-2xl">
+                      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-accent/10 text-2xl">
                         ⏳
                       </div>
-                      <h3 className="mt-4 font-black text-[#101828]">Demande en attente</h3>
-                      <p className="mt-2 text-sm text-[#667085]">
+                      <h3 className="mt-4 font-black text-foreground">Demande en attente</h3>
+                      <p className="mt-2 text-sm text-muted">
                         Un administrateur doit valider votre accès au salon.
                       </p>
                     </div>
@@ -626,39 +626,39 @@ function GroupDetailTabs({
               {activeTab === 'programme' && (
                 <div className="p-4 sm:p-6 space-y-8">
                   <div>
-                    <div className="text-[10px] font-black uppercase tracking-[0.14em] text-[#98a2b3]">Objectifs</div>
-                    <h3 className="mt-2 text-lg font-black text-[#101828]">Déroulé de la session</h3>
-                    <p className="mt-2 text-sm leading-7 text-[#667085]">
+                    <div className="text-[10px] font-black uppercase tracking-[0.14em] text-muted/60">Objectifs</div>
+                    <h3 className="mt-2 text-lg font-black text-foreground">Déroulé de la session</h3>
+                    <p className="mt-2 text-sm leading-7 text-muted">
                       Voici les points clés qui seront abordés durant la rencontre.
                     </p>
                   </div>
 
                   <div className="space-y-3">
                     {sessionTasks.length > 0 ? sessionTasks.map((task, idx) => (
-                      <div key={idx} className="flex items-center gap-4 rounded-2xl border border-[#f2f4f7] bg-surface p-4">
-                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#f8fafc] text-[11px] font-black text-[#161c35] border border-[#e2e8f0]">
+                      <div key={idx} className="flex items-center gap-4 rounded-2xl border border-border-soft bg-surface p-4">
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-surface-strong text-[11px] font-black text-foreground border border-border-soft">
                           {idx + 1}
                         </div>
-                        <div className="flex-1 text-sm font-bold text-[#344054]">{task}</div>
+                        <div className="flex-1 text-sm font-bold text-foreground/80">{task}</div>
                         {isAdmin && (
                           <button
                             type="button"
                             onClick={() => setSessionTasks(prev => prev.filter((_, i) => i !== idx))}
-                            className="text-[#98a2b3] hover:text-rose-500"
+                            className="text-muted hover:text-rose-500"
                           >
                             <X size={16} />
                           </button>
                         )}
                       </div>
                     )) : (
-                      <div className="rounded-2xl border-2 border-dashed border-[#f2f4f7] p-8 text-center text-sm font-medium text-[#98a2b3]">
+                      <div className="rounded-2xl border-2 border-dashed border-border-soft p-8 text-center text-sm font-medium text-muted/60">
                         Aucun point inscrit au programme pour le moment.
                       </div>
                     )}
                   </div>
 
                   {isAdmin && (
-                    <div className="pt-4 border-t border-[#f2f4f7]">
+                    <div className="pt-4 border-t border-border-soft">
                        <div className="flex gap-2">
                         <input
                           value={taskDraft}
@@ -670,7 +670,7 @@ function GroupDetailTabs({
                             }
                           }}
                           placeholder="Ajouter un point au programme..."
-                          className="h-11 flex-1 rounded-xl border border-[#e6e8ec] bg-[#fcfcfd] px-4 text-sm font-medium text-[#101828] outline-none focus:border-[#161c35]"
+                          className="h-11 flex-1 rounded-xl border border-border-soft bg-surface-strong px-4 text-sm font-medium text-foreground outline-none focus:border-accent/40"
                         />
                         <button
                           type="button"
@@ -681,7 +681,7 @@ function GroupDetailTabs({
                             }
                           }}
                           disabled={!taskDraft.trim()}
-                          className="h-11 rounded-xl bg-[#161c35] px-4 text-xs font-black uppercase tracking-[0.1em] text-white disabled:opacity-40"
+                          className="h-11 rounded-xl bg-foreground px-4 text-xs font-black uppercase tracking-[0.1em] text-background disabled:opacity-40"
                         >
                           Ajouter
                         </button>
@@ -698,19 +698,19 @@ function GroupDetailTabs({
         <div className="space-y-6">
           {/* Section Rejoindre si non membre */}
           {!selectedGroup.joined && (
-             <div className="rounded-[32px] border border-[#e9eaeb] bg-surface p-6 shadow-[0_12px_24px_rgba(16,24,40,0.03)]">
-                <div className="text-[10px] font-black uppercase tracking-[0.14em] text-[#c89f2d]">Accès</div>
-                <h3 className="mt-2 text-lg font-black text-[#101828]">Rejoindre l'espace</h3>
+             <div className="rounded-[32px] border border-border-soft bg-surface p-6 shadow-[0_12px_24px_rgba(16,24,40,0.03)]">
+                <div className="text-[10px] font-black uppercase tracking-[0.14em] text-accent">Accès</div>
+                <h3 className="mt-2 text-lg font-black text-foreground">Rejoindre l'espace</h3>
                 
                 {selectedGroup.is_paid && (
                   <div className="mt-4 space-y-3">
-                    <p className="text-xs font-bold text-[#b54708]">Clé requise pour cette formation</p>
+                    <p className="text-xs font-bold text-rose-500">Clé requise pour cette formation</p>
                     <input
                       type="text"
                       placeholder="CHARIS-XXXXX"
                       value={passCodeInput}
                       onChange={(e) => setPassCodeInput(e.target.value.toUpperCase())}
-                      className="w-full rounded-xl border border-[#fedf89] bg-[#fffcf5] px-4 py-3 text-sm font-bold text-[#101828] outline-none"
+                      className="w-full rounded-xl border border-accent/30 bg-accent/5 px-4 py-3 text-sm font-bold text-foreground outline-none"
                     />
                   </div>
                 )}
@@ -718,7 +718,7 @@ function GroupDetailTabs({
                 <button
                   onClick={() => onJoin(selectedGroup.id, passCodeInput)}
                   disabled={!!actionState[selectedGroup.id]}
-                  className="mt-6 w-full rounded-2xl bg-[#161c35] py-4 text-sm font-black text-white transition hover:-translate-y-[1px]"
+                  className="mt-6 w-full rounded-2xl bg-foreground text-background py-4 text-sm font-black transition hover:-translate-y-[1px]"
                 >
                   {selectedGroup.is_paid ? "Valider mon code" : "Rejoindre l'espace"}
                 </button>
@@ -726,8 +726,8 @@ function GroupDetailTabs({
           )}
 
           {/* Section Présentation */}
-          <div className="rounded-[32px] border border-[#e9eaeb] bg-surface p-6 shadow-[0_12px_24px_rgba(16,24,40,0.03)]">
-            <div className="flex border-b border-[#f2f4f7] -mx-6 px-6 pb-2 mb-4">
+          <div className="rounded-[32px] border border-border-soft bg-surface p-6 shadow-[0_12px_24px_rgba(16,24,40,0.03)]">
+            <div className="flex border-b border-border-soft -mx-6 px-6 pb-2 mb-4">
               {[
                 { key: 'about', label: 'Présentation' },
                 { key: 'members', label: 'Membres' },
@@ -737,8 +737,8 @@ function GroupDetailTabs({
                   onClick={() => setActiveTab(tab.key as any)}
                   className={`mr-4 pb-2 text-[10px] font-black uppercase tracking-[0.14em] transition ${
                     (activeTab === tab.key || (activeTab === 'salon' && tab.key === 'about') || (activeTab === 'programme' && tab.key === 'about'))
-                    ? 'text-[#161c35] border-b-2 border-[#161c35]' 
-                    : 'text-[#98a2b3]'
+                    ? 'text-foreground border-b-2 border-accent' 
+                    : 'text-muted/60'
                   }`}
                 >
                   {tab.label}
@@ -748,26 +748,26 @@ function GroupDetailTabs({
 
             {activeTab === 'members' ? (
               <div className="space-y-4">
-                <div className="flex items-center justify-between text-[11px] font-bold text-[#667085]">
+                <div className="flex items-center justify-between text-[11px] font-bold text-muted">
                   <span>{groupMembers.length} Personnes</span>
                   <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                 </div>
                 <div className="max-h-[320px] overflow-y-auto space-y-2 pr-1 custom-scrollbar">
                   {groupMembers.map((member) => (
-                    <div key={member.device_id} className="flex items-center gap-3 p-2 rounded-xl border border-[#f9fafb] bg-[#fcfcfd]">
-                      <div className="h-8 w-8 shrink-0 rounded-lg bg-[#161c35] text-[10px] font-black text-white flex items-center justify-center">
+                    <div key={member.device_id} className="flex items-center gap-3 p-2 rounded-xl border border-border-soft bg-surface-strong">
+                      <div className="h-8 w-8 shrink-0 rounded-lg bg-foreground text-background text-[10px] font-black flex items-center justify-center">
                         {initials(member.display_name)}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="truncate text-xs font-bold text-[#101828]">{member.display_name}</div>
+                        <div className="truncate text-xs font-bold text-foreground">{member.display_name}</div>
                         {selectedGroup.admin_ids?.some(id => id === member.user_id || id === member.device_id) && (
-                          <div className="text-[9px] font-black text-[#c89f2d] uppercase">Administrateur</div>
+                          <div className="text-[9px] font-black text-accent uppercase">Administrateur</div>
                         )}
                       </div>
                       {isAdmin && member.status === 'pending' && member.device_id !== actor.deviceId && (
                         <button 
                           onClick={() => onModerate(member.user_id, member.device_id, 'approve')}
-                          className="h-6 w-6 rounded-md bg-emerald-50 text-emerald-600 grid place-items-center hover:bg-emerald-100"
+                          className="h-6 w-6 rounded-md bg-emerald-500/10 text-emerald-500 grid place-items-center hover:bg-emerald-500/20"
                         >
                           ✓
                         </button>
@@ -783,23 +783,23 @@ function GroupDetailTabs({
                     value={detailDescription}
                     onChange={(e) => setDetailDescription(e.target.value)}
                     rows={6}
-                    className="w-full resize-none rounded-2xl border border-[#e6e8ec] bg-[#fcfcfd] p-4 text-sm font-medium text-[#475467] outline-none focus:border-[#161c35]"
+                    className="w-full resize-none rounded-2xl border border-border-soft bg-surface-strong p-4 text-sm font-medium text-foreground outline-none focus:border-accent/40"
                     placeholder="Présente l'espace de formation..."
                   />
                 ) : (
-                  <p className="text-sm leading-7 text-[#667085]">
+                  <p className="text-sm leading-7 text-muted">
                      {selectedGroup.description || "Cet espace n'a pas encore de présentation officielle."}
                   </p>
                 )}
                 
                 <div className="grid grid-cols-2 gap-2">
                   <div className="p-3 rounded-xl bg-surface-strong border border-border-soft">
-                    <div className="text-[9px] font-black text-[#98a2b3] uppercase">Créé par</div>
-                    <div className="mt-1 text-xs font-bold text-[#161c35] truncate">{selectedGroup.created_by_name}</div>
+                    <div className="text-[9px] font-black text-muted uppercase">Créé par</div>
+                    <div className="mt-1 text-xs font-bold text-foreground truncate">{selectedGroup.created_by_name}</div>
                   </div>
                   <div className="p-3 rounded-xl bg-surface-strong border border-border-soft">
                     <div className="text-[9px] font-black text-[#98a2b3] uppercase">Membres</div>
-                    <div className="mt-1 text-xs font-bold text-[#161c35]">{selectedGroup.members_count} actifs</div>
+                    <div className="mt-1 text-xs font-bold text-foreground">{selectedGroup.members_count} actifs</div>
                   </div>
                 </div>
 
@@ -1740,7 +1740,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
                   Plateforme chrétienne
                 </div>
 
-                <h1 className="text-[2rem] font-black leading-[1.05] tracking-tight text-[#161c35] xs:text-4xl sm:text-6xl lg:text-7xl font-display">
+                <h1 className="text-[2rem] font-black leading-[1.05] tracking-tight text-foreground xs:text-4xl sm:text-6xl lg:text-7xl font-display">
                   Crée tes groupes,
                   <br />
                   lance tes appels,
@@ -2078,7 +2078,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
 
       {/* Feedback Toast */}
       {feedback ? (
-        <div className="fixed bottom-24 left-1/2 z-[500] -translate-x-1/2 rounded-2xl border border-[#e2e8f0] bg-surface px-4 py-2 text-sm shadow-xl font-bold text-[#161c35]">
+        <div className="fixed bottom-24 left-1/2 z-[500] -translate-x-1/2 rounded-2xl border border-[#e2e8f0] bg-surface px-4 py-2 text-sm shadow-xl font-bold text-foreground">
           {feedback}
         </div>
       ) : null}

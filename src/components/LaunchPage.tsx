@@ -62,7 +62,7 @@ export default function LaunchPage() {
   // Écran de Splash pendant la restauration de la session
   if (!mounted || loading) {
     return (
-      <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-[#fffdf9]">
+      <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-surface">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -103,12 +103,12 @@ export default function LaunchPage() {
   ];
 
   return (
-    <div className="fixed inset-0 z-[100] overflow-auto bg-[#f5f7fb] p-3 sm:p-5 lg:p-7">
+    <div className="fixed inset-0 z-[100] overflow-auto bg-background p-3 sm:p-5 lg:p-7">
       <motion.div
         initial={{ opacity: 0, y: 18, scale: 0.985 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
-        className="relative mx-auto flex min-h-[calc(100vh-24px)] max-w-[1420px] flex-col overflow-hidden rounded-[28px] border border-[#e8ebf1] bg-[#fffdf9] shadow-[0_26px_70px_rgba(15,23,42,0.12)] sm:min-h-[calc(100vh-40px)]"
+        className="relative mx-auto flex min-h-[calc(100vh-24px)] max-w-[1420px] flex-col overflow-hidden rounded-[28px] border border-border-soft bg-surface shadow-[0_26px_70px_rgba(15,23,42,0.12)] sm:min-h-[calc(100vh-40px)]"
       >
         <div className="pointer-events-none absolute inset-x-0 top-0 h-[360px] bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.09),transparent_62%)]" />
         <div className="pointer-events-none absolute inset-x-[14%] bottom-0 h-[420px] rounded-full bg-[radial-gradient(circle_at_center,rgba(255,182,72,0.14),rgba(255,255,255,0))] blur-3xl" />
@@ -117,7 +117,7 @@ export default function LaunchPage() {
           <button
             type="button"
             onClick={handleMainAction}
-            className="inline-flex items-center gap-3 rounded-full text-left text-[#141b37]"
+            className="inline-flex items-center gap-3 rounded-full text-left text-foreground"
           >
             <img src="/images/Logo.webp" alt="CharisHub Logo" className="h-[46px] w-auto object-contain drop-shadow-sm" />
             <span className="flex flex-col items-start leading-[1.05]">
@@ -136,7 +136,7 @@ export default function LaunchPage() {
                   key={item.href}
                   type="button"
                   onClick={() => navigateTo(item.href)}
-                  className="inline-flex items-center gap-2 text-sm font-semibold text-[#1a2142]/72 transition hover:text-[#10162f]"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-muted transition hover:text-foreground"
                 >
                   <Icon size={15} />
                   {item.label}
@@ -170,7 +170,7 @@ export default function LaunchPage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.08, duration: 0.55 }}
-              className="inline-flex items-center gap-2 rounded-full border border-[#eee7da] bg-white/88 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.2em] text-[#b78616] shadow-[0_12px_30px_rgba(15,23,42,0.06)]"
+              className="inline-flex items-center gap-2 rounded-full border border-border-soft bg-surface/80 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.2em] text-accent shadow-[0_12px_30px_rgba(15,23,42,0.06)]"
             >
               <Video size={14} />
               Réunir. Enseigner. Grandir.
@@ -180,7 +180,7 @@ export default function LaunchPage() {
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.16, duration: 0.62 }}
-              className="mt-6 max-w-[760px] text-[1.9rem] font-black leading-[1.05] tracking-[-0.05em] text-[#161c35] xs:text-4xl sm:mt-10 sm:text-6xl lg:text-[4.5rem]"
+              className="mt-6 max-w-[760px] text-[1.9rem] font-black leading-[1.05] tracking-[-0.05em] text-foreground xs:text-4xl sm:mt-10 sm:text-6xl lg:text-[4.5rem]"
             >
               Crée des groupes,
               <br />
@@ -193,7 +193,7 @@ export default function LaunchPage() {
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.24, duration: 0.62 }}
-              className="mt-5 max-w-[680px] text-base font-medium leading-7 text-[#4b556f] sm:text-[1.15rem]"
+              className="mt-5 max-w-[680px] text-base font-medium leading-7 text-muted sm:text-[1.15rem]"
             >
               CharisHub est une plateforme chrétienne pensée pour réunir des croyants autour
               d’appels, de groupes d’étude, de temps de prière et de formations gratuites ou payantes,
@@ -218,9 +218,9 @@ export default function LaunchPage() {
               <button
                 type="button"
                 onClick={() => navigateTo('/bible')}
-                className="inline-flex items-center gap-3 rounded-full border border-[#ebe6db] bg-surface px-6 py-3.5 text-sm font-semibold text-[#141b37] shadow-[0_12px_32px_rgba(15,23,42,0.08)] transition hover:border-[#d9d1c0] hover:bg-[#fffdf8]"
+                className="inline-flex items-center gap-3 rounded-full border border-border-soft bg-surface px-6 py-3.5 text-sm font-semibold text-foreground shadow-[0_12px_32px_rgba(15,23,42,0.08)] transition hover:border-accent/40 hover:bg-surface-strong"
               >
-                <span className="grid h-7 w-7 place-items-center rounded-full bg-[#f4efe3] text-[#b78616]">
+                <span className="grid h-7 w-7 place-items-center rounded-full bg-accent/10 text-accent">
                   <BookOpen size={15} />
                 </span>
                 Explorer la Bible
@@ -231,25 +231,25 @@ export default function LaunchPage() {
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.62 }}
-              className="mt-8 grid w-full max-w-[760px] grid-cols-1 gap-3 sm:grid-cols-3"
+              className="mt-8 grid w-full max-w-[760px] grid-cols-1 gap-4 sm:grid-cols-3"
             >
-              <div className="rounded-2xl border border-[#ece7db] bg-white/90 px-4 py-4 text-left shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
-                <div className="text-[11px] font-black uppercase tracking-[0.14em] text-[#c89f2d]">Groupes</div>
-                <p className="mt-2 text-sm font-medium text-[#4b556f]">
+              <div className="rounded-2xl border border-border-soft bg-surface-strong/60 px-4 py-4 text-left shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
+                <div className="text-[11px] font-black uppercase tracking-[0.14em] text-accent">Groupes</div>
+                <p className="mt-2 text-sm font-medium text-muted">
                   Crée des espaces de prière, d’étude ou de suivi.
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-[#ece7db] bg-white/90 px-4 py-4 text-left shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
-                <div className="text-[11px] font-black uppercase tracking-[0.14em] text-[#c89f2d]">Appels</div>
-                <p className="mt-2 text-sm font-medium text-[#4b556f]">
+              <div className="rounded-2xl border border-border-soft bg-surface-strong/60 px-4 py-4 text-left shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
+                <div className="text-[11px] font-black uppercase tracking-[0.14em] text-accent">Appels</div>
+                <p className="mt-2 text-sm font-medium text-muted">
                   Lance des rencontres en ligne pour enseigner et partager en direct.
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-[#ece7db] bg-white/90 px-4 py-4 text-left shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
-                <div className="text-[11px] font-black uppercase tracking-[0.14em] text-[#c89f2d]">Formations</div>
-                <p className="mt-2 text-sm font-medium text-[#4b556f]">
+              <div className="rounded-2xl border border-border-soft bg-surface-strong/60 px-4 py-4 text-left shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
+                <div className="text-[11px] font-black uppercase tracking-[0.14em] text-accent">Formations</div>
+                <p className="mt-2 text-sm font-medium text-muted">
                   Propose des parcours gratuits ou payants dans un cadre chrétien.
                 </p>
               </div>

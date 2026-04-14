@@ -155,7 +155,7 @@ function DailyVerseCard({ verse }: { verse: DailyVerse }) {
         <div className="mt-8 flex gap-3">
           <button 
             onClick={() => navigator.clipboard.writeText(`"${verse.text}" - ${verse.ref}`)}
-            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-surface px-4 py-3 text-xs font-black uppercase tracking-wider text-black transition-transform active:scale-95"
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3 text-xs font-black uppercase tracking-wider text-black transition-transform active:scale-95"
           >
             <Copy size={16} /> Copier
           </button>
@@ -171,16 +171,16 @@ function PepiteCard({ pepite }: { pepite: Pepite }) {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-[24px] border border-white/60 bg-white/40 p-5 backdrop-blur-md shadow-sm"
+      className="rounded-[24px] border border-border-soft bg-surface-strong/40 p-5 backdrop-blur-md shadow-sm"
     >
       <div className="flex items-center gap-2 mb-3">
-        <div className="h-8 w-8 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600">
+        <div className="h-8 w-8 rounded-xl bg-accent/10 flex items-center justify-center text-accent">
            <Star size={16} />
         </div>
-        <span className="text-[10px] font-black uppercase tracking-widest text-amber-600/70">Pépite découverte</span>
+        <span className="text-[10px] font-black uppercase tracking-widest text-accent/70">Pépite découverte</span>
       </div>
-      <p className="text-sm font-medium text-[#141b37] leading-relaxed italic">« {pepite.text} »</p>
-      <div className="mt-4 text-[10px] font-bold text-[#141b37]/30 uppercase tracking-wider">{pepite.reference}</div>
+      <p className="text-sm font-medium text-foreground leading-relaxed italic">« {pepite.text} »</p>
+      <div className="mt-4 text-[10px] font-bold text-muted uppercase tracking-wider">{pepite.reference}</div>
     </motion.div>
   );
 }
@@ -193,15 +193,15 @@ function PastoralInsight() {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
-      className="flex items-start gap-4 rounded-[28px] border border-white/50 bg-white/40 p-6 backdrop-blur-xl shadow-lg ring-1 ring-black/5"
+      className="flex items-start gap-4 rounded-[28px] border border-border-soft bg-surface/40 p-6 backdrop-blur-xl shadow-lg ring-1 ring-black/5"
     >
       <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#D4FF33] text-black shadow-inner">
         <Heart size={24} />
       </div>
        <div>
-        <h4 className="text-sm font-black text-[#141b37] uppercase tracking-wide">{word.title}</h4>
+        <h4 className="text-sm font-black text-foreground uppercase tracking-wide">{word.title}</h4>
         <WordsPullUpMultiStyle 
-          segments={[{ text: word.text, className: "mt-1 text-xs leading-relaxed text-[#141b37]/60" }]}
+          segments={[{ text: word.text, className: "mt-1 text-xs leading-relaxed text-muted" }]}
           className="!justify-start !text-left"
         />
       </div>
@@ -222,7 +222,7 @@ function StatCard({ icon, label, value, subtext, color, delay = 0 }: {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.5 }}
-      className="relative overflow-hidden rounded-[28px] border border-white/60 bg-white/60 p-5 backdrop-blur-md shadow-sm ring-1 ring-black/[0.02]"
+      className="relative overflow-hidden rounded-[28px] border border-border-soft bg-surface-strong/60 p-5 backdrop-blur-md shadow-sm ring-1 ring-black/[0.02]"
     >
       <div className="absolute -right-3 -top-3 opacity-[0.05]" style={{ color, fontSize: 64 }}>
         {icon}
@@ -233,9 +233,9 @@ function StatCard({ icon, label, value, subtext, color, delay = 0 }: {
       >
         {icon}
       </div>
-      <div className="text-2xl font-black tracking-tight text-[#141b37]">{value}</div>
-      <div className="mt-0.5 text-[10px] font-black uppercase tracking-widest text-[#141b37]/40">{label}</div>
-      {subtext && <div className="mt-1 text-[9px] font-bold text-[#141b37]/30 italic">{subtext}</div>}
+      <div className="text-2xl font-black tracking-tight text-foreground">{value}</div>
+      <div className="mt-0.5 text-[10px] font-black uppercase tracking-widest text-muted">{label}</div>
+      {subtext && <div className="mt-1 text-[9px] font-bold text-muted italic">{subtext}</div>}
     </motion.div>
   );
 }
@@ -253,12 +253,12 @@ function WeekHeatmap({ days }: { days: WeekDay[] }) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3, duration: 0.5 }}
-      className="rounded-[28px] border border-white/60 bg-white/50 p-6 backdrop-blur-md shadow-sm"
+      className="rounded-[28px] border border-border-soft bg-surface/50 p-6 backdrop-blur-md shadow-sm"
     >
       <div className="mb-5 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Calendar size={16} className="text-amber-600" />
-          <span className="text-[10px] font-black uppercase tracking-widest text-[#141b37]">Activité Hebdo</span>
+          <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Activité Hebdo</span>
         </div>
         <div className="flex items-center gap-1">
            {intensityColors.map((c, i) => (
@@ -269,7 +269,7 @@ function WeekHeatmap({ days }: { days: WeekDay[] }) {
       <div className="grid grid-cols-7 gap-3">
         {days.map((day) => (
           <div key={day.date} className="flex flex-col items-center gap-2">
-            <span className="text-[9px] font-black text-[#141b37]/30 uppercase">{day.label}</span>
+            <span className="text-[9px] font-black text-muted uppercase">{day.label}</span>
             <div
               className={`h-9 w-9 md:h-11 md:w-11 rounded-xl transition-all ${intensityColors[day.intensity]} ${
                 day.intensity >= 2 ? 'ring-2 ring-amber-200/50 shadow-md shadow-amber-500/10' : ''
@@ -347,7 +347,7 @@ export default function SpiritualDashboard() {
 
   if (!mounted) {
     return (
-      <div className="flex h-64 items-center justify-center text-[10px] font-black uppercase tracking-widest text-[#141b37]/20">
+      <div className="flex h-64 items-center justify-center text-[10px] font-black uppercase tracking-widest text-muted">
         Chargement...
       </div>
     );
@@ -370,7 +370,7 @@ export default function SpiritualDashboard() {
             whileTap={{ scale: 0.95 }}
             onClick={handleSync}
             disabled={isSyncing}
-            className="flex items-center gap-2 rounded-full bg-white/40 px-3 py-1.5 backdrop-blur-md border border-white/50 text-[10px] font-black tracking-wider text-[#141b37]/60 hover:bg-white/60 transition-colors"
+            className="flex items-center gap-2 rounded-full bg-surface-strong/40 px-3 py-1.5 backdrop-blur-md border border-border-soft text-[10px] font-black tracking-wider text-muted hover:bg-surface-strong/60 transition-colors"
           >
             {isSyncing ? (
               <RefreshCw size={12} className="animate-spin text-amber-500" />
@@ -389,13 +389,13 @@ export default function SpiritualDashboard() {
              <DailyVerseCard verse={dailyVerse} />
           </div>
           <div className="lg:w-1/3 flex flex-col gap-6">
-             <div className="flex flex-col items-center justify-center rounded-[32px] border border-blue-200/50 bg-gradient-to-b from-blue-50/80 to-[#fffdf8] p-6 shadow-sm ring-1 ring-blue-100/50">
+             <div className="flex flex-col items-center justify-center rounded-[32px] border border-blue-200/50 bg-gradient-to-b from-blue-50/20 to-surface p-6 shadow-sm ring-1 ring-blue-100/50">
                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-surface shadow-sm mb-4">
                   <Sun size={28} className="text-blue-600" />
                </div>
                <div className="text-center">
                  <div className="text-xs font-black uppercase tracking-[0.2em] text-blue-600/60 mb-1">Cœur de Grâce</div>
-                 <div className="text-xl font-black text-[#141b37]">Paix soit avec toi</div>
+                 <div className="text-xl font-black text-foreground">Paix soit avec toi</div>
                </div>
              </div>
              <PastoralInsight />
@@ -405,8 +405,8 @@ export default function SpiritualDashboard() {
         {/* Memory Grid */}
         <section>
           <div className="mb-4 flex items-center gap-2">
-            <TrendingUp size={16} className="text-[#141b37]/30" />
-            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#141b37]/40">Mémoire de Ses bontés</h4>
+            <TrendingUp size={16} className="text-muted/40" />
+            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted">Mémoire de Ses bontés</h4>
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard icon={<BookOpen size={20} />} label="Paroles méditées" value={streak.totalChapters} subtext="Trésors ouverts" color="#3b82f6" delay={0.1} />
@@ -425,10 +425,10 @@ export default function SpiritualDashboard() {
         <section>
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Star size={18} className="text-amber-500 fill-amber-500/20" />
-              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#141b37]/40">Derniers Trésors</h4>
+              <Star size={18} className="text-accent fill-accent/20" />
+              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted">Derniers Trésors</h4>
             </div>
-            <div className="rounded-full bg-black/5 px-2 py-0.5 text-[9px] font-black">
+            <div className="rounded-full bg-foreground/5 px-2 py-0.5 text-[9px] font-black">
                {pepites.length} trouvés
             </div>
           </div>
@@ -450,20 +450,20 @@ export default function SpiritualDashboard() {
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            className="rounded-[32px] border border-white/60 bg-gradient-to-br from-white/80 to-white/40 p-6 backdrop-blur-xl shadow-inner shadow-white/50"
+            className="rounded-[32px] border border-border-soft bg-gradient-to-br from-surface/80 to-surface/40 p-6 backdrop-blur-xl shadow-inner"
           >
             <div className="mb-4 flex items-center gap-2">
               <MessageCircle size={16} className="text-pink-500" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-[#141b37]/40">Dernier temps avec Lui</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-muted">Dernier temps avec Lui</span>
             </div>
             <div className="flex flex-wrap gap-2 mb-4">
               {sessions[0].steps.filter(s => s.completed).map((step, i) => (
-                <span key={i} className="flex items-center gap-1.5 rounded-xl bg-white/50 border border-white px-3 py-1.5 text-[10px] font-bold text-[#141b37]/80">
+                <span key={i} className="flex items-center gap-1.5 rounded-xl bg-surface-strong/50 border border-border-soft px-3 py-1.5 text-[10px] font-bold text-foreground/80">
                   {step.emoji} {step.label}
                 </span>
               ))}
             </div>
-            <div className="flex items-center justify-between text-[10px] font-bold text-[#141b37]/30 italic">
+            <div className="flex items-center justify-between text-[10px] font-bold text-muted italic">
                <span>
                  {new Date(sessions[0].date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
                </span>

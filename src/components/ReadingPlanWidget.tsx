@@ -228,7 +228,7 @@ export default function ReadingPlanWidget({
     return (
         <>
             <motion.div
-                className="relative mx-auto w-full max-w-[800px] overflow-hidden rounded-[28px] border border-[#e8ebf1] bg-[linear-gradient(180deg,#ffffff_0%,#fbf9f5_58%,#f6f4f0_100%)] p-5 text-[#161c35] shadow-[0_24px_80px_rgba(22,28,53,0.08)] sm:p-6"
+                className="relative mx-auto w-full max-w-[800px] overflow-hidden rounded-[28px] border border-border-soft bg-surface shadow-[0_24px_80px_rgba(22,28,53,0.08)] sm:p-6"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
@@ -240,43 +240,43 @@ export default function ReadingPlanWidget({
                         background: `
                             radial-gradient(circle at 0% 0%, ${activePlan ? teaserPresentation.theme.accentSoft : 'rgba(200,159,45,0.08)'} 0%, transparent 40%),
                             radial-gradient(circle at 100% 100%, rgba(200,159,45,0.04) 0%, transparent 30%),
-                            linear-gradient(180deg, rgba(255,255,255,0.6) 0%, transparent 100%)
+                            linear-gradient(180deg, var(--surface) 0%, transparent 100%)
                         `,
                     }}
                 />
 
                 {/* Texture de grain subtile */}
-                <div className="pointer-events-none absolute inset-0 opacity-[0.02] mix-blend-multiply" style={{ backgroundImage: 'radial-gradient(#161c35 0.8px, transparent 1px)', backgroundSize: '24px 24px', backgroundPosition: 'center center' }} />
+                <div className="pointer-events-none absolute inset-0 opacity-[0.02] mix-blend-multiply" style={{ backgroundImage: 'radial-gradient(var(--foreground) 0.8px, transparent 1px)', backgroundSize: '24px 24px', backgroundPosition: 'center center' }} />
 
                 <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-6">
                     <div className="flex flex-1 items-center gap-5">
                         {/* Icône principale avec halo */}
-                        <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-[20px] border border-[#e8ebf1] bg-[linear-gradient(180deg,rgba(255,255,255,0.8),rgba(246,244,240,0.6))] shadow-inner sm:h-16 sm:w-16 sm:rounded-[22px]">
+                        <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-[20px] border border-border-soft bg-surface-strong/60 shadow-inner sm:h-16 sm:w-16 sm:rounded-[22px]">
                             <div
                                 className="absolute inset-0 rounded-[inherit] blur-2xl"
                                 style={{ background: activePlan ? teaserPresentation.theme.accentSoft : 'rgba(200,159,45,0.15)' }}
                             />
-                            <div className="relative z-10 flex items-center justify-center text-[#161c35]">
+                            <div className="relative z-10 flex items-center justify-center text-foreground">
                                 <PlanSymbol symbolId={teaserPresentation.art.symbolId} size={24} />
                             </div>
                         </div>
 
                         <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-2.5 text-[10px] font-black uppercase tracking-[0.25em] text-[#161c35]/40">
-                                {activePlan && <Sun size={10} className="text-[#c89f2d] animate-pulse" />}
+                            <div className="flex flex-wrap items-center gap-2.5 text-[10px] font-black uppercase tracking-[0.25em] text-muted/60">
+                                {activePlan && <Sun size={10} className="text-accent animate-pulse" />}
                                 <span>{eyebrow}</span>
                             </div>
 
-                            <h3 className="mt-1.5 font-display text-[20px] font-black leading-tight text-[#161c35] sm:text-[23px] tracking-tight">
+                            <h3 className="mt-1.5 font-display text-[20px] font-black leading-tight text-foreground sm:text-[23px] tracking-tight">
                                 {title}
                             </h3>
 
-                            <div className="mt-2 flex items-center gap-3 text-[13px] text-[#161c35]/60">
+                            <div className="mt-2 flex items-center gap-3 text-[13px] text-muted">
                                 <span className="truncate">{subtitle}</span>
                                 {detail && (
                                     <>
-                                        <span className="h-1 w-1 rounded-full bg-[#161c35]/20" />
-                                        <span className="truncate font-medium text-[#c89f2d]">{detail}</span>
+                                        <span className="h-1 w-1 rounded-full bg-border-soft" />
+                                        <span className="truncate font-medium text-accent">{detail}</span>
                                     </>
                                 )}
                             </div>
@@ -284,21 +284,21 @@ export default function ReadingPlanWidget({
                             {/* Barre de progression si actif */}
                             {activePlan && (
                                 <div className="mt-4 flex items-center gap-3">
-                                    <div className="h-1 flex-1 overflow-hidden rounded-full bg-[#161c35]/5">
+                                    <div className="h-1 flex-1 overflow-hidden rounded-full bg-foreground/5">
                                         <motion.div
-                                            className="h-full bg-[#c89f2d]"
+                                            className="h-full bg-accent"
                                             initial={{ width: 0 }}
                                             animate={{ width: `${(activePlan.completedDays.length / activePlan.plan.days.length) * 100}%` }}
                                             transition={{ duration: 1, ease: 'circOut' }}
                                         />
                                     </div>
-                                    <span className="text-[10px] font-bold text-[#161c35]/30 uppercase tracking-widest">{Math.round((activePlan.completedDays.length / activePlan.plan.days.length) * 100)}%</span>
+                                    <span className="text-[10px] font-bold text-muted uppercase tracking-widest">{Math.round((activePlan.completedDays.length / activePlan.plan.days.length) * 100)}%</span>
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-between gap-4 border-t border-[#e8ebf1]/60 pt-4 md:border-t-0 md:pt-0">
+                    <div className="flex items-center justify-between gap-4 border-t border-border-soft/60 pt-4 md:border-t-0 md:pt-0">
                         <div className={`${activePlan ? 'hidden' : 'block'} lg:block`}>
                            <CompactPlanStack entries={teaserEntries} primaryPlanId={activePlan?.plan.id ?? ''} />
                         </div>
@@ -306,7 +306,7 @@ export default function ReadingPlanWidget({
                         <motion.button
                             type="button"
                             onClick={() => router.push(primaryHref)}
-                            className="inline-flex shrink-0 items-center gap-2.5 rounded-full bg-[#161c35] px-6 py-3 text-[12px] font-black uppercase tracking-[0.18em] text-white shadow-[0_10px_30px_rgba(22,28,53,0.15)]"
+                            className="inline-flex shrink-0 items-center gap-2.5 rounded-full bg-foreground text-background px-6 py-3 text-[12px] font-black uppercase tracking-[0.18em] shadow-[0_10px_30px_rgba(0,0,0,0.15)]"
                             whileHover={{ y: -4, scale: 1.02 }}
                             whileTap={{ scale: 0.97 }}
                         >
@@ -361,8 +361,7 @@ function CompactPlanStack({
 
                 return (
                     <div
-                        key={entry.plan.id}
-                        className="absolute h-[54px] w-[40px] overflow-hidden rounded-[14px] border border-white/14 bg-[linear-gradient(180deg,rgba(255,255,255,0.14),rgba(255,255,255,0.04))] shadow-[0_14px_28px_rgba(0,0,0,0.22)] backdrop-blur-md"
+                        className="absolute h-[54px] w-[40px] overflow-hidden rounded-[14px] border border-border-strong/10 bg-surface/40 shadow-[0_14px_28px_rgba(0,0,0,0.22)] backdrop-blur-md"
                         style={{
                             left: `${layout.left}px`,
                             top: `${layout.top}px`,

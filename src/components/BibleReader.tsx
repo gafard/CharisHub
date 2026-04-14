@@ -167,23 +167,23 @@ const BOOK_MOODS: Partial<Record<string, AudioMood>> = {
 const BOOK_THEMES: Record<string, { accent: string; background: string }> = {
   psa: {
     accent: '#c89f2d',
-    background: '#FCF9F3',
+    background: 'var(--background)',
   },
   pro: {
     accent: '#c89f2d',
-    background: '#FCF9F3',
+    background: 'var(--background)',
   },
   jhn: {
     accent: '#c89f2d',
-    background: '#FCF9F3',
+    background: 'var(--background)',
   },
   rev: {
     accent: '#c89f2d',
-    background: '#FCF9F3',
+    background: 'var(--background)',
   },
   default: {
     accent: '#c89f2d',
-    background: '#FCF9F3',
+    background: 'var(--background)',
   },
 };
 
@@ -2739,10 +2739,9 @@ export default function BibleReader({
     <section
       ref={rootSectionRef}
       className={`relative transition-all duration-700 ${embedded ? 'bible-embedded-shell bible-enter h-full flex flex-col p-0 bg-transparent' : 'px-6 pb-24 pt-12 md:px-12'
-        } ${immersiveMode ? 'text-white' : ''} ${fullScreen ? 'fixed inset-0 z-[12000] overflow-hidden bg-[#FCF9F3]' : ''}`}
+        } ${immersiveMode ? 'text-white' : ''} ${fullScreen ? 'fixed inset-0 z-[12000] overflow-hidden bg-background' : ''}`}
       style={{
         ['--accent' as any]: currentBookTheme.accent,
-        background: '#FCF9F3',
       }}
     >
       {embedded ? (
@@ -2759,20 +2758,20 @@ export default function BibleReader({
 
       <div className={`mx-auto w-full ${embedded ? 'h-full min-h-0 flex flex-col' : 'max-w-6xl space-y-6'}`}>
         {/* Header Section (Flexible for both standard and embedded mode) */}
-        <header className={`bible-paper rounded-[32px] border border-[#e8ebf1] bg-surface shadow-sm transition-all duration-500 
+        <header className={`bible-paper rounded-[32px] border border-border-soft bg-surface shadow-sm transition-all duration-500 
           ${embedded ? 'p-4 mb-2' : 'p-10 md:p-14 mb-6'} 
           ${!embedded && (fullScreen || !isClient) ? 'hidden lg:block' : ''}`}
         >
           <div className={`${embedded ? 'flex flex-wrap items-center justify-between gap-4' : 'space-y-4'}`}>
             {!embedded && (
               <div>
-                <div className="text-[10px] font-black uppercase tracking-[0.3em] text-[#c89f2d]">
+                <div className="text-[10px] font-black uppercase tracking-[0.3em] text-accent">
                   Parole
                 </div>
-                <h1 className="text-4xl font-black leading-tight tracking-tight text-[#161c35] md:text-6xl font-display">
+                <h1 className="text-4xl font-black leading-tight tracking-tight text-foreground md:text-6xl font-display">
                   La Parole vivante
                 </h1>
-                <p className="max-w-2xl text-lg font-medium leading-relaxed text-[#4b556f]">
+                <p className="max-w-2xl text-lg font-medium leading-relaxed text-muted">
                   Lis, médite et laisse la Parole te transformer.
                 </p>
               </div>
@@ -2783,7 +2782,7 @@ export default function BibleReader({
                 <select
                   value={translationId}
                   onChange={(e) => setTranslationId(e.target.value)}
-                  className="cursor-pointer appearance-none rounded-xl border border-border-soft bg-[#FCF9F3] px-4 py-2 text-sm font-semibold text-foreground outline-none focus:border-[#c89f2d] focus:ring-1 focus:ring-[#c89f2d]/30"
+                  className="cursor-pointer appearance-none rounded-xl border border-border-soft bg-background px-4 py-2 text-sm font-semibold text-foreground outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
                 >
                   {LOCAL_BIBLE_TRANSLATIONS.map((t) => (
                     <option key={t.id} value={t.id}>
@@ -2798,7 +2797,7 @@ export default function BibleReader({
                     setBookId(e.target.value);
                     setChapter(1);
                   }}
-                  className="cursor-pointer appearance-none rounded-xl border border-border-soft bg-[#FCF9F3] px-4 py-2 text-sm font-semibold text-foreground outline-none focus:border-[#c89f2d] focus:ring-1 focus:ring-[#c89f2d]/30"
+                  className="cursor-pointer appearance-none rounded-xl border border-border-soft bg-background px-4 py-2 text-sm font-semibold text-foreground outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
                 >
                   {BIBLE_BOOKS.map((b) => (
                     <option key={b.id} value={b.id}>
@@ -2810,7 +2809,7 @@ export default function BibleReader({
                 <select
                   value={chapter}
                   onChange={(e) => setChapter(Number(e.target.value))}
-                  className="cursor-pointer appearance-none rounded-xl border border-border-soft bg-[#FCF9F3] px-4 py-2 text-sm font-semibold text-foreground outline-none focus:border-[#c89f2d] focus:ring-1 focus:ring-[#c89f2d]/30"
+                  className="cursor-pointer appearance-none rounded-xl border border-border-soft bg-background px-4 py-2 text-sm font-semibold text-foreground outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
                 >
                   {Array.from({ length: book.chapters }, (_, i) => i + 1).map((c) => (
                     <option key={c} value={c}>
@@ -2821,7 +2820,7 @@ export default function BibleReader({
               </div>
 
               <div className="flex flex-wrap items-center gap-3 ml-auto">
-                <div className="flex items-center gap-1.5 rounded-xl border border-border-soft bg-[#FCF9F3] p-1">
+                <div className="flex items-center gap-1.5 rounded-xl border border-border-soft bg-background p-1">
                   <button
                     type="button"
                     onClick={prevChapter}
@@ -2839,7 +2838,7 @@ export default function BibleReader({
                     disabled={!audioAvailable}
                     className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all ${
                       playerPlaying 
-                        ? 'bg-[#c89f2d] text-white shadow-lg shadow-[#c89f2d]/20' 
+                        ? 'bg-accent text-white shadow-lg shadow-accent/20' 
                         : 'hover:bg-surface-strong text-foreground/70 disabled:opacity-30'
                     }`}
                     title={playerPlaying ? "Pause" : "Lire l'audio"}
@@ -2860,8 +2859,8 @@ export default function BibleReader({
                 </div>
 
                 {!embedded && streakData.current > 0 && (
-                  <div className="flex items-center gap-2 rounded-full bg-[#c89f2d]/10 px-4 py-1.5 ring-1 ring-[#c89f2d]/20">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-[#b78616]">
+                  <div className="flex items-center gap-2 rounded-full bg-accent/10 px-4 py-1.5 ring-1 ring-accent/20">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-accent">
                       🔥 {streakData.current} jour{streakData.current > 1 ? 's' : ''}
                     </span>
                   </div>
@@ -2937,10 +2936,10 @@ export default function BibleReader({
                             key={verse.number}
                             onClick={(e) => handleVerseTap(verse, e)}
                             onDoubleClick={() => handleVerseDoubleTap(verse)}
-                            className={`group relative w-full rounded-xl px-4 py-3 text-left transition-all duration-300 ${isSelected ? 'bg-[#c89f2d]/10' : 'hover:bg-[#161c35]/5'}`}
+                            className={`group relative w-full rounded-xl px-4 py-3 text-left transition-all duration-300 ${isSelected ? 'bg-accent/10' : 'hover:bg-foreground/5'}`}
                           >
-                            <span className={`mr-4 inline-block font-sans text-[10px] font-black uppercase tracking-widest ${isAudioActive ? 'text-[#c89f2d]' : 'text-[#161c35]/20'}`}>{verse.number}</span>
-                            <span className={`text-[1.05em] leading-[1.8] transition-colors duration-500 ${isAudioActive ? 'font-bold text-[#b78616]' : 'text-[#1a2142]/90'} ${verseHighlightColor ? `bg-${verseHighlightColor}-500/10 rounded-md px-1` : ''}`}>
+                            <span className={`mr-4 inline-block font-sans text-[10px] font-black uppercase tracking-widest ${isAudioActive ? 'text-accent' : 'text-muted/30'}`}>{verse.number}</span>
+                            <span className={`text-[1.05em] leading-[1.8] transition-colors duration-500 ${isAudioActive ? 'font-bold text-accent' : 'text-foreground/90'} ${verseHighlightColor ? `bg-${verseHighlightColor}-500/10 rounded-md px-1` : ''}`}>
                               {isPrismaMeditation ? (
                                 <AnimatedLetter text={verse.text} />
                               ) : (
@@ -2965,17 +2964,17 @@ export default function BibleReader({
                             whileInView={{ opacity: 1, scale: 1 }}
                             whileHover={{ scale: 1.05, y: -4 }}
                             whileTap={{ scale: 0.98 }}
-                            className="group relative flex items-center gap-3 overflow-hidden rounded-full bg-[#161c35] px-8 py-4 text-white shadow-xl transition-all hover:shadow-[#c89f2d]/20"
+                            className="group relative flex items-center gap-3 overflow-hidden rounded-full bg-foreground px-8 py-4 text-background shadow-xl transition-all hover:shadow-accent/20"
                           >
-                            <div className="absolute inset-0 bg-gradient-to-r from-[#c89f2d]/20 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-                            <Sun size={18} className="text-[#c89f2d]" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-accent/20 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+                            <Sun size={18} className="text-accent" />
                             <span className="text-xs font-black uppercase tracking-[0.2em]">
                               {currentMatchingReading.isCompleted ? 'Revoir ma méditation' : 'Valider ma lecture'}
                             </span>
-                            <div className="ml-1 h-1.5 w-1.5 rounded-full bg-[#c89f2d] shadow-[0_0_8px_#c89f2d]" />
+                            <div className="ml-1 h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_8px_var(--accent)]" />
                           </motion.button>
                           {!currentMatchingReading.isCompleted && (
-                            <p className="mt-4 text-[11px] font-bold uppercase tracking-widest text-[#161c35]/30">
+                            <p className="mt-4 text-[11px] font-bold uppercase tracking-widest text-muted">
                               Jour {currentMatchingReading.dayIndex + 1} du plan
                             </p>
                           )}
