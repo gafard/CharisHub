@@ -1729,11 +1729,11 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
               <img
                 src="/images/community_hero.webp"
                 alt=""
-                className="h-full w-full object-cover object-center opacity-75 mix-blend-luminosity dark:opacity-40 dark:mix-blend-lighten"
+                className="h-full w-full object-cover object-center opacity-75 mix-blend-luminosity dark:opacity-90 dark:mix-blend-normal"
                 aria-hidden="true"
               />
               {/* Masque pour fondre l'image dans le noir absolu à gauche */}
-              <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent dark:from-black dark:via-black/90 dark:to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent dark:from-black dark:via-black/40 dark:to-transparent" />
             </div>
 
             <div className="relative z-10 mx-auto max-w-7xl">
