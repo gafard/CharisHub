@@ -281,7 +281,7 @@ function GroupCard({
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
 
           <div className="absolute left-5 top-5 flex flex-wrap gap-2">
-            <span className="rounded-full bg-white/90 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-foreground shadow-sm backdrop-blur-md">
+            <span className="rounded-full bg-surface/90 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-foreground shadow-sm backdrop-blur-md">
               {typeLabel}
             </span>
 
@@ -300,7 +300,7 @@ function GroupCard({
         {/* Body */}
         <div className="relative flex flex-1 flex-col px-5 pb-6 pt-5">
           {/* Avatar flottant */}
-          <div className="absolute -top-10 left-5 flex h-20 w-20 items-center justify-center rounded-full border-[6px] border-white bg-[#fcf8f1] text-xl font-black text-[#b78616] shadow-xl">
+          <div className="absolute -top-10 left-5 flex h-20 w-20 items-center justify-center rounded-full border-[6px] border-background bg-surface-strong text-xl font-black text-accent shadow-xl">
             {initials(group.name)}
           </div>
 
@@ -318,10 +318,10 @@ function GroupCard({
           </p>
 
           <div className="mt-5 flex flex-wrap gap-2">
-            <span className="rounded-full bg-[#f8f9fb] px-3 py-1.5 text-[10px] font-bold text-[#4b556f] border border-[#f0f2f5]">
+            <span className="rounded-full bg-surface-strong px-3 py-1.5 text-[10px] font-bold text-muted border border-border-soft">
               {group.is_paid ? 'Formation' : 'Accès libre'}
             </span>
-            <span className="rounded-full bg-[#f8f9fb] px-3 py-1.5 text-[10px] font-bold text-[#4b556f] border border-[#f0f2f5]">
+            <span className="rounded-full bg-surface-strong px-3 py-1.5 text-[10px] font-bold text-muted border border-border-soft">
               Live + Chat
             </span>
           </div>
@@ -829,7 +829,7 @@ function GroupDetailTabs({
                       type="datetime-local"
                       value={detailNextCallAt}
                       onChange={(e) => setDetailNextCallAt(e.target.value)}
-                      className="w-full rounded-xl border border-[#e6e8ec] bg-[#fcfcfd] px-4 py-3 text-xs font-bold text-[#101828]"
+                      className="w-full rounded-xl border border-border-soft bg-surface-strong px-4 py-3 text-xs font-bold text-foreground"
                     />
                   </label>
 
@@ -854,7 +854,7 @@ function GroupDetailTabs({
                     value={detailCallLink}
                     onChange={(e) => setDetailCallLink(e.target.value)}
                     placeholder="Lien d'appel direct (optionnel)"
-                    className="w-full rounded-xl border border-[#e6e8ec] bg-[#fcfcfd] px-4 py-3 text-xs font-bold text-[#101828]"
+                    className="w-full rounded-xl border border-border-soft bg-surface-strong px-4 py-3 text-xs font-bold text-foreground"
                   />
                </div>
             </div>
@@ -1720,23 +1720,23 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
         </div>
       ) : (
         <>
-          <section className="relative overflow-hidden bg-[#fcf8f1] px-6 py-12 sm:px-12 sm:py-20 lg:py-24">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(200,159,45,0.10),transparent_38%)]" />
+          <section className="relative overflow-hidden bg-background px-6 py-12 sm:px-12 sm:py-20 lg:py-24">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(var(--accent-rgb),0.10),transparent_38%)]" />
 
             <div className="absolute right-0 top-0 bottom-0 z-0 hidden w-[58%] lg:block">
               <img
                 src="/images/community_hero.webp"
                 alt=""
-                className="h-full w-full object-cover object-center opacity-95"
+                className="h-full w-full object-cover object-center opacity-80 mix-blend-luminosity"
                 aria-hidden="true"
               />
             </div>
 
-            <div className="absolute inset-y-0 right-0 z-[1] hidden w-[65%] bg-gradient-to-r from-[#fcf8f1] via-[#fcf8f1]/45 to-transparent lg:block" />
+            <div className="absolute inset-y-0 right-0 z-[1] hidden w-[65%] bg-gradient-to-r from-background via-background/60 to-transparent lg:block" />
 
             <div className="relative z-10 mx-auto max-w-7xl">
               <div className="max-w-3xl text-center lg:text-left">
-                <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#eadfca] bg-white/90 px-4 py-2 text-[11px] font-black uppercase tracking-[0.18em] text-[#b88919] shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
+                <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border-soft bg-surface/90 px-4 py-2 text-[11px] font-black uppercase tracking-[0.18em] text-accent shadow-[0_10px_24px_rgba(var(--foreground-rgb),0.05)]">
                   Plateforme chrétienne
                 </div>
 
@@ -1748,35 +1748,35 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
                   transmets ton enseignement.
                 </h1>
 
-                <p className="mt-8 max-w-2xl text-lg font-medium leading-relaxed text-[#4b556f] lg:text-xl">
+                <p className="mt-8 max-w-2xl text-lg font-medium leading-relaxed text-muted lg:text-xl">
                   Réunissez des croyants, organisez des appels en direct, animez des groupes d'étude
                   et proposez des formations chrétiennes gratuites ou payantes dans un environnement dédié.
                 </p>
 
                 <div className="mt-10 grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3">
-                  <div className="rounded-2xl border border-[#ece7db] bg-white/90 px-4 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.04)]">
-                    <div className="text-[10px] font-black uppercase tracking-[0.14em] text-[#c89f2d]">
+                  <div className="rounded-2xl border border-border-soft bg-surface/80 px-4 py-4 shadow-[0_10px_24px_rgba(0,0,0,0.04)]">
+                    <div className="text-[10px] font-black uppercase tracking-[0.14em] text-accent">
                       Appels en direct
                     </div>
-                    <p className="mt-2 text-sm font-medium text-[#667085]">
+                    <p className="mt-2 text-sm font-medium text-muted">
                       Lance des sessions de groupe et enseigne en temps réel.
                     </p>
                   </div>
 
-                  <div className="rounded-2xl border border-[#ece7db] bg-white/90 px-4 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.04)]">
-                    <div className="text-[10px] font-black uppercase tracking-[0.14em] text-[#c89f2d]">
+                  <div className="rounded-2xl border border-border-soft bg-surface/80 px-4 py-4 shadow-[0_10px_24px_rgba(0,0,0,0.04)]">
+                    <div className="text-[10px] font-black uppercase tracking-[0.14em] text-accent">
                       Étude biblique
                     </div>
-                    <p className="mt-2 text-sm font-medium text-[#667085]">
+                    <p className="mt-2 text-sm font-medium text-muted">
                       Prépare des rencontres autour de la Parole et de la prière.
                     </p>
                   </div>
 
-                  <div className="rounded-2xl border border-[#ece7db] bg-white/90 px-4 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.04)]">
-                    <div className="text-[10px] font-black uppercase tracking-[0.14em] text-[#c89f2d]">
+                  <div className="rounded-2xl border border-border-soft bg-surface/80 px-4 py-4 shadow-[0_10px_24px_rgba(0,0,0,0.04)]">
+                    <div className="text-[10px] font-black uppercase tracking-[0.14em] text-accent">
                       Formations
                     </div>
-                    <p className="mt-2 text-sm font-medium text-[#667085]">
+                    <p className="mt-2 text-sm font-medium text-muted">
                       Propose des parcours gratuits ou payants dans un cadre chrétien.
                     </p>
                   </div>
@@ -1787,7 +1787,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
 
           <section className="mx-auto max-w-7xl px-6 py-10 sm:px-12">
             {/* Toolbar de pilotage */}
-            <div className="mb-10 rounded-[32px] border border-[#ebeef3] bg-surface p-4 shadow-[0_14px_36px_rgba(16,24,40,0.06)] sm:p-5">
+            <div className="mb-10 rounded-[32px] border border-border-soft bg-surface p-4 shadow-[0_14px_36px_rgba(16,24,40,0.06)] sm:p-5">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex flex-1 flex-col gap-4 lg:flex-row lg:items-center">
                   <div className="relative w-full lg:max-w-md">
@@ -1796,9 +1796,9 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
                       placeholder="Rechercher un groupe, une session ou une formation..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="h-12 w-full rounded-2xl border border-[#e6e8ec] bg-[#fcfcfd] px-11 text-sm font-medium text-[#101828] outline-none transition focus:border-[#c89f2d] focus:ring-4 focus:ring-[#c89f2d]/5"
+                      className="h-12 w-full rounded-2xl border border-border-soft bg-surface-strong px-11 text-sm font-medium text-foreground outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/5"
                     />
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#98a2b3]" size={16} />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted/60" size={16} />
                   </div>
 
                   <div className="flex flex-wrap gap-2">
@@ -1819,8 +1819,8 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
                       onClick={() => setListMode('joined')}
                       className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.14em] transition ${
                         listMode === 'joined'
-                          ? 'bg-[#161c35] text-white shadow-[0_10px_24px_rgba(22,28,53,0.14)]'
-                          : 'border border-[#e6e8ec] bg-surface text-[#667085] hover:text-[#101828]'
+                          ? 'bg-foreground text-background shadow-[0_10px_24px_rgba(0,0,0,0.14)]'
+                          : 'border border-border-soft bg-surface text-muted hover:text-foreground'
                       }`}
                     >
                       Mes groupes
@@ -1831,8 +1831,8 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
                       onClick={() => setListMode('discover')}
                       className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.14em] transition ${
                         listMode === 'discover'
-                          ? 'bg-[#161c35] text-white shadow-[0_10px_24px_rgba(22,28,53,0.14)]'
-                          : 'border border-[#e6e8ec] bg-surface text-[#667085] hover:text-[#101828]'
+                          ? 'bg-foreground text-background shadow-[0_10px_24px_rgba(0,0,0,0.14)]'
+                          : 'border border-border-soft bg-surface text-muted hover:text-foreground'
                       }`}
                     >
                       Découvrir
@@ -1841,7 +1841,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
                 </div>
 
                 <div className="flex items-center justify-between gap-3 lg:justify-end">
-                  <div className="text-sm font-bold text-[#667085]">
+                  <div className="text-sm font-bold text-muted">
                     {listMode === 'all' && `${visibleGroups.length} espace(s)`}
                     {listMode === 'joined' && `${visibleGroups.length} groupe(s) rejoint(s)`}
                     {listMode === 'discover' && `${visibleGroups.length} à découvrir`}
@@ -1863,17 +1863,17 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
 
             {/* Formulaire de création premium */}
             {showCreateForm && (
-              <div className="mb-12 overflow-hidden rounded-[36px] border border-[#ebeef3] bg-surface shadow-[0_24px_60px_rgba(16,24,40,0.08)]">
-                <div className="border-b border-[#eef1f5] bg-[linear-gradient(180deg,#fffdf8,white)] px-6 py-6 sm:px-8">
+              <div className="mb-12 overflow-hidden rounded-[36px] border border-border-soft bg-surface shadow-[0_24px_60px_rgba(16,24,40,0.08)]">
+                <div className="border-b border-border-soft bg-surface-strong/50 px-6 py-6 sm:px-8">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <div className="text-[11px] font-black uppercase tracking-[0.18em] text-[#c89f2d]">
+                      <div className="text-[11px] font-black uppercase tracking-[0.18em] text-accent">
                         Nouvel espace
                       </div>
-                      <h3 className="mt-2 text-2xl font-black tracking-tight text-[#101828]">
+                      <h3 className="mt-2 text-2xl font-black tracking-tight text-foreground">
                         Créer un groupe ou une formation
                       </h3>
-                      <p className="mt-2 max-w-2xl text-sm leading-7 text-[#667085]">
+                      <p className="mt-2 max-w-2xl text-sm leading-7 text-muted">
                         Lance un espace pour enseigner, organiser des appels, accompagner un groupe
                         ou proposer une formation chrétienne gratuite ou payante.
                       </p>
@@ -1882,7 +1882,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
                     <button
                       type="button"
                       onClick={() => setShowCreateForm(false)}
-                      className="grid h-11 w-11 place-items-center rounded-2xl border border-[#e7eaf0] bg-surface text-[#667085] transition hover:text-[#101828]"
+                      className="grid h-11 w-11 place-items-center rounded-2xl border border-border-soft bg-surface text-muted transition hover:text-foreground"
                     >
                       <X size={20} />
                     </button>
@@ -1892,25 +1892,25 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
                 <div className="px-6 py-6 sm:px-8 sm:py-8">
                   <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
                     <label className="flex flex-col gap-2">
-                      <span className="text-[11px] font-black uppercase tracking-[0.14em] text-[#98a2b3]">
+                      <span className="text-[11px] font-black uppercase tracking-[0.14em] text-muted/60">
                         Nom de l'espace
                       </span>
                       <input
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="Ex: Formation sur l'identité en Christ"
-                        className="h-13 rounded-2xl border border-[#e6e8ec] bg-[#fcfcfd] px-4 text-sm font-semibold text-[#101828] outline-none transition focus:border-[#c89f2d] focus:ring-4 focus:ring-[#c89f2d]/5"
+                        className="h-13 rounded-2xl border border-border-soft bg-surface-strong px-4 text-sm font-semibold text-foreground outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/5"
                       />
                     </label>
 
                     <label className="flex flex-col gap-2">
-                      <span className="text-[11px] font-black uppercase tracking-[0.14em] text-[#98a2b3]">
+                      <span className="text-[11px] font-black uppercase tracking-[0.14em] text-muted/60">
                         Type
                       </span>
                       <select
                         value={groupType}
                         onChange={(e) => setGroupType(e.target.value as CommunityGroupType)}
-                        className="h-13 rounded-2xl border border-[#e6e8ec] bg-[#fcfcfd] px-4 text-sm font-semibold text-[#101828] outline-none transition focus:border-[#c89f2d] focus:ring-4 focus:ring-[#c89f2d]/5"
+                        className="h-13 rounded-2xl border border-border-soft bg-surface-strong px-4 text-sm font-semibold text-foreground outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/5"
                       >
                         {GROUP_TYPES.map((type) => (
                           <option key={type} value={type}>
@@ -1921,7 +1921,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
                     </label>
 
                     <label className="flex flex-col gap-2 lg:col-span-2">
-                      <span className="text-[11px] font-black uppercase tracking-[0.14em] text-[#98a2b3]">
+                      <span className="text-[11px] font-black uppercase tracking-[0.14em] text-muted/60">
                         Description
                       </span>
                       <textarea
@@ -1929,20 +1929,20 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
                         onChange={(e) => setDescription(e.target.value)}
                         placeholder="Décris l'objectif du groupe, le public visé, le type de rencontres ou la formation proposée..."
                         rows={4}
-                        className="rounded-2xl border border-[#e6e8ec] bg-[#fcfcfd] px-4 py-3 text-sm font-medium leading-7 text-[#101828] outline-none transition focus:border-[#c89f2d] focus:ring-4 focus:ring-[#c89f2d]/5"
+                        className="rounded-2xl border border-border-soft bg-surface-strong px-4 py-3 text-sm font-medium leading-7 text-foreground outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/5"
                       />
                     </label>
                   </div>
 
                   <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-3">
                     <label className="flex flex-col gap-2">
-                      <span className="text-[11px] font-black uppercase tracking-[0.14em] text-[#98a2b3]">
+                      <span className="text-[11px] font-black uppercase tracking-[0.14em] text-muted/60">
                         Accès
                       </span>
                       <select
                         value={isPaid ? 'paid' : 'free'}
                         onChange={(e) => setIsPaid(e.target.value === 'paid')}
-                        className="h-13 rounded-2xl border border-[#e6e8ec] bg-[#fcfcfd] px-4 text-sm font-semibold text-[#101828] outline-none transition focus:border-[#c89f2d] focus:ring-4 focus:ring-[#c89f2d]/5"
+                        className="h-13 rounded-2xl border border-border-soft bg-surface-strong px-4 text-sm font-semibold text-foreground outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/5"
                       >
                         <option value="free">Gratuit</option>
                         <option value="paid">Payant</option>
@@ -1951,7 +1951,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
 
                     {isPaid ? (
                       <label className="flex flex-col gap-2">
-                        <span className="text-[11px] font-black uppercase tracking-[0.14em] text-[#98a2b3]">
+                        <span className="text-[11px] font-black uppercase tracking-[0.14em] text-muted/60">
                           Prix
                         </span>
                         <input
@@ -1959,33 +1959,33 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
                           value={price || ''}
                           onChange={(e) => setPrice(Number(e.target.value))}
                           placeholder="Ex: 5000"
-                          className="h-13 rounded-2xl border border-[#e6e8ec] bg-[#fcfcfd] px-4 text-sm font-semibold text-[#101828] outline-none transition focus:border-[#c89f2d] focus:ring-4 focus:ring-[#c89f2d]/5"
+                          className="h-13 rounded-2xl border border-border-soft bg-surface-strong px-4 text-sm font-semibold text-foreground outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/5"
                         />
                       </label>
                     ) : (
-                      <div className="rounded-2xl border border-[#e6e8ec] bg-[#fcfcfd] px-4 py-3">
-                        <div className="text-[11px] font-black uppercase tracking-[0.14em] text-[#98a2b3]">
+                      <div className="rounded-2xl border border-border-soft bg-surface-strong px-4 py-3">
+                        <div className="text-[11px] font-black uppercase tracking-[0.14em] text-muted/60">
                           Tarification
                         </div>
-                        <div className="mt-1 text-sm font-bold text-[#101828]">Accès libre</div>
+                        <div className="mt-1 text-sm font-bold text-foreground">Accès libre</div>
                       </div>
                     )}
 
                     <label className="flex flex-col gap-2">
-                      <span className="text-[11px] font-black uppercase tracking-[0.14em] text-[#98a2b3]">
+                      <span className="text-[11px] font-black uppercase tracking-[0.14em] text-muted/60">
                         Prochaine rencontre
                       </span>
                       <input
                         type="datetime-local"
                         value={nextCallAt}
                         onChange={(e) => setNextCallAt(e.target.value)}
-                        className="h-13 rounded-2xl border border-[#e6e8ec] bg-[#fcfcfd] px-4 text-sm font-semibold text-[#101828] outline-none transition focus:border-[#c89f2d] focus:ring-4 focus:ring-[#c89f2d]/5"
+                        className="h-13 rounded-2xl border border-border-soft bg-surface-strong px-4 text-sm font-semibold text-foreground outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/5"
                       />
                     </label>
                   </div>
 
-                  <div className="mt-8 flex flex-col gap-3 border-t border-[#eef1f5] pt-6 sm:flex-row sm:items-center sm:justify-between">
-                    <p className="max-w-xl text-sm leading-7 text-[#667085]">
+                  <div className="mt-8 flex flex-col gap-3 border-t border-border-soft pt-6 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="max-w-xl text-sm leading-7 text-muted">
                       Une fois créé, tu pourras gérer les membres, planifier les appels, partager le lien
                       et organiser le programme de tes sessions.
                     </p>
@@ -1994,7 +1994,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
                       <button
                         type="button"
                         onClick={() => setShowCreateForm(false)}
-                        className="h-12 rounded-full border border-[#e6e8ec] bg-surface px-6 text-sm font-bold text-[#475467] transition hover:text-[#101828]"
+                        className="h-12 rounded-full border border-border-soft bg-surface px-6 text-sm font-bold text-muted transition hover:text-foreground"
                       >
                         Annuler
                       </button>
@@ -2003,7 +2003,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
                         type="button"
                         onClick={onCreate}
                         disabled={createState === 'saving'}
-                        className="inline-flex h-12 items-center gap-2 rounded-full bg-[#161c35] px-7 text-sm font-black text-white shadow-[0_16px_34px_rgba(22,28,53,0.16)] transition hover:-translate-y-[1px] disabled:opacity-60"
+                        className="inline-flex h-12 items-center gap-2 rounded-full bg-foreground text-background px-7 text-sm font-black transition hover:-translate-y-[1px] disabled:opacity-60"
                       >
                         {createState === 'saving' ? (
                           <>
@@ -2026,15 +2026,15 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
             {/* Grille des groupes */}
             <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <div className="text-[11px] font-black uppercase tracking-[0.16em] text-[#98a2b3]">
+                <div className="text-[11px] font-black uppercase tracking-[0.16em] text-muted/60">
                   Espaces disponibles
                 </div>
-                <h2 className="mt-2 text-2xl font-black tracking-tight text-[#101828]">
+                <h2 className="mt-2 text-2xl font-black tracking-tight text-foreground">
                   Groupes, appels et formations
                 </h2>
               </div>
 
-              <div className="text-sm font-semibold text-[#667085]">
+              <div className="text-sm font-semibold text-muted">
                 {visibleGroups.length} résultat(s)
               </div>
             </div>
@@ -2046,11 +2046,11 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
                 ))}
 
               {status === 'ready' && visibleGroups.length === 0 && (
-                <div className="col-span-full rounded-[32px] border border-dashed border-[#dfe3ea] bg-[#fcfcfd] py-20 text-center">
-                  <p className="text-xl font-black text-[#101828]">
+                <div className="col-span-full rounded-[32px] border border-dashed border-border-soft bg-surface-strong py-20 text-center">
+                  <p className="text-xl font-black text-foreground">
                     Aucun espace ne correspond à votre recherche.
                   </p>
-                  <p className="mt-3 text-sm font-medium text-[#667085]">
+                  <p className="mt-3 text-sm font-medium text-muted">
                     Essaie un autre mot-clé ou crée un nouveau groupe.
                   </p>
                 </div>
