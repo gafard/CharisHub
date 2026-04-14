@@ -7,10 +7,12 @@ import {
   Cloud,
   CloudOff,
   Globe,
-  LogOut,
+  Moon,
   Save,
   ShieldCheck,
+  Sun,
   UserRound,
+  LogOut,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useI18n } from '../contexts/I18nContext';
@@ -117,7 +119,7 @@ export default function StudyUserPanel({
   compact?: boolean;
 }) {
   const { locale, setLocale } = useI18n();
-  const { notificationsEnabled, setNotificationsEnabled } = useSettings();
+  const { notificationsEnabled, setNotificationsEnabled, theme, setTheme } = useSettings();
   const { isAuthenticated, identity, updateName } = useCommunityIdentity();
   const { user, signOut } = useAuth();
   const { isConnected } = useCloudSync();
@@ -287,6 +289,35 @@ export default function StudyUserPanel({
                     : 'text-[color:var(--foreground)]/60 hover:text-[color:var(--foreground)]',
                 ].join(' ')}
               >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </SectionCard>
+
+        <SectionCard
+          eyebrow="Préférences"
+          title="Thème"
+          description="Ajustez l'apparence selon l'heure ou vos préférences."
+          icon={theme === 'dark' ? <Moon size={20} /> : <Sun size={20} />}
+        >
+          <div className="inline-flex items-center gap-2 rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)] p-1">
+            {[
+              { value: 'light', label: 'Clair', icon: <Sun size={14} /> },
+              { value: 'dark', label: 'Sombre', icon: <Moon size={14} /> },
+            ].map((item) => (
+              <button
+                key={item.value}
+                type="button"
+                onClick={() => setTheme(item.value as 'light' | 'dark')}
+                className={[
+                  'flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all',
+                  theme === item.value
+                    ? 'bg-white shadow-sm ring-1 ring-black/5 text-[color:var(--foreground)] dark:bg-[color:var(--surface-strong)]'
+                    : 'text-[color:var(--foreground)]/60 hover:text-[color:var(--foreground)]',
+                ].join(' ')}
+              >
+                {item.icon}
                 {item.label}
               </button>
             ))}

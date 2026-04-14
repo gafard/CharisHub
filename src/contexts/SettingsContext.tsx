@@ -11,7 +11,10 @@ const STORAGE_KEYS = {
   reminders: 'formation_biblique_reminders',
   reminderTime: 'formation_biblique_reminder_time',
   syncId: 'formation_biblique_sync_id',
+  theme: 'formation_biblique_theme',
 } as const;
+
+type Theme = 'light' | 'dark';
 
 type AudioQuality = 'auto' | 'low' | 'high';
 type TextScale = 1 | 1.1 | 1.2;
@@ -51,6 +54,9 @@ type SettingsState = {
   dataSaver: boolean;
   setDataSaver: (v: boolean) => void;
 
+  theme: Theme;
+  setTheme: (t: Theme) => void;
+
   accent: Accent;
   setAccent: (v: Accent) => void;
 
@@ -81,6 +87,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [audioQuality, setAudioQuality] = useState<AudioQuality>('auto');
   const [textScale, setTextScale] = useState<TextScale>(1);
   const [dataSaver, setDataSaver] = useState(false);
+  const [theme, setThemeState] = useState<Theme>('light');
   const [accent, setAccent] = useState<Accent>('blue');
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [remindersEnabled, setRemindersEnabled] = useState(false);
@@ -101,6 +108,12 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       const savedData = localStorage.getItem(STORAGE_KEYS.dataSaver);
       if (savedData === '0' || savedData === '1') {
         setDataSaver(savedData === '1');
+      }
+      const savedTheme = localStorage.getItem(STORAGE_KEYS.theme) as Theme;
+      if (savedTheme === 'dark' || savedTheme === 'light') {
+        setThemeState(savedTheme);
+      } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        setThemeState('dark');
       }
       const savedAccent = localStorage.getItem(STORAGE_KEYS.accent) as Accent | null;
       if (savedAccent === 'blue' || savedAccent === 'emerald' || savedAccent === 'amber') {
@@ -140,6 +153,19 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem(STORAGE_KEYS.dataSaver, dataSaver ? '1' : '0');
     }
   }, [dataSaver]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_KEYS.theme, theme);
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.documentElement.dataset.theme = 'dark';
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.dataset.theme = 'light';
+      }
+    }
+  }, [theme]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -221,6 +247,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     dataSaver,
     setDataSaver,
 
+    theme,
+    setTheme: setThemeState,
+
     accent,
     setAccent,
 
@@ -241,7 +270,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       for (let i = 0; i < 6; i += 1) out += alphabet[Math.floor(Math.random() * alphabet.length)];
       setSyncIdState(out);
     },
-  }), [hasMounted, isOpen, autoPlayOnOpen, autoTranscribe, autoSummarize, autoPlayNext, audioQuality, textScale, dataSaver, accent, notificationsEnabled, remindersEnabled, reminderTime, syncId]);
+  }), [hasMounted, isOpen, autoPlayOnOpen, autoTranscribe, autoSummarize, autoPlayNext, audioQuality, textScale, dataSaver, theme, accent, notificationsEnabled, remindersEnabled, reminderTime, syncId]);
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
 }
