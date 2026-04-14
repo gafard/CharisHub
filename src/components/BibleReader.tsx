@@ -3411,7 +3411,7 @@ export default function BibleReader({
       />
       <AdvancedStudyTools
         isOpen={showAdvancedStudyTools}
-        onComplete={() => setShowAdvancedStudyTools(false)}
+        onClose={() => setShowAdvancedStudyTools(false)}
         bookId={book.id}
         chapter={chapter}
         verse={selectedVerse?.number || 1}
