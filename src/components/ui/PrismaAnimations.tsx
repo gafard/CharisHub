@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef } from 'react';
-import { motion, useInView, useScroll, useTransform, useSpring } from 'framer-motion';
+import { motion, useInView, useScroll, useTransform, useSpring, Variants } from 'framer-motion';
 
 // ============================================================
 // WordsPullUp
@@ -20,7 +20,7 @@ export function WordsPullUp({
   const isInView = useInView(ref, { once: true, margin: "-10%" });
   const words = text.split(/\s+/);
 
-  const container = {
+  const container: Variants = {
     hidden: { opacity: 0 },
     visible: (i = 1) => ({
       opacity: 1,
@@ -28,7 +28,7 @@ export function WordsPullUp({
     }),
   };
 
-  const child = {
+  const child: Variants = {
     visible: {
       opacity: 1,
       y: 0,
@@ -100,7 +100,7 @@ export function WordsPullUpMultiStyle({
     }))
   ).filter(w => w.text.length > 0);
 
-  const container = {
+  const container: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -108,7 +108,7 @@ export function WordsPullUpMultiStyle({
     },
   };
 
-  const child = {
+  const child: Variants = {
     visible: {
       opacity: 1,
       y: 0,
