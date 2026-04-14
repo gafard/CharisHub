@@ -72,6 +72,11 @@ body {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-primary: var(--prisma-cream);
+  --color-surface: var(--surface);
+  --color-surface-strong: var(--surface-strong);
+  --color-border-soft: var(--border-soft);
+  --color-border-strong: var(--border-strong);
+  --color-muted: var(--text-muted);
   --font-sans: var(--app-font-ui);
   --font-serif: var(--app-font-reading);
   --font-display: var(--app-font-display);

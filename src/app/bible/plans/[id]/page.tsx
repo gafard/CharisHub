@@ -153,7 +153,7 @@ export default function ReadingPlanDetail({ params }: { params: Promise<{ id: st
                         isDayDone
                           ? 'border-[#c89f2d]/20 bg-[#c89f2d]/5'
                           : isCurrentlyToday
-                          ? 'border-[#c89f2d] bg-white shadow-md'
+                          ? 'border-[#c89f2d] bg-surface shadow-md'
                           : 'border-[#e8ebf1] bg-white/40'
                       }`}
                     >

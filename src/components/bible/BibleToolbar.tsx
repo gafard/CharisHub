@@ -51,8 +51,8 @@ function ToolbarPill({ active = false, label, icon, onClick }: ToolbarBtnProps) 
       className={[
         'inline-flex h-10 shrink-0 items-center gap-2 rounded-2xl border px-3 text-[12px] font-extrabold transition-all',
         active
-          ? 'border-[color:var(--accent-border)]/60 bg-[color:var(--accent-soft)]/45 text-[color:var(--foreground)] shadow-[0_6px_20px_rgba(0,0,0,0.08)]'
-          : 'border-[color:var(--border-soft)] bg-[color:var(--surface)] text-[color:var(--foreground)]/88 hover:bg-[color:var(--surface-strong)] dark:border-white/15 dark:bg-white/10 dark:text-white/85 dark:hover:bg-white/15',
+          ? 'border-[color:var(--accent-border)]/60 bg-[color:var(--accent-soft)]/45 text-foreground shadow-[0_6px_20px_rgba(0,0,0,0.08)]'
+          : 'border-border-soft bg-surface text-foreground/88 hover:bg-surface-strong dark:border-white/15 dark:bg-white/10 dark:text-white/85 dark:hover:bg-white/15',
       ].join(' ')}
     >
       <span className="opacity-90">{icon}</span>
@@ -80,12 +80,12 @@ function AudioVerseTimeline({
   const currentTime = (first?.start ?? 0) + totalSpan * Math.max(0, Math.min(1, playerProgress));
 
   return (
-    <div className="rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface)]/72 px-2 py-2 dark:border-white/12 dark:bg-white/8">
+    <div className="rounded-2xl border border-border-soft bg-surface/72 px-2 py-2 dark:border-white/12 dark:bg-white/8">
       <div className="mb-2 flex items-center justify-between">
-        <div className="text-[10px] font-black uppercase tracking-[0.16em] text-[color:var(--foreground)]/55">
+        <div className="text-[10px] font-black uppercase tracking-[0.16em] text-foreground/55">
           Progression audio
         </div>
-        <div className="text-[10px] font-bold text-[color:var(--foreground)]/55">
+        <div className="text-[10px] font-bold text-foreground/55">
           {activeVerseNumber ? `Verset ${activeVerseNumber}` : 'Lecture'}
         </div>
       </div>
@@ -109,7 +109,7 @@ function AudioVerseTimeline({
                     ? 'border-orange-300/80 bg-orange-300 shadow-[0_0_0_3px_rgba(251,146,60,0.18)]'
                     : isDone
                       ? 'border-[color:var(--accent-border)]/65 bg-[color:var(--accent)]/85'
-                      : 'border-[color:var(--border-soft)] bg-[color:var(--surface-strong)] hover:bg-[color:var(--surface)] dark:border-white/20 dark:bg-white/18 dark:hover:bg-white/30',
+                      : 'border-border-soft bg-surface-strong hover:bg-surface dark:border-white/20 dark:bg-white/18 dark:hover:bg-white/30',
                 ].join(' ')}
                 style={{
                   flexGrow: Math.max(0.4, ratio * 100),
@@ -186,13 +186,13 @@ export default function BibleToolbar({
 
   return (
     <div className="w-full">
-      <div className="relative rounded-[26px] border border-[color:var(--border-soft)] bg-[rgba(255,255,255,0.82)] p-3 shadow-[0_18px_50px_rgba(22,28,53,0.10)] backdrop-blur-2xl ring-1 ring-black/5 dark:border-white/12 dark:bg-[rgba(15,23,42,0.72)] dark:ring-white/5">
+      <div className="relative rounded-[26px] border border-border-soft bg-[rgba(255,255,255,0.82)] p-3 shadow-[0_18px_50px_rgba(22,28,53,0.10)] backdrop-blur-2xl ring-1 ring-black/5 dark:border-white/12 dark:bg-[rgba(15,23,42,0.72)] dark:ring-white/5">
         
         {/* Toggle Button */}
         <button
           type="button"
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="absolute -top-3 left-1/2 -translate-x-1/2 flex h-6 w-12 items-center justify-center rounded-full border border-[color:var(--border-soft)] bg-[color:var(--surface)] text-[color:var(--foreground)]/60 shadow-md transition hover:scale-105 hover:bg-[color:var(--surface-strong)] dark:border-white/12 dark:bg-slate-800 dark:text-white/60 pointer-events-auto z-10"
+          className="absolute -top-3 left-1/2 -translate-x-1/2 flex h-6 w-12 items-center justify-center rounded-full border border-border-soft bg-surface text-foreground/60 shadow-md transition hover:scale-105 hover:bg-surface-strong dark:border-white/12 dark:bg-slate-800 dark:text-white/60 pointer-events-auto z-10"
           aria-label={isCollapsed ? "Déplier" : "Réduire"}
         >
           {isCollapsed ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -211,7 +211,7 @@ export default function BibleToolbar({
               <div className="flex flex-col gap-3">
                 {/* Ligne 1 */}
                 <div className="flex flex-wrap items-center gap-2">
-                  <div className="mr-1 text-[10px] font-black uppercase tracking-[0.18em] text-[color:var(--foreground)]/48">
+                  <div className="mr-1 text-[10px] font-black uppercase tracking-[0.18em] text-foreground/48">
                     Mode
                   </div>
 
@@ -237,8 +237,8 @@ export default function BibleToolbar({
 
                 {/* Palette highlight */}
                 {tool === 'highlight' ? (
-                  <div className="rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface)]/70 p-2.5 dark:border-white/12 dark:bg-white/6">
-                    <div className="mb-2 text-[10px] font-black uppercase tracking-[0.16em] text-[color:var(--foreground)]/55">
+                  <div className="rounded-2xl border border-border-soft bg-surface/70 p-2.5 dark:border-white/12 dark:bg-white/6">
+                    <div className="mb-2 text-[10px] font-black uppercase tracking-[0.16em] text-foreground/55">
                       Couleur du surlignage
                     </div>
 
@@ -253,8 +253,8 @@ export default function BibleToolbar({
                             className={[
                               'inline-flex h-10 items-center gap-2 rounded-2xl border px-3 text-[11px] font-bold transition-all',
                               active
-                                ? 'border-[color:var(--accent-border)]/60 bg-[color:var(--accent-soft)]/45 text-[color:var(--foreground)] shadow-[0_6px_18px_rgba(0,0,0,0.08)]'
-                                : 'border-[color:var(--border-soft)] bg-[color:var(--surface)] text-[color:var(--foreground)]/88 hover:bg-[color:var(--surface-strong)] dark:border-white/15 dark:bg-white/10 dark:text-white/82 dark:hover:bg-white/15',
+                                ? 'border-[color:var(--accent-border)]/60 bg-[color:var(--accent-soft)]/45 text-foreground shadow-[0_6px_18px_rgba(0,0,0,0.08)]'
+                                : 'border-border-soft bg-surface text-foreground/88 hover:bg-surface-strong dark:border-white/15 dark:bg-white/10 dark:text-white/82 dark:hover:bg-white/15',
                             ].join(' ')}
                           >
                             <span className={`h-3 w-3 rounded-full ${COLOR_DOT[option.id]}`} />
@@ -268,7 +268,7 @@ export default function BibleToolbar({
 
                 {/* Ligne 2 */}
                 <div className="flex flex-wrap items-center gap-2">
-                  <div className="mr-1 text-[10px] font-black uppercase tracking-[0.18em] text-[color:var(--foreground)]/48">
+                  <div className="mr-1 text-[10px] font-black uppercase tracking-[0.18em] text-foreground/48">
                     Outils
                   </div>
 
@@ -299,7 +299,7 @@ export default function BibleToolbar({
                     onClick={() => setIsPrismaMeditation(!isPrismaMeditation)}
                   />
 
-                  <div className="ml-auto flex items-center gap-2 rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface)] px-2 py-1.5 dark:border-white/15 dark:bg-white/8">
+                  <div className="ml-auto flex items-center gap-2 rounded-2xl border border-border-soft bg-surface px-2 py-1.5 dark:border-white/15 dark:bg-white/8">
                     <div className="relative">
                       <svg className="pointer-events-none absolute -inset-1 h-11 w-11" viewBox="0 0 48 48">
                         <circle
@@ -327,7 +327,7 @@ export default function BibleToolbar({
                       <button
                         type="button"
                         onClick={onTogglePlayer}
-                        className={`grid h-9 w-9 place-items-center rounded-full bg-white/85 text-[color:var(--foreground)] shadow-sm transition hover:scale-[1.03] dark:bg-white/12 dark:text-white ${
+                        className={`grid h-9 w-9 place-items-center rounded-full bg-white/85 text-foreground shadow-sm transition hover:scale-[1.03] dark:bg-white/12 dark:text-white ${
                           isClient && audioAvailable ? '' : 'cursor-not-allowed opacity-50'
                         }`}
                         aria-label={playerPlaying ? 'Pause' : 'Play'}
@@ -339,11 +339,11 @@ export default function BibleToolbar({
                     </div>
 
                     <div className="pr-1">
-                      <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-[color:var(--foreground)]/55">
+                      <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-foreground/55">
                         <Volume2 size={12} />
                         Audio
                       </div>
-                      <div className="text-[11px] font-semibold text-[color:var(--foreground)]/72 text-right">
+                      <div className="text-[11px] font-semibold text-foreground/72 text-right">
                         {playerPlaying ? 'Lecture...' : 'Écouter'}
                       </div>
                     </div>
@@ -374,7 +374,7 @@ export default function BibleToolbar({
                   {toolIcons[tool]}
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Mode actif</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted">Mode actif</span>
                   <span className="text-[12px] font-bold capitalize text-slate-700 dark:text-slate-200">{tool === 'read' ? 'Lecture' : tool === 'highlight' ? 'Surlignage' : 'Note'}</span>
                 </div>
               </div>

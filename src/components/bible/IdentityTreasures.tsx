@@ -77,14 +77,14 @@ function StatCard({
   icon: React.ReactNode;
 }) {
   return (
-    <div className="group relative overflow-hidden rounded-[26px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]/90 p-5 shadow-sm transition-all hover:border-[color:var(--border-strong)] hover:shadow-md">
-      <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-[color:var(--surface-strong)] opacity-0 blur-2xl transition-opacity group-hover:opacity-100" />
+    <div className="group relative overflow-hidden rounded-[26px] border border-border-soft bg-surface/90 p-5 shadow-sm transition-all hover:border-border-strong hover:shadow-md">
+      <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-surface-strong opacity-0 blur-2xl transition-opacity group-hover:opacity-100" />
       <div className="relative z-10">
-        <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-[color:var(--surface-strong)] shadow-inner">
+        <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-surface-strong shadow-inner">
           {icon}
         </div>
-        <div className="text-3xl font-black tracking-tight text-[color:var(--foreground)]">{value}</div>
-        <div className="mt-1 text-[10px] font-black uppercase tracking-[0.2em] text-[color:var(--foreground)]/40">
+        <div className="text-3xl font-black tracking-tight text-foreground">{value}</div>
+        <div className="mt-1 text-[10px] font-black uppercase tracking-[0.2em] text-foreground/40">
           {label}
         </div>
       </div>
@@ -113,7 +113,7 @@ function FilterPill({
         'inline-flex items-center gap-2.5 rounded-full px-5 py-2.5 text-xs font-black transition-all',
         active
           ? 'bg-[color:var(--foreground)] text-[color:var(--surface)] shadow-lg'
-          : 'border border-[color:var(--border-soft)] bg-[color:var(--surface)] text-[color:var(--foreground)]/60 hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface-strong)]',
+          : 'border border-border-soft bg-surface text-foreground/60 hover:border-border-strong hover:bg-surface-strong',
       ].join(' ')}
     >
       {icon}
@@ -121,7 +121,7 @@ function FilterPill({
       <span
         className={[
           'rounded-full px-2 py-0.5 text-[10px] font-black',
-          active ? 'bg-white/20 text-white' : 'bg-[color:var(--surface-strong)] text-[color:var(--foreground)]/40',
+          active ? 'bg-white/20 text-white' : 'bg-surface-strong text-foreground/40',
         ].join(' ')}
       >
         {count}
@@ -150,23 +150,23 @@ function DeleteConfirmModal({
 
   return (
     <div className="fixed inset-0 z-[20002] flex items-end justify-center bg-black/60 p-4 transition-all animate-in fade-in duration-300 backdrop-blur-md sm:items-center">
-      <div className="w-full max-w-md rounded-[40px] border border-white/10 bg-[color:var(--surface)] p-8 shadow-2xl animate-in zoom-in-95 duration-300">
+      <div className="w-full max-w-md rounded-[40px] border border-white/10 bg-surface p-8 shadow-2xl animate-in zoom-in-95 duration-300">
         <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-rose-500/10 text-rose-500">
           <Trash2 className="h-8 w-8" />
         </div>
 
         <div className="text-center">
-          <h3 className="text-2xl font-black tracking-tight text-[color:var(--foreground)]">Supprimer ce trésor ?</h3>
-          <p className="mt-3 text-sm leading-relaxed text-[color:var(--foreground)]/60">
+          <h3 className="text-2xl font-black tracking-tight text-foreground">Supprimer ce trésor ?</h3>
+          <p className="mt-3 text-sm leading-relaxed text-foreground/60">
             Cette action est irréversible. Ce verset et vos notes associées seront définitivement retirés de votre bibliothèque.
           </p>
         </div>
 
-        <div className="mt-7 rounded-[24px] border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)]/50 p-5">
+        <div className="mt-7 rounded-[24px] border border-border-soft bg-surface-strong/50 p-5">
           <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[color:var(--accent)]">
             {pepite.reference}
           </div>
-          <p className="mt-2 line-clamp-2 text-sm italic leading-relaxed text-[color:var(--foreground)]/80">
+          <p className="mt-2 line-clamp-2 text-sm italic leading-relaxed text-foreground/80">
             “{pepite.text}”
           </p>
         </div>
@@ -175,7 +175,7 @@ function DeleteConfirmModal({
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)] px-4 py-4 text-sm font-black text-[color:var(--foreground)]/70 transition-all active:scale-95"
+            className="rounded-2xl border border-border-soft bg-surface-strong px-4 py-4 text-sm font-black text-foreground/70 transition-all active:scale-95"
           >
             Garder
           </button>
@@ -202,7 +202,7 @@ function PepiteCard({
   const styles = getTypeStyles(pepite.type as PepiteType);
 
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-[36px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-7 transition-all hover:-translate-y-1 hover:border-[color:var(--border-strong)] hover:shadow-2xl hover:shadow-black/[0.04]">
+    <article className="group relative flex flex-col overflow-hidden rounded-[36px] border border-border-soft bg-surface p-7 transition-all hover:-translate-y-1 hover:border-border-strong hover:shadow-2xl hover:shadow-black/[0.04]">
       {/* Decorative Gradient Glow */}
       <div className={`pointer-events-none absolute inset-x-0 -top-10 h-40 bg-gradient-to-b opacity-40 blur-3xl transition-opacity group-hover:opacity-60 ${styles.glow}`} />
 
@@ -216,7 +216,7 @@ function PepiteCard({
           <button
             type="button"
             onClick={onDelete}
-            className="grid h-11 w-11 place-items-center rounded-2xl text-[color:var(--foreground)]/20 transition-all hover:bg-rose-500/10 hover:text-rose-500 group-hover:text-[color:var(--foreground)]/40"
+            className="grid h-11 w-11 place-items-center rounded-2xl text-foreground/20 transition-all hover:bg-rose-500/10 hover:text-rose-500 group-hover:text-foreground/40"
             title="Supprimer"
           >
             <Trash2 className="h-4.5 w-4.5" />
@@ -230,24 +230,24 @@ function PepiteCard({
         </div>
 
         <blockquote className="flex-1">
-          <p className="text-[17px] font-medium leading-[1.8] text-[color:var(--foreground)]/90 sm:text-[18px]">
-            <span className="font-serif italic text-[color:var(--foreground)]/40">“</span>
+          <p className="text-[17px] font-medium leading-[1.8] text-foreground/90 sm:text-[18px]">
+            <span className="font-serif italic text-foreground/40">“</span>
             <span className="font-serif italic">{pepite.text}</span>
-            <span className="font-serif italic text-[color:var(--foreground)]/40">”</span>
+            <span className="font-serif italic text-foreground/40">”</span>
           </p>
         </blockquote>
 
         {pepite.note ? (
-          <div className="mt-7 rounded-[24px] border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)]/40 p-5">
-            <div className="mb-2 text-[10px] font-black uppercase tracking-[0.2em] text-[color:var(--foreground)]/30">
+          <div className="mt-7 rounded-[24px] border border-border-soft bg-surface-strong/40 p-5">
+            <div className="mb-2 text-[10px] font-black uppercase tracking-[0.2em] text-foreground/30">
               Note de méditation
             </div>
-            <p className="text-[13px] leading-relaxed text-[color:var(--foreground)]/65">{pepite.note}</p>
+            <p className="text-[13px] leading-relaxed text-foreground/65">{pepite.note}</p>
           </div>
         ) : null}
 
-        <div className="mt-7 flex items-center justify-between gap-3 border-t border-[color:var(--border-soft)] pt-5">
-          <div className="inline-flex items-center gap-2 text-[11px] font-semibold text-[color:var(--foreground)]/35">
+        <div className="mt-7 flex items-center justify-between gap-3 border-t border-border-soft pt-5">
+          <div className="inline-flex items-center gap-2 text-[11px] font-semibold text-foreground/35">
             <Clock3 className="h-3.5 w-3.5 opacity-60" />
             <span>
               Célébré {formatDistanceToNow(new Date(pepite.createdAt), {
@@ -320,7 +320,7 @@ export default function IdentityTreasures() {
     <>
       <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
         {/* Editorial Header Section */}
-        <section className="relative overflow-hidden rounded-[42px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]/80 p-8 shadow-sm sm:p-10">
+        <section className="relative overflow-hidden rounded-[42px] border border-border-soft bg-surface/80 p-8 shadow-sm sm:p-10">
           <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[color:var(--accent)] opacity-[0.03] blur-3xl" />
           
           <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
@@ -330,11 +330,11 @@ export default function IdentityTreasures() {
                 Patrimoine Spirituel
               </div>
 
-              <h2 className="mt-5 text-4xl font-black tracking-tight text-[color:var(--foreground)] sm:text-5xl">
+              <h2 className="mt-5 text-4xl font-black tracking-tight text-foreground sm:text-5xl">
                 Bibliothèque de trésors
               </h2>
 
-              <p className="mt-4 text-[15px] leading-relaxed text-[color:var(--foreground)]/60">
+              <p className="mt-4 text-[15px] leading-relaxed text-foreground/60">
                 L'archive personnalisée de votre identité révélée. Chaque pépite est une ancre pour votre 
                 vie de foi, un miroir de la grâce inépuisable du Père.
               </p>
@@ -350,7 +350,7 @@ export default function IdentityTreasures() {
         </section>
 
         {/* Toolbar & Filters */}
-        <section className="flex flex-col gap-5 rounded-[36px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]/80 p-5 shadow-sm lg:flex-row lg:items-center lg:justify-between">
+        <section className="flex flex-col gap-5 rounded-[36px] border border-border-soft bg-surface/80 p-5 shadow-sm lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap gap-2.5">
             <FilterPill active={filter === 'all'} label="Tout" count={stats.total} icon={<Filter className="h-3.5 w-3.5" />} onClick={() => setFilter('all')} />
             <FilterPill active={filter === 'identity'} label="Identité" count={stats.identity} icon={<ShieldCheck className="h-3.5 w-3.5" />} onClick={() => setFilter('identity')} />
@@ -360,27 +360,27 @@ export default function IdentityTreasures() {
 
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
             <div className="relative flex-1">
-              <Search className="pointer-events-none absolute left-4.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[color:var(--foreground)]/30" />
+              <Search className="pointer-events-none absolute left-4.5 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/30" />
               <input
                 type="text"
                 placeholder="Chercher une pépite..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="h-12 w-full min-w-[280px] rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)]/50 pl-11.5 pr-10 text-sm font-medium text-[color:var(--foreground)] outline-none transition focus:border-[color:var(--accent)] focus:bg-[color:var(--surface)]"
+                className="h-12 w-full min-w-[280px] rounded-2xl border border-border-soft bg-surface-strong/50 pl-11.5 pr-10 text-sm font-medium text-foreground outline-none transition focus:border-[color:var(--accent)] focus:bg-surface"
               />
               {search && (
-                <button onClick={() => setSearch('')} className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-lg p-1 text-[color:var(--foreground)]/30 hover:bg-[color:var(--surface-strong)] hover:text-[color:var(--foreground)]/60">
+                <button onClick={() => setSearch('')} className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-lg p-1 text-foreground/30 hover:bg-surface-strong hover:text-foreground/60">
                   <X className="h-4 w-4" />
                 </button>
               )}
             </div>
 
             <div className="relative group">
-              <ArrowUpDown className="pointer-events-none absolute left-4 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[color:var(--foreground)]/40" />
+              <ArrowUpDown className="pointer-events-none absolute left-4 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-foreground/40" />
               <select
                 value={sort}
                 onChange={(e) => setSort(e.target.value as SortType)}
-                className="h-12 appearance-none rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)]/50 pl-10 pr-10 text-xs font-black text-[color:var(--foreground)]/70 outline-none transition hover:border-[color:var(--border-strong)] focus:border-[color:var(--accent)] cursor-pointer"
+                className="h-12 appearance-none rounded-2xl border border-border-soft bg-surface-strong/50 pl-10 pr-10 text-xs font-black text-foreground/70 outline-none transition hover:border-border-strong focus:border-[color:var(--accent)] cursor-pointer"
               >
                 <option value="recent">Plus récentes</option>
                 <option value="oldest">Plus anciennes</option>
@@ -402,14 +402,14 @@ export default function IdentityTreasures() {
             ))}
           </section>
         ) : (
-          <section className="flex flex-col items-center justify-center rounded-[48px] border-2 border-dashed border-[color:var(--border-soft)] bg-[color:var(--surface)]/40 px-6 py-24 text-center">
+          <section className="flex flex-col items-center justify-center rounded-[48px] border-2 border-dashed border-border-soft bg-surface/40 px-6 py-24 text-center">
             <div className="mb-8 flex h-20 w-20 items-center justify-center rounded-[32px] bg-[color:var(--accent)]/5">
               <Sun className="h-10 w-10 text-[color:var(--accent)] opacity-40" />
             </div>
 
-            <h3 className="text-2xl font-black text-[color:var(--foreground)]">Aucune pépite à afficher</h3>
+            <h3 className="text-2xl font-black text-foreground">Aucune pépite à afficher</h3>
 
-            <p className="mt-4 max-w-sm text-[15px] leading-relaxed text-[color:var(--foreground)]/50">
+            <p className="mt-4 max-w-sm text-[15px] leading-relaxed text-foreground/50">
               Le silence n'est pas une absence. Votre Miroir de Grâce attend de révéler votre identité dans le lecteur biblique.
             </p>
             

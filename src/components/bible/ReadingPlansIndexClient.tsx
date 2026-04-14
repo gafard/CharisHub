@@ -430,7 +430,7 @@ export default function ReadingPlansIndexClient() {
                         </p>
                       </div>
 
-                      <div className="rounded-[24px] border border-[#ece8df] bg-white px-4 py-4">
+                      <div className="rounded-[24px] border border-[#ece8df] bg-surface px-4 py-4">
                         <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-[#161c35]/45">
                           <CheckCircle2 size={13} />
                           Progression
@@ -446,7 +446,7 @@ export default function ReadingPlansIndexClient() {
                         </p>
                       </div>
 
-                      <div className="rounded-[24px] border border-[#ece8df] bg-white px-4 py-4">
+                      <div className="rounded-[24px] border border-[#ece8df] bg-surface px-4 py-4">
                         <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-[#161c35]/45">
                           <BookOpen size={13} />
                           Expérience

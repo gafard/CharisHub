@@ -77,7 +77,7 @@ export default function PrayerFinishSummary({
       <button
         onClick={onFinish}
         disabled={finishing}
-        className="relative flex h-16 w-full items-center justify-center gap-3 overflow-hidden rounded-[26px] bg-white text-lg font-black text-slate-950 shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+        className="relative flex h-16 w-full items-center justify-center gap-3 overflow-hidden rounded-[26px] bg-surface text-lg font-black text-slate-950 shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
       >
         <Check size={22} strokeWidth={4} />
         Terminer & Sauvegarder

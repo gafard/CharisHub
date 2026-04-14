@@ -8,7 +8,7 @@ export default function DashboardPage() {
       <section className="mx-auto max-w-4xl space-y-5">
         <Suspense
           fallback={
-            <div className="flex h-72 items-center justify-center text-sm text-[color:var(--foreground)]/60">
+            <div className="flex h-72 items-center justify-center text-sm text-foreground/60">
               Chargement du tableau de bord...
             </div>
           }

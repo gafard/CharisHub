@@ -135,7 +135,7 @@ export default function ConnectionModeIndicator() {
                 initial={{ opacity: 0, scale: 0.95, y: 10 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                className="absolute bottom-full right-0 mb-2 w-72 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden z-50"
+                className="absolute bottom-full right-0 mb-2 w-72 bg-surface rounded-xl shadow-2xl border border-border-soft overflow-hidden z-50"
               >
                 {/* Header */}
                 <div className="px-4 py-3 bg-gradient-to-r from-[#D4AF37] to-[#B8941F] text-white">
@@ -165,12 +165,12 @@ export default function ConnectionModeIndicator() {
                         setShowSyncMenu(false);
                       }}
                       disabled={syncStatus.syncing}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed group"
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-strong transition-colors disabled:opacity-50 disabled:cursor-not-allowed group"
                     >
                       <Download className="w-4 h-4 text-blue-600 group-hover:scale-110 transition-transform" />
                       <div className="flex-1 text-left">
-                        <p className="text-sm font-semibold text-gray-900">Récupérer depuis le cloud</p>
-                        <p className="text-xs text-gray-500">Fusionne les données cloud avec vos données locales</p>
+                        <p className="text-sm font-semibold text-foreground">Récupérer depuis le cloud</p>
+                        <p className="text-xs text-muted">Fusionne les données cloud avec vos données locales</p>
                       </div>
                     </button>
                   )}
@@ -183,12 +183,12 @@ export default function ConnectionModeIndicator() {
                         setShowSyncMenu(false);
                       }}
                       disabled={syncStatus.syncing}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed group"
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-strong transition-colors disabled:opacity-50 disabled:cursor-not-allowed group"
                     >
                       <Upload className="w-4 h-4 text-emerald-600 group-hover:scale-110 transition-transform" />
                       <div className="flex-1 text-left">
-                        <p className="text-sm font-semibold text-gray-900">Sauvegarder vers le cloud</p>
-                        <p className="text-xs text-gray-500">Envoyer toutes vos données vers Supabase</p>
+                        <p className="text-sm font-semibold text-foreground">Sauvegarder vers le cloud</p>
+                        <p className="text-xs text-muted">Envoyer toutes vos données vers Supabase</p>
                       </div>
                     </button>
                   )}
@@ -199,17 +199,17 @@ export default function ConnectionModeIndicator() {
                       exportData();
                       setShowSyncMenu(false);
                     }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors group"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-strong transition-colors group"
                   >
                     <Download className="w-4 h-4 text-purple-600 group-hover:scale-110 transition-transform" />
                     <div className="flex-1 text-left">
-                      <p className="text-sm font-semibold text-gray-900">Exporter mes données</p>
-                      <p className="text-xs text-gray-500">Télécharger un fichier JSON de sauvegarde</p>
+                      <p className="text-sm font-semibold text-foreground">Exporter mes données</p>
+                      <p className="text-xs text-muted">Télécharger un fichier JSON de sauvegarde</p>
                     </div>
                   </button>
 
                   {/* Divider */}
-                  <div className="border-t border-gray-200 my-2" />
+                  <div className="border-t border-border-soft my-2" />
 
                   {/* Info */}
                   <div className="px-3 py-2 bg-blue-50 rounded-lg">
@@ -226,8 +226,8 @@ export default function ConnectionModeIndicator() {
 
                 {/* Progress bar */}
                 {syncStatus.syncing && syncStatus.syncProgress && (
-                  <div className="px-4 py-3 bg-gray-50 border-t border-gray-200">
-                    <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+                  <div className="px-4 py-3 bg-surface-strong border-t border-border-soft">
+                    <div className="flex items-center justify-between text-xs text-muted mb-1">
                       <span>{syncStatus.syncProgress.current}</span>
                       <span>{Math.round((syncStatus.syncProgress.completed / syncStatus.syncProgress.total) * 100)}%</span>
                     </div>

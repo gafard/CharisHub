@@ -190,10 +190,10 @@ function ParticipantThumb({
           'bg-red-500/80'
         }`}>
           <div className={`h-1.5 w-1.5 rounded-full ${
-            peerQuality === 'good' ? 'bg-white' :
-            peerQuality === 'fair' ? 'bg-white' :
-            peerQuality === 'weak' ? 'bg-white' :
-            'bg-white animate-pulse'
+            peerQuality === 'good' ? 'bg-surface' :
+            peerQuality === 'fair' ? 'bg-surface' :
+            peerQuality === 'weak' ? 'bg-surface' :
+            'bg-surface animate-pulse'
           }`} />
           <span className="text-[8px] font-black text-white uppercase">
             {peerQuality === 'good' ? 'Bon' :

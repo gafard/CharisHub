@@ -123,10 +123,10 @@ export default function BibleLongPressSheet({
                 <Sun size={12} />
                 Miroir de grâce
               </div>
-              <div className="mt-3 text-xl font-black tracking-tight text-slate-900">
+              <div className="mt-3 text-xl font-black tracking-tight text-foreground">
                 {target.ref}
               </div>
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-sm text-muted">
                 Choisissez une action d’étude ou appliquez un surlignage.
               </p>
             </div>
@@ -134,7 +134,7 @@ export default function BibleLongPressSheet({
             <button
               type="button"
               onClick={onClose}
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50 hover:text-slate-700"
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border-soft bg-surface text-muted transition hover:bg-surface-strong hover:text-slate-700"
               aria-label="Fermer"
               title="Fermer"
             >
@@ -159,8 +159,8 @@ export default function BibleLongPressSheet({
             </p>
           </div>
 
-          <div className="mt-5 rounded-[24px] border border-slate-200 bg-slate-50/70 p-4">
-            <div className="mb-3 text-xs font-black uppercase tracking-[0.18em] text-slate-500">
+          <div className="mt-5 rounded-[24px] border border-border-soft bg-slate-50/70 p-4">
+            <div className="mb-3 text-xs font-black uppercase tracking-[0.18em] text-muted">
               Surligner
             </div>
 
@@ -185,7 +185,7 @@ export default function BibleLongPressSheet({
           </div>
 
           <div className="mt-5">
-            <div className="mb-3 text-xs font-black uppercase tracking-[0.18em] text-slate-500">
+            <div className="mb-3 text-xs font-black uppercase tracking-[0.18em] text-muted">
               Outils
             </div>
 
@@ -195,7 +195,7 @@ export default function BibleLongPressSheet({
                   key={item.label}
                   type="button"
                   onClick={() => onAction(item.action)}
-                  className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-left text-sm font-bold text-slate-800 shadow-sm transition hover:-translate-y-[1px] hover:border-slate-300 hover:bg-slate-50"
+                  className="flex items-center gap-3 rounded-2xl border border-border-soft bg-surface px-4 py-3.5 text-left text-sm font-bold text-slate-800 shadow-sm transition hover:-translate-y-[1px] hover:border-slate-300 hover:bg-surface-strong"
                 >
                   <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[color:var(--accent-soft)]/35">
                     {item.icon}

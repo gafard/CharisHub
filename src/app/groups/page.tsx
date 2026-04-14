@@ -8,7 +8,7 @@ export default function GroupsPage() {
       <section className="space-y-4">
         <Suspense
           fallback={
-            <div className="flex h-72 items-center justify-center rounded-[32px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]/90 text-sm text-[color:var(--foreground)]/60">
+            <div className="flex h-72 items-center justify-center rounded-[32px] border border-border-soft bg-surface/90 text-sm text-foreground/60">
               Chargement des groupes...
             </div>
           }

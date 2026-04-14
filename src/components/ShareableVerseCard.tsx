@@ -156,10 +156,10 @@ export default function ShareableVerseCard({ reference, text, translation = 'LSG
     return (
         <div className="fixed inset-0 z-[20000] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-            <div className="relative w-full max-w-md rounded-3xl bg-[color:var(--surface-strong)] border border-[color:var(--border-soft)] p-5 shadow-2xl animate-in fade-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto">
+            <div className="relative w-full max-w-md rounded-3xl bg-surface-strong border border-border-soft p-5 shadow-2xl animate-in fade-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto">
                 <button
                     onClick={onClose}
-                    className="absolute top-3 right-3 z-10 p-2 rounded-xl hover:bg-[color:var(--surface)] text-[color:var(--text-muted)]"
+                    className="absolute top-3 right-3 z-10 p-2 rounded-xl hover:bg-surface text-[color:var(--text-muted)]"
                 >
                     <X size={18} />
                 </button>
@@ -179,8 +179,8 @@ export default function ShareableVerseCard({ reference, text, translation = 'LSG
                             key={t.name}
                             onClick={() => setThemeIndex(i)}
                             className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${themeIndex === i
-                                    ? 'ring-2 ring-[color:var(--accent)] bg-[color:var(--surface)]'
-                                    : 'bg-[color:var(--surface)] hover:bg-[color:var(--surface-strong)]'
+                                    ? 'ring-2 ring-[color:var(--accent)] bg-surface'
+                                    : 'bg-surface hover:bg-surface-strong'
                                 }`}
                         >
                             <span

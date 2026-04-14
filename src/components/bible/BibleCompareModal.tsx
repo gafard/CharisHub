@@ -111,7 +111,7 @@ export default function BibleCompareModal({
         <div className="p-8 border-t border-white/5 flex justify-center">
             <button 
               onClick={onClose}
-              className="px-12 py-4 rounded-2xl bg-white text-black text-sm font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl active:scale-95"
+              className="px-12 py-4 rounded-2xl bg-surface text-black text-sm font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl active:scale-95"
             >
                 Retour à la lecture
             </button>

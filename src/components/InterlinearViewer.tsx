@@ -98,7 +98,7 @@ const InterlinearViewer = ({
       onMouseDown={onClose}
     >
       <div
-        className="bible-paper rounded-[2rem] w-full max-w-5xl max-h-[95vh] md:max-h-[90vh] overflow-hidden flex flex-col text-[color:var(--foreground)] shadow-2xl border border-white/10"
+        className="bible-paper rounded-[2rem] w-full max-w-5xl max-h-[95vh] md:max-h-[90vh] overflow-hidden flex flex-col text-foreground shadow-2xl border border-white/10"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="flex justify-between items-center p-5 border-b border-black/5 dark:border-white/5 bg-white/5 backdrop-blur-md">
@@ -107,17 +107,17 @@ const InterlinearViewer = ({
               <BookOpen size={24} />
             </div>
             <div>
-              <h2 className="text-xl font-black tracking-tight text-[color:var(--foreground)]">
+              <h2 className="text-xl font-black tracking-tight text-foreground">
                 Analyse Interlinéaire
               </h2>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-[color:var(--foreground)]/40">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">
                 Sources Originales & Concordance
               </p>
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="h-10 w-10 rounded-full hover:bg-black/5 dark:hover:bg-white/5 flex items-center justify-center transition-all text-[color:var(--foreground)]/50 hover:text-[color:var(--foreground)]"
+            className="h-10 w-10 rounded-full hover:bg-black/5 dark:hover:bg-white/5 flex items-center justify-center transition-all text-foreground/50 hover:text-foreground"
             aria-label="Fermer"
           >
             <X size={24} />
@@ -126,10 +126,10 @@ const InterlinearViewer = ({
 
         <div className="p-6 border-b border-black/5 dark:border-white/5 bg-amber-50/30 dark:bg-black/20">
           <div className="text-center">
-            <h3 className="text-2xl font-black text-[color:var(--foreground)] mb-1">
+            <h3 className="text-2xl font-black text-foreground mb-1">
               {bookId} {chapter}:{verse}
             </h3>
-            <p className="text-sm font-medium text-[color:var(--foreground)]/60 max-w-2xl mx-auto italic">
+            <p className="text-sm font-medium text-foreground/60 max-w-2xl mx-auto italic">
               {interlinearData?.text ? `« ${interlinearData.text} »` : "Chargement du texte..."}
             </p>
           </div>
@@ -157,9 +157,9 @@ const InterlinearViewer = ({
                   <table className="w-full border-collapse">
                     <thead>
                       <tr className="bg-white/5">
-                        <th className="p-4 text-left text-[10px] font-black uppercase tracking-wider text-[color:var(--foreground)]/40 border-b border-black/5 dark:border-white/5">Lexique</th>
-                        <th className="p-4 text-left text-[10px] font-black uppercase tracking-wider text-[color:var(--foreground)]/40 border-b border-black/5 dark:border-white/5">Strong</th>
-                        <th className="p-4 text-left text-[10px] font-black uppercase tracking-wider text-[color:var(--foreground)]/40 border-b border-black/5 dark:border-white/5">Français</th>
+                        <th className="p-4 text-left text-[10px] font-black uppercase tracking-wider text-foreground/40 border-b border-black/5 dark:border-white/5">Lexique</th>
+                        <th className="p-4 text-left text-[10px] font-black uppercase tracking-wider text-foreground/40 border-b border-black/5 dark:border-white/5">Strong</th>
+                        <th className="p-4 text-left text-[10px] font-black uppercase tracking-wider text-foreground/40 border-b border-black/5 dark:border-white/5">Français</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-black/5 dark:divide-white/5">
@@ -185,7 +185,7 @@ const InterlinearViewer = ({
                                 e.stopPropagation();
                                 if (onStrongSelect) onStrongSelect(word.strongNumber);
                               }}
-                              className="group flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-white/5 border border-black/5 dark:border-white/5 text-[11px] font-black text-slate-500 hover:bg-amber-500 hover:text-white hover:border-amber-500 transition-all"
+                              className="group flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-white/5 border border-black/5 dark:border-white/5 text-[11px] font-black text-muted hover:bg-amber-500 hover:text-white hover:border-amber-500 transition-all"
                             >
                               {word.strongNumber}
                               <ExternalLink size={10} className="opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -193,7 +193,7 @@ const InterlinearViewer = ({
                           </td>
                           <td className="p-4">
                             <div className="flex flex-col">
-                              <span className="text-sm font-bold text-[color:var(--foreground)]">
+                              <span className="text-sm font-bold text-foreground">
                                 {word.translation}
                               </span>
                               {word.morphology && (
@@ -221,7 +221,7 @@ const InterlinearViewer = ({
                         
                         <div className="space-y-4">
                           <div>
-                            <p className="text-[10px] font-black text-[color:var(--foreground)]/40 uppercase mb-1">Translittération</p>
+                            <p className="text-[10px] font-black text-foreground/40 uppercase mb-1">Translittération</p>
                             <p className="text-lg font-bold text-amber-600">{interlinearData.words[selectedWordIndex].transliteration}</p>
                             {interlinearData.words[selectedWordIndex].phonetic && (
                               <p className="text-xs italic opacity-60">/{interlinearData.words[selectedWordIndex].phonetic}/</p>
@@ -230,9 +230,9 @@ const InterlinearViewer = ({
 
                           {interlinearData.words[selectedWordIndex].definition && (
                             <div>
-                              <p className="text-[10px] font-black text-[color:var(--foreground)]/40 uppercase mb-1">Définition courte</p>
+                              <p className="text-[10px] font-black text-foreground/40 uppercase mb-1">Définition courte</p>
                               <div 
-                                className="text-sm leading-relaxed text-[color:var(--foreground)]/80 line-clamp-6"
+                                className="text-sm leading-relaxed text-foreground/80 line-clamp-6"
                                 dangerouslySetInnerHTML={{ __html: interlinearData.words[selectedWordIndex].definition! }}
                               />
                             </div>
@@ -267,7 +267,7 @@ const InterlinearViewer = ({
           )}
         </div>
 
-        <div className="p-5 border-t border-black/5 dark:border-white/5 text-[10px] font-bold text-[color:var(--foreground)]/30 text-center uppercase tracking-[0.2em] bg-white/5">
+        <div className="p-5 border-t border-black/5 dark:border-white/5 text-[10px] font-bold text-foreground/30 text-center uppercase tracking-[0.2em] bg-white/5">
           Outil de Formation Biblique Intégré - Données Lexicographiques Réelles
         </div>
       </div>

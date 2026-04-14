@@ -69,7 +69,7 @@ export default function VerseOverlay({ reference, content, onClose, onOpenInterl
               <Sun size={10} className="text-amber-400" />
               <span>Miroir</span>
             </div>
-            <div className="text-[10px] font-medium text-slate-500 italic">
+            <div className="text-[10px] font-medium text-muted italic">
               Données de concordance réelles issues du texte original
             </div>
           </div>

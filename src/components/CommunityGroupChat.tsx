@@ -276,7 +276,7 @@ function VoiceNotePlayer({
   return (
     <div
       className={[
-        'rounded-2xl border border-[color:var(--border-soft)] bg-gradient-to-br from-[color:var(--surface)] to-[color:var(--surface-strong)] px-3 py-2.5',
+        'rounded-2xl border border-border-soft bg-gradient-to-br from-[color:var(--surface)] to-[color:var(--surface-strong)] px-3 py-2.5',
         'shadow-[inset_0_1px_0_rgba(255,255,255,0.22)]',
         compact ? 'p-2.5' : '',
       ].join(' ')}
@@ -293,7 +293,7 @@ function VoiceNotePlayer({
             'grid shrink-0 place-items-center rounded-full border transition-all',
             isPlaying
               ? 'border-[color:var(--accent-border)]/70 bg-[color:var(--accent)] text-white shadow-[0_0_0_4px_rgba(var(--accent-rgb),0.15)]'
-              : 'border-[color:var(--accent-border)]/45 bg-[color:var(--accent-soft)]/40 text-[color:var(--foreground)] hover:bg-[color:var(--accent-soft)]/58',
+              : 'border-[color:var(--accent-border)]/45 bg-[color:var(--accent-soft)]/40 text-foreground hover:bg-[color:var(--accent-soft)]/58',
             compact ? 'h-10 w-10' : 'h-11 w-11',
           ].join(' ')}
           title={isPlaying ? 'Pause' : 'Lecture'}
@@ -303,7 +303,7 @@ function VoiceNotePlayer({
 
         <div className="min-w-0 flex-1">
           <div className="mb-1 flex items-center justify-between gap-2">
-            <span className="truncate text-[11px] font-semibold text-[color:var(--foreground)]/65">
+            <span className="truncate text-[11px] font-semibold text-foreground/65">
               {title}
             </span>
             <div className="flex shrink-0 items-center gap-1.5">
@@ -313,13 +313,13 @@ function VoiceNotePlayer({
                 className={[
                   'rounded-full border px-2 py-0.5 font-bold transition',
                   compact ? 'text-[9px]' : 'text-[10px]',
-                  'border-[color:var(--accent-border)]/40 bg-[color:var(--accent-soft)]/32 text-[color:var(--foreground)]/78 hover:bg-[color:var(--accent-soft)]/50',
+                  'border-[color:var(--accent-border)]/40 bg-[color:var(--accent-soft)]/32 text-foreground/78 hover:bg-[color:var(--accent-soft)]/50',
                 ].join(' ')}
                 title="Vitesse de lecture"
               >
                 {playbackLabel}
               </button>
-              <span className="text-[10px] font-semibold text-[color:var(--foreground)]/58">
+              <span className="text-[10px] font-semibold text-foreground/58">
                 {formatDuration(roundedPosition)} /{' '}
                 {roundedDuration > 0 ? formatDuration(roundedDuration) : '--:--'}
               </span>
@@ -327,7 +327,7 @@ function VoiceNotePlayer({
           </div>
 
           <div className="relative h-4">
-            <div className="pointer-events-none absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-[color:var(--surface-strong)]/95" />
+            <div className="pointer-events-none absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-surface-strong/95" />
             <div
               className="pointer-events-none absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-[color:var(--accent)]/70"
               style={{ width: `${progressRatio * 100}%` }}
@@ -350,7 +350,7 @@ function VoiceNotePlayer({
 
           <div
             className={[
-              'mt-1.5 flex items-end gap-[2px] overflow-hidden rounded-md bg-[color:var(--surface-strong)]/45 px-1 py-[3px]',
+              'mt-1.5 flex items-end gap-[2px] overflow-hidden rounded-md bg-surface-strong/45 px-1 py-[3px]',
               compact ? 'h-5' : 'h-6',
             ].join(' ')}
           >
@@ -968,28 +968,28 @@ export default function CommunityGroupChat({
               'max-w-[88%] rounded-3xl px-4 py-3 shadow-sm',
               mine
                 ? 'border border-[color:var(--accent-border)]/45 bg-[color:var(--accent-soft)]/45'
-                : 'border border-[color:var(--border-soft)] bg-[color:var(--surface)]',
+                : 'border border-border-soft bg-surface',
             ].join(' ')}
           >
             {!mine ? (
-              <div className="mb-1 text-[10px] font-bold uppercase tracking-wide text-[color:var(--foreground)]/55">
+              <div className="mb-1 text-[10px] font-bold uppercase tracking-wide text-foreground/55">
                 {message.author_name || 'Invite'}
               </div>
             ) : null}
 
             {replyTarget ? (
-              <div className="mb-2 rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)]/70 px-2.5 py-2">
-                <div className="text-[10px] font-bold text-[color:var(--foreground)]/58">
+              <div className="mb-2 rounded-xl border border-border-soft bg-surface-strong/70 px-2.5 py-2">
+                <div className="text-[10px] font-bold text-foreground/58">
                   {replyTarget.author_name || 'Message'}
                 </div>
-                <div className="mt-0.5 text-xs text-[color:var(--foreground)]/72">
+                <div className="mt-0.5 text-xs text-foreground/72">
                   {snippet(replyTarget.cleanContent || '')}
                 </div>
               </div>
             ) : null}
 
             {shouldRenderText ? (
-              <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-[color:var(--foreground)]/85">
+              <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-foreground/85">
                 {message.cleanContent}
               </p>
             ) : null}
@@ -1001,7 +1001,7 @@ export default function CommunityGroupChat({
             ) : null}
 
             {!hasAudio && message.media_url ? (
-              <div className="mt-2 overflow-hidden rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)]">
+              <div className="mt-2 overflow-hidden rounded-2xl border border-border-soft bg-surface-strong">
                 {hasImage ? (
                   <img
                     src={message.media_url}
@@ -1014,7 +1014,7 @@ export default function CommunityGroupChat({
                     href={message.media_url}
                     target="_blank"
                     rel="noreferrer"
-                    className="block truncate px-3 py-2 text-xs font-semibold text-[color:var(--foreground)]/78 underline"
+                    className="block truncate px-3 py-2 text-xs font-semibold text-foreground/78 underline"
                   >
                     Ouvrir le fichier
                   </a>
@@ -1026,7 +1026,7 @@ export default function CommunityGroupChat({
               <div className="flex items-center gap-1">
                 <button
                   type="button"
-                  className="rounded-lg px-1.5 py-0.5 text-[10px] font-semibold text-[color:var(--foreground)]/58 hover:bg-[color:var(--surface-strong)]"
+                  className="rounded-lg px-1.5 py-0.5 text-[10px] font-semibold text-foreground/58 hover:bg-surface-strong"
                   onClick={() => onReplyMessage(message.id)}
                 >
                   <span className="inline-flex items-center gap-1">
@@ -1038,7 +1038,7 @@ export default function CommunityGroupChat({
                 {mine ? (
                   <button
                     type="button"
-                    className="rounded-lg px-1.5 py-0.5 text-[10px] font-semibold text-[color:var(--foreground)]/58 hover:bg-[color:var(--surface-strong)]"
+                    className="rounded-lg px-1.5 py-0.5 text-[10px] font-semibold text-foreground/58 hover:bg-surface-strong"
                     onClick={() => onStartEditMessage(message.id)}
                     disabled={!!messageBusy[message.id]}
                   >
@@ -1068,7 +1068,7 @@ export default function CommunityGroupChat({
                 ) : null}
               </div>
 
-              <div className="inline-flex items-center gap-1 text-[10px] font-medium text-[color:var(--foreground)]/50">
+              <div className="inline-flex items-center gap-1 text-[10px] font-medium text-foreground/50">
                 {isEdited ? <span>modifié</span> : null}
                 <span>{formatTime(message.created_at)}</span>
                 {mine ? (
@@ -1077,7 +1077,7 @@ export default function CommunityGroupChat({
                       'inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5',
                       seenCount > 0
                         ? 'bg-emerald-500/14 text-emerald-700 dark:text-emerald-200'
-                        : 'bg-[color:var(--surface-strong)] text-[color:var(--foreground)]/58',
+                        : 'bg-surface-strong text-foreground/58',
                     ].join(' ')}
                     title={seenCount > 0 ? `Vu par ${seenCount}` : 'Envoyé'}
                   >
@@ -1104,21 +1104,21 @@ export default function CommunityGroupChat({
 
   return (
     <div className="space-y-3">
-      <div className="relative overflow-hidden rounded-3xl border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-3 sm:p-4">
+      <div className="relative overflow-hidden rounded-3xl border border-border-soft bg-surface p-3 sm:p-4">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.08),transparent_58%)]" />
         <div className="relative">
           <div className="mb-2 flex items-center justify-between gap-2">
-            <div className="text-xs font-bold uppercase tracking-[0.16em] text-[color:var(--foreground)]/55">
+            <div className="text-xs font-bold uppercase tracking-[0.16em] text-foreground/55">
               Échanges du groupe
             </div>
-            <div className="rounded-full border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)] px-2.5 py-1 text-[10px] font-bold text-[color:var(--foreground)]/60">
+            <div className="rounded-full border border-border-soft bg-surface-strong px-2.5 py-1 text-[10px] font-bold text-foreground/60">
               {messages.length} messages
             </div>
           </div>
 
-          <div className="h-[52vh] overflow-y-auto rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)] p-2.5 sm:p-3">
+          <div className="h-[52vh] overflow-y-auto rounded-2xl border border-border-soft bg-surface-strong p-2.5 sm:p-3">
             {status === 'loading' ? (
-              <div className="grid h-full place-items-center text-sm text-[color:var(--foreground)]/62">
+              <div className="grid h-full place-items-center text-sm text-foreground/62">
                 <span className="inline-flex items-center gap-2">
                   <Loader2 size={16} className="animate-spin" />
                   Chargement...
@@ -1133,7 +1133,7 @@ export default function CommunityGroupChat({
             ) : null}
 
             {status === 'ready' && messages.length === 0 ? (
-              <div className="grid h-full place-items-center p-6 text-center text-sm text-[color:var(--foreground)]/58">
+              <div className="grid h-full place-items-center p-6 text-center text-sm text-foreground/58">
                 Commencez l’échange : message, image ou note vocale.
               </div>
             ) : null}
@@ -1146,7 +1146,7 @@ export default function CommunityGroupChat({
           </div>
 
           {typingUsers.length > 0 ? (
-            <div className="mt-2 px-1 text-xs text-[color:var(--foreground)]/62">
+            <div className="mt-2 px-1 text-xs text-foreground/62">
               {typingUsers.length === 1
                 ? `${typingUsers[0].displayName} est en train d’écrire...`
                 : `${typingUsers[0].displayName} +${typingUsers.length - 1} sont en train d’écrire...`}
@@ -1156,24 +1156,24 @@ export default function CommunityGroupChat({
       </div>
 
       {feedback ? (
-        <div className="rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)] px-3 py-2 text-xs text-[color:var(--foreground)]/78">
+        <div className="rounded-2xl border border-border-soft bg-surface-strong px-3 py-2 text-xs text-foreground/78">
           {feedback}
         </div>
       ) : null}
 
-      <div className="rounded-3xl border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-3">
+      <div className="rounded-3xl border border-border-soft bg-surface p-3">
         {replyToMessage ? (
-          <div className="mb-2 flex items-center justify-between gap-2 rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)] px-3 py-2 text-xs">
+          <div className="mb-2 flex items-center justify-between gap-2 rounded-xl border border-border-soft bg-surface-strong px-3 py-2 text-xs">
             <div className="min-w-0">
-              <div className="text-[10px] font-bold text-[color:var(--foreground)]/60">Réponse à {replyToMessage.author_name}</div>
-              <div className="truncate font-semibold text-[color:var(--foreground)]/78">
+              <div className="text-[10px] font-bold text-foreground/60">Réponse à {replyToMessage.author_name}</div>
+              <div className="truncate font-semibold text-foreground/78">
                 {snippet(replyToMessage.cleanContent)}
               </div>
             </div>
             <button
               type="button"
               onClick={() => setReplyToMessageId(null)}
-              className="grid h-7 w-7 place-items-center rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--surface)] text-[color:var(--foreground)]/62"
+              className="grid h-7 w-7 place-items-center rounded-lg border border-border-soft bg-surface text-foreground/62"
             >
               <X size={14} />
             </button>
@@ -1200,7 +1200,7 @@ export default function CommunityGroupChat({
 
         {attachmentFile ? (
           attachmentAudioUrl ? (
-            <div className="mb-2 rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)] p-2">
+            <div className="mb-2 rounded-xl border border-border-soft bg-surface-strong p-2">
               <div className="flex items-start gap-2">
                 <div className="min-w-0 flex-1">
                   <VoiceNotePlayer
@@ -1212,21 +1212,21 @@ export default function CommunityGroupChat({
                 <button
                   type="button"
                   onClick={clearAttachment}
-                  className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--surface)] text-[color:var(--foreground)]/62"
+                  className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-border-soft bg-surface text-foreground/62"
                 >
                   <X size={14} />
                 </button>
               </div>
             </div>
           ) : (
-            <div className="mb-2 flex items-center justify-between gap-2 rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)] px-3 py-2 text-xs">
-              <div className="truncate font-semibold text-[color:var(--foreground)]/78">
+            <div className="mb-2 flex items-center justify-between gap-2 rounded-xl border border-border-soft bg-surface-strong px-3 py-2 text-xs">
+              <div className="truncate font-semibold text-foreground/78">
                 {attachmentLabel || attachmentFile.name}
               </div>
               <button
                 type="button"
                 onClick={clearAttachment}
-                className="grid h-7 w-7 place-items-center rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--surface)] text-[color:var(--foreground)]/62"
+                className="grid h-7 w-7 place-items-center rounded-lg border border-border-soft bg-surface text-foreground/62"
               >
                 <X size={14} />
               </button>
@@ -1253,7 +1253,7 @@ export default function CommunityGroupChat({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={!!editingMessageId}
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)] text-[color:var(--foreground)]/72 transition hover:bg-[color:var(--surface)] disabled:cursor-not-allowed disabled:opacity-55"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-border-soft bg-surface-strong text-foreground/72 transition hover:bg-surface disabled:cursor-not-allowed disabled:opacity-55"
             title="Ajouter un media"
           >
             <Paperclip size={17} />
@@ -1271,14 +1271,14 @@ export default function CommunityGroupChat({
             }}
           />
 
-          <div className="min-w-0 flex-1 rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)] px-3 py-2">
+          <div className="min-w-0 flex-1 rounded-2xl border border-border-soft bg-surface-strong px-3 py-2">
             <textarea
               ref={textareaRef}
               value={text}
               onChange={(event) => setText(event.target.value)}
               rows={1}
               placeholder={editingMessageId ? 'Modifiez votre message...' : 'Écris un message...'}
-              className="max-h-32 w-full resize-y bg-transparent text-sm text-[color:var(--foreground)] outline-none placeholder:text-[color:var(--foreground)]/45"
+              className="max-h-32 w-full resize-y bg-transparent text-sm text-foreground outline-none placeholder:text-foreground/45"
               onKeyDown={(event) => {
                 if (event.key === 'Enter' && !event.shiftKey) {
                   event.preventDefault();
@@ -1296,7 +1296,7 @@ export default function CommunityGroupChat({
               'grid h-11 w-11 shrink-0 place-items-center rounded-2xl border transition disabled:cursor-not-allowed disabled:opacity-55',
               recording
                 ? 'border-rose-300/35 bg-rose-500/15 text-rose-600 dark:text-rose-200'
-                : 'border-[color:var(--border-soft)] bg-[color:var(--surface-strong)] text-[color:var(--foreground)]/72 hover:bg-[color:var(--surface)]',
+                : 'border-border-soft bg-surface-strong text-foreground/72 hover:bg-surface',
             ].join(' ')}
             title={recording ? 'Stop enregistrement' : 'Note vocale'}
           >
@@ -1318,13 +1318,13 @@ export default function CommunityGroupChat({
       {/* DELETE CONFIRMATION MODAL */}
       {deleteConfirmationId && (
         <div className="fixed inset-0 z-[100] grid place-items-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-xs rounded-[32px] bg-white p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+          <div className="w-full max-w-xs rounded-[32px] bg-surface p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             <div className="text-center">
               <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-rose-100 text-rose-600">
                 <Trash2 size={24} />
               </div>
-              <h3 className="text-lg font-black text-gray-900">Supprimer ce message ?</h3>
-              <p className="mt-1 text-sm text-gray-500">Cette action est irréversible.</p>
+              <h3 className="text-lg font-black text-foreground">Supprimer ce message ?</h3>
+              <p className="mt-1 text-sm text-muted">Cette action est irréversible.</p>
             </div>
             <div className="mt-6 flex flex-col gap-2">
               <button
@@ -1335,7 +1335,7 @@ export default function CommunityGroupChat({
               </button>
               <button
                 onClick={() => setDeleteConfirmationId(null)}
-                className="w-full rounded-2xl bg-gray-100 py-3 text-sm font-bold text-gray-600 active:scale-[0.97] transition-transform"
+                className="w-full rounded-2xl bg-gray-100 py-3 text-sm font-bold text-muted active:scale-[0.97] transition-transform"
               >
                 Annuler
               </button>

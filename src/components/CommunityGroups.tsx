@@ -87,14 +87,14 @@ function AvatarPile({
         {Array.from({ length: shown }).map((_, index) => (
           <div
             key={`${label || 'member'}-${index}`}
-            className="grid h-8 w-8 place-items-center rounded-full border border-[color:var(--border-soft)] bg-[color:var(--surface)] text-[11px] font-extrabold backdrop-blur-md"
+            className="grid h-8 w-8 place-items-center rounded-full border border-border-soft bg-surface text-[11px] font-extrabold backdrop-blur-md"
             title={label || 'Membre'}
           >
             {fallback[index] || String.fromCharCode(65 + index)}
           </div>
         ))}
         {rest > 0 ? (
-          <div className="grid h-8 w-8 place-items-center rounded-full border border-[color:var(--border-soft)] bg-[color:var(--surface)] text-[11px] font-extrabold">
+          <div className="grid h-8 w-8 place-items-center rounded-full border border-border-soft bg-surface text-[11px] font-extrabold">
             +{rest}
           </div>
         ) : null}
@@ -171,10 +171,10 @@ function GroupTile({
       onClick={onOpen}
       className={[
         "relative shrink-0 w-[240px] sm:w-[260px]",
-        "overflow-hidden rounded-3xl border border-[color:var(--border-soft)]",
-        "bg-[color:var(--surface-strong)]/95 p-4 text-left",
+        "overflow-hidden rounded-3xl border border-border-soft",
+        "bg-surface-strong/95 p-4 text-left",
         "shadow-[0_14px_34px_rgba(0,0,0,0.22)]",
-        "hover:border-[color:var(--border-strong)] active:scale-[0.99] transition-all",
+        "hover:border-border-strong active:scale-[0.99] transition-all",
         accent.border,
       ].join(" ")}
     >
@@ -195,18 +195,18 @@ function GroupTile({
         </div>
 
         <div className="mt-3">
-          <div className="truncate text-base font-extrabold text-[color:var(--foreground)]">{group.name}</div>
+          <div className="truncate text-base font-extrabold text-foreground">{group.name}</div>
           {group.description ? (
-            <div className="mt-1 line-clamp-2 text-sm text-[color:var(--foreground)]/75">
+            <div className="mt-1 line-clamp-2 text-sm text-foreground/75">
               {group.description}
             </div>
           ) : (
-            <div className="mt-1 text-sm text-[color:var(--foreground)]/45">—</div>
+            <div className="mt-1 text-sm text-foreground/45">—</div>
           )}
         </div>
 
         <div className="mt-4 flex items-center justify-between">
-          <div className="text-xs font-bold text-[color:var(--foreground)]/70">
+          <div className="text-xs font-bold text-foreground/70">
             {group.members_count || 0} membres
           </div>
           <div className="flex items-center gap-1.5 text-[10px] font-black text-[color:var(--accent)] uppercase tracking-widest">
@@ -268,7 +268,7 @@ function GroupCard({
       <button
         type="button"
         onClick={onOpen}
-        className="flex h-full w-full flex-col overflow-hidden rounded-[34px] bg-white text-left shadow-[0_18px_40px_rgba(15,23,42,0.08)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_56px_rgba(15,23,42,0.12)] active:scale-[0.99]"
+        className="flex h-full w-full flex-col overflow-hidden rounded-[34px] bg-surface text-left shadow-[0_18px_40px_rgba(15,23,42,0.08)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_56px_rgba(15,23,42,0.12)] active:scale-[0.99]"
       >
         {/* Cover */}
         <div className="relative h-[210px] w-full overflow-hidden">
@@ -465,7 +465,7 @@ function GroupDetailTabs({
           <button
             type="button"
             onClick={onCloseGroupPage}
-            className="grid h-10 w-10 place-items-center rounded-xl border border-[#e6e8ec] bg-white text-[#667085] transition hover:text-[#101828] hover:border-[#d0d5dd]"
+            className="grid h-10 w-10 place-items-center rounded-xl border border-[#e6e8ec] bg-surface text-[#667085] transition hover:text-[#101828] hover:border-[#d0d5dd]"
           >
             ←
           </button>
@@ -493,7 +493,7 @@ function GroupDetailTabs({
           <button
             type="button"
             onClick={() => onShareGroup(selectedGroup.id)}
-            className="inline-flex h-10 items-center gap-2 rounded-xl border border-[#e6e8ec] bg-white px-4 text-xs font-bold text-[#667085] transition hover:text-[#101828]"
+            className="inline-flex h-10 items-center gap-2 rounded-xl border border-[#e6e8ec] bg-surface px-4 text-xs font-bold text-[#667085] transition hover:text-[#101828]"
           >
             <Link2 size={14} />
             Partager l'espace
@@ -502,7 +502,7 @@ function GroupDetailTabs({
       </div>
 
       {/* 2. Bandeau Session / Live */}
-      <div className="overflow-hidden rounded-[32px] border border-[#e9eaeb] bg-white shadow-[0_12px_30px_rgba(16,24,40,0.04)]">
+      <div className="overflow-hidden rounded-[32px] border border-[#e9eaeb] bg-surface shadow-[0_12px_30px_rgba(16,24,40,0.04)]">
         <div className="flex flex-col lg:flex-row lg:items-stretch">
           <div className="flex-1 p-6 sm:p-8">
             <div className="flex items-center gap-3">
@@ -512,7 +512,7 @@ function GroupDetailTabs({
                   Session en direct
                 </div>
               ) : (
-                <div className="flex items-center gap-2 rounded-full bg-slate-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
+                <div className="flex items-center gap-2 rounded-full bg-surface-strong px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-muted">
                   Prochaine session
                 </div>
               )}
@@ -570,7 +570,7 @@ function GroupDetailTabs({
         
         {/* Colonne GAUCHE (Main Content) */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="overflow-hidden rounded-[32px] border border-[#e9eaeb] bg-white shadow-[0_12px_24px_rgba(16,24,40,0.03)]">
+          <div className="overflow-hidden rounded-[32px] border border-[#e9eaeb] bg-surface shadow-[0_12px_24px_rgba(16,24,40,0.03)]">
             <div className="flex border-b border-[#f2f4f7] bg-[#fcfcfd]/50">
               {[
                 { key: 'salon', label: 'Salon' },
@@ -635,7 +635,7 @@ function GroupDetailTabs({
 
                   <div className="space-y-3">
                     {sessionTasks.length > 0 ? sessionTasks.map((task, idx) => (
-                      <div key={idx} className="flex items-center gap-4 rounded-2xl border border-[#f2f4f7] bg-white p-4">
+                      <div key={idx} className="flex items-center gap-4 rounded-2xl border border-[#f2f4f7] bg-surface p-4">
                         <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#f8fafc] text-[11px] font-black text-[#161c35] border border-[#e2e8f0]">
                           {idx + 1}
                         </div>
@@ -698,7 +698,7 @@ function GroupDetailTabs({
         <div className="space-y-6">
           {/* Section Rejoindre si non membre */}
           {!selectedGroup.joined && (
-             <div className="rounded-[32px] border border-[#e9eaeb] bg-white p-6 shadow-[0_12px_24px_rgba(16,24,40,0.03)]">
+             <div className="rounded-[32px] border border-[#e9eaeb] bg-surface p-6 shadow-[0_12px_24px_rgba(16,24,40,0.03)]">
                 <div className="text-[10px] font-black uppercase tracking-[0.14em] text-[#c89f2d]">Accès</div>
                 <h3 className="mt-2 text-lg font-black text-[#101828]">Rejoindre l'espace</h3>
                 
@@ -726,7 +726,7 @@ function GroupDetailTabs({
           )}
 
           {/* Section Présentation */}
-          <div className="rounded-[32px] border border-[#e9eaeb] bg-white p-6 shadow-[0_12px_24px_rgba(16,24,40,0.03)]">
+          <div className="rounded-[32px] border border-[#e9eaeb] bg-surface p-6 shadow-[0_12px_24px_rgba(16,24,40,0.03)]">
             <div className="flex border-b border-[#f2f4f7] -mx-6 px-6 pb-2 mb-4">
               {[
                 { key: 'about', label: 'Présentation' },
@@ -793,11 +793,11 @@ function GroupDetailTabs({
                 )}
                 
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                  <div className="p-3 rounded-xl bg-surface-strong border border-border-soft">
                     <div className="text-[9px] font-black text-[#98a2b3] uppercase">Créé par</div>
                     <div className="mt-1 text-xs font-bold text-[#161c35] truncate">{selectedGroup.created_by_name}</div>
                   </div>
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                  <div className="p-3 rounded-xl bg-surface-strong border border-border-soft">
                     <div className="text-[9px] font-black text-[#98a2b3] uppercase">Membres</div>
                     <div className="mt-1 text-xs font-bold text-[#161c35]">{selectedGroup.members_count} actifs</div>
                   </div>
@@ -818,7 +818,7 @@ function GroupDetailTabs({
 
           {/* Pilotage Admin (Date & Provider) */}
           {isAdmin && (
-            <div className="rounded-[32px] border border-[#e9eaeb] bg-white p-6 shadow-[0_12px_24px_rgba(16,24,40,0.03)]">
+            <div className="rounded-[32px] border border-[#e9eaeb] bg-surface p-6 shadow-[0_12px_24px_rgba(16,24,40,0.03)]">
                <div className="text-[10px] font-black uppercase tracking-[0.14em] text-[#c89f2d]">Pilotage</div>
                <h3 className="mt-2 text-lg font-black text-[#101828]">Gestion des sessions</h3>
                
@@ -842,7 +842,7 @@ function GroupDetailTabs({
                         className={`rounded-xl py-2.5 text-[9px] font-black uppercase tracking-wider transition ${
                           detailCallProvider === prov
                             ? 'bg-[#161c35] text-white shadow-md'
-                            : 'bg-slate-50 text-slate-400 border border-slate-100 hover:border-slate-300'
+                            : 'bg-surface-strong text-slate-400 border border-border-soft hover:border-slate-300'
                         }`}
                       >
                         {prov.replace('_', ' ')}
@@ -861,7 +861,7 @@ function GroupDetailTabs({
           )}
 
           {/* Zone de danger / Actions secondaires */}
-          <div className="rounded-[32px] border border-[#e9eaeb] bg-white p-4 shadow-[0_12px_24px_rgba(16,24,40,0.03)]">
+          <div className="rounded-[32px] border border-[#e9eaeb] bg-surface p-4 shadow-[0_12px_24px_rgba(16,24,40,0.03)]">
              {selectedGroup.joined && (
                <button
                  onClick={() => onLeave(selectedGroup.id)}
@@ -1787,7 +1787,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
 
           <section className="mx-auto max-w-7xl px-6 py-10 sm:px-12">
             {/* Toolbar de pilotage */}
-            <div className="mb-10 rounded-[32px] border border-[#ebeef3] bg-white p-4 shadow-[0_14px_36px_rgba(16,24,40,0.06)] sm:p-5">
+            <div className="mb-10 rounded-[32px] border border-[#ebeef3] bg-surface p-4 shadow-[0_14px_36px_rgba(16,24,40,0.06)] sm:p-5">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex flex-1 flex-col gap-4 lg:flex-row lg:items-center">
                   <div className="relative w-full lg:max-w-md">
@@ -1808,7 +1808,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
                       className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.14em] transition ${
                         listMode === 'all'
                           ? 'bg-[#161c35] text-white shadow-[0_10px_24px_rgba(22,28,53,0.14)]'
-                          : 'border border-[#e6e8ec] bg-white text-[#667085] hover:text-[#101828]'
+                          : 'border border-[#e6e8ec] bg-surface text-[#667085] hover:text-[#101828]'
                       }`}
                     >
                       Tous
@@ -1820,7 +1820,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
                       className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.14em] transition ${
                         listMode === 'joined'
                           ? 'bg-[#161c35] text-white shadow-[0_10px_24px_rgba(22,28,53,0.14)]'
-                          : 'border border-[#e6e8ec] bg-white text-[#667085] hover:text-[#101828]'
+                          : 'border border-[#e6e8ec] bg-surface text-[#667085] hover:text-[#101828]'
                       }`}
                     >
                       Mes groupes
@@ -1832,7 +1832,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
                       className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.14em] transition ${
                         listMode === 'discover'
                           ? 'bg-[#161c35] text-white shadow-[0_10px_24px_rgba(22,28,53,0.14)]'
-                          : 'border border-[#e6e8ec] bg-white text-[#667085] hover:text-[#101828]'
+                          : 'border border-[#e6e8ec] bg-surface text-[#667085] hover:text-[#101828]'
                       }`}
                     >
                       Découvrir
@@ -1863,7 +1863,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
 
             {/* Formulaire de création premium */}
             {showCreateForm && (
-              <div className="mb-12 overflow-hidden rounded-[36px] border border-[#ebeef3] bg-white shadow-[0_24px_60px_rgba(16,24,40,0.08)]">
+              <div className="mb-12 overflow-hidden rounded-[36px] border border-[#ebeef3] bg-surface shadow-[0_24px_60px_rgba(16,24,40,0.08)]">
                 <div className="border-b border-[#eef1f5] bg-[linear-gradient(180deg,#fffdf8,white)] px-6 py-6 sm:px-8">
                   <div className="flex items-start justify-between gap-4">
                     <div>
@@ -1882,7 +1882,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
                     <button
                       type="button"
                       onClick={() => setShowCreateForm(false)}
-                      className="grid h-11 w-11 place-items-center rounded-2xl border border-[#e7eaf0] bg-white text-[#667085] transition hover:text-[#101828]"
+                      className="grid h-11 w-11 place-items-center rounded-2xl border border-[#e7eaf0] bg-surface text-[#667085] transition hover:text-[#101828]"
                     >
                       <X size={20} />
                     </button>
@@ -1994,7 +1994,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
                       <button
                         type="button"
                         onClick={() => setShowCreateForm(false)}
-                        className="h-12 rounded-full border border-[#e6e8ec] bg-white px-6 text-sm font-bold text-[#475467] transition hover:text-[#101828]"
+                        className="h-12 rounded-full border border-[#e6e8ec] bg-surface px-6 text-sm font-bold text-[#475467] transition hover:text-[#101828]"
                       >
                         Annuler
                       </button>
@@ -2078,7 +2078,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
 
       {/* Feedback Toast */}
       {feedback ? (
-        <div className="fixed bottom-24 left-1/2 z-[500] -translate-x-1/2 rounded-2xl border border-[#e2e8f0] bg-white px-4 py-2 text-sm shadow-xl font-bold text-[#161c35]">
+        <div className="fixed bottom-24 left-1/2 z-[500] -translate-x-1/2 rounded-2xl border border-[#e2e8f0] bg-surface px-4 py-2 text-sm shadow-xl font-bold text-[#161c35]">
           {feedback}
         </div>
       ) : null}
@@ -2086,13 +2086,13 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
       {/* GLOBAL GROUP DELETE CONFIRMATION */}
       {showDeleteConfirm && selectedGroup && (
         <div className="fixed inset-0 z-[1000] flex items-end justify-center bg-black/40 backdrop-blur-sm sm:items-center p-4">
-          <div className="w-full max-w-sm rounded-[32px] bg-white p-8 shadow-2xl animate-in slide-in-from-bottom-8 duration-300">
+          <div className="w-full max-w-sm rounded-[32px] bg-surface p-8 shadow-2xl animate-in slide-in-from-bottom-8 duration-300">
             <div className="mb-6 text-center">
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-rose-100 text-rose-600">
                 <Trash2 size={32} />
               </div>
-              <h3 className="text-xl font-black text-gray-900">Supprimer le groupe ?</h3>
-              <p className="mt-2 text-sm text-gray-500 font-medium">
+              <h3 className="text-xl font-black text-foreground">Supprimer le groupe ?</h3>
+              <p className="mt-2 text-sm text-muted font-medium">
                 Voulez-vous vraiment supprimer "{selectedGroup.name}" ?<br/>
                 Cette action est irréversible.
               </p>
@@ -2109,7 +2109,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
               </button>
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="w-full rounded-2xl bg-gray-100 py-4 text-sm font-bold text-gray-600 active:scale-[0.97] transition-transform"
+                className="w-full rounded-2xl bg-gray-100 py-4 text-sm font-bold text-muted active:scale-[0.97] transition-transform"
               >
                 Non, garder le groupe
               </button>

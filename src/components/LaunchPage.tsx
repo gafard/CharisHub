@@ -218,7 +218,7 @@ export default function LaunchPage() {
               <button
                 type="button"
                 onClick={() => navigateTo('/bible')}
-                className="inline-flex items-center gap-3 rounded-full border border-[#ebe6db] bg-white px-6 py-3.5 text-sm font-semibold text-[#141b37] shadow-[0_12px_32px_rgba(15,23,42,0.08)] transition hover:border-[#d9d1c0] hover:bg-[#fffdf8]"
+                className="inline-flex items-center gap-3 rounded-full border border-[#ebe6db] bg-surface px-6 py-3.5 text-sm font-semibold text-[#141b37] shadow-[0_12px_32px_rgba(15,23,42,0.08)] transition hover:border-[#d9d1c0] hover:bg-[#fffdf8]"
               >
                 <span className="grid h-7 w-7 place-items-center rounded-full bg-[#f4efe3] text-[#b78616]">
                   <BookOpen size={15} />

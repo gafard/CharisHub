@@ -132,7 +132,7 @@ export default function PrayerStepCard({
         <div className="mt-8 flex items-center gap-6">
           <button
             onClick={onToggleRunning}
-            className="grid h-20 w-20 place-items-center rounded-[28px] bg-white text-slate-950 shadow-2xl transition-all hover:scale-105 active:scale-95"
+            className="grid h-20 w-20 place-items-center rounded-[28px] bg-surface text-slate-950 shadow-2xl transition-all hover:scale-105 active:scale-95"
           >
             {isRunning ? <Pause size={32} fill="currentColor" /> : <Play size={32} className="ml-1" fill="currentColor" />}
           </button>

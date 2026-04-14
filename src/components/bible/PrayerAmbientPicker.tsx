@@ -51,7 +51,7 @@ export default function PrayerAmbientPicker({
                   onClick={() => onSelect(sound.id)}
                   className={`flex flex-col items-center justify-center gap-2.5 rounded-[24px] px-3 py-5 transition-all ${
                     isSelected
-                      ? 'bg-white text-slate-950 shadow-xl'
+                      ? 'bg-surface text-slate-950 shadow-xl'
                       : 'border border-white/5 bg-white/5 text-white/60 hover:bg-white/10'
                   }`}
                 >

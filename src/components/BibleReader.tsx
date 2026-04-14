@@ -334,7 +334,7 @@ function renderTextWithSearchMatch(text: string, query: string): ReactNode {
     nodes.push(
       <mark
         key={`hit-${key++}`}
-        className="search-hit-marker text-[color:var(--foreground)]"
+        className="search-hit-marker text-foreground"
       >
         {text.slice(index, end)}
       </mark>
@@ -2759,7 +2759,7 @@ export default function BibleReader({
 
       <div className={`mx-auto w-full ${embedded ? 'h-full min-h-0 flex flex-col' : 'max-w-6xl space-y-6'}`}>
         {/* Header Section (Flexible for both standard and embedded mode) */}
-        <header className={`bible-paper rounded-[32px] border border-[#e8ebf1] bg-white shadow-sm transition-all duration-500 
+        <header className={`bible-paper rounded-[32px] border border-[#e8ebf1] bg-surface shadow-sm transition-all duration-500 
           ${embedded ? 'p-4 mb-2' : 'p-10 md:p-14 mb-6'} 
           ${!embedded && (fullScreen || !isClient) ? 'hidden lg:block' : ''}`}
         >
@@ -2783,7 +2783,7 @@ export default function BibleReader({
                 <select
                   value={translationId}
                   onChange={(e) => setTranslationId(e.target.value)}
-                  className="cursor-pointer appearance-none rounded-xl border border-[color:var(--border-soft)] bg-[#FCF9F3] px-4 py-2 text-sm font-semibold text-[color:var(--foreground)] outline-none focus:border-[#c89f2d] focus:ring-1 focus:ring-[#c89f2d]/30"
+                  className="cursor-pointer appearance-none rounded-xl border border-border-soft bg-[#FCF9F3] px-4 py-2 text-sm font-semibold text-foreground outline-none focus:border-[#c89f2d] focus:ring-1 focus:ring-[#c89f2d]/30"
                 >
                   {LOCAL_BIBLE_TRANSLATIONS.map((t) => (
                     <option key={t.id} value={t.id}>
@@ -2798,7 +2798,7 @@ export default function BibleReader({
                     setBookId(e.target.value);
                     setChapter(1);
                   }}
-                  className="cursor-pointer appearance-none rounded-xl border border-[color:var(--border-soft)] bg-[#FCF9F3] px-4 py-2 text-sm font-semibold text-[color:var(--foreground)] outline-none focus:border-[#c89f2d] focus:ring-1 focus:ring-[#c89f2d]/30"
+                  className="cursor-pointer appearance-none rounded-xl border border-border-soft bg-[#FCF9F3] px-4 py-2 text-sm font-semibold text-foreground outline-none focus:border-[#c89f2d] focus:ring-1 focus:ring-[#c89f2d]/30"
                 >
                   {BIBLE_BOOKS.map((b) => (
                     <option key={b.id} value={b.id}>
@@ -2810,7 +2810,7 @@ export default function BibleReader({
                 <select
                   value={chapter}
                   onChange={(e) => setChapter(Number(e.target.value))}
-                  className="cursor-pointer appearance-none rounded-xl border border-[color:var(--border-soft)] bg-[#FCF9F3] px-4 py-2 text-sm font-semibold text-[color:var(--foreground)] outline-none focus:border-[#c89f2d] focus:ring-1 focus:ring-[#c89f2d]/30"
+                  className="cursor-pointer appearance-none rounded-xl border border-border-soft bg-[#FCF9F3] px-4 py-2 text-sm font-semibold text-foreground outline-none focus:border-[#c89f2d] focus:ring-1 focus:ring-[#c89f2d]/30"
                 >
                   {Array.from({ length: book.chapters }, (_, i) => i + 1).map((c) => (
                     <option key={c} value={c}>
@@ -2821,11 +2821,11 @@ export default function BibleReader({
               </div>
 
               <div className="flex flex-wrap items-center gap-3 ml-auto">
-                <div className="flex items-center gap-1.5 rounded-xl border border-[color:var(--border-soft)] bg-[#FCF9F3] p-1">
+                <div className="flex items-center gap-1.5 rounded-xl border border-border-soft bg-[#FCF9F3] p-1">
                   <button
                     type="button"
                     onClick={prevChapter}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[color:var(--surface-strong)] transition-colors text-[color:var(--foreground)]/70"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-surface-strong transition-colors text-foreground/70"
                     title="Chapitre précédent"
                   >
                     <ChevronLeft size={16} />
@@ -2840,7 +2840,7 @@ export default function BibleReader({
                     className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all ${
                       playerPlaying 
                         ? 'bg-[#c89f2d] text-white shadow-lg shadow-[#c89f2d]/20' 
-                        : 'hover:bg-[color:var(--surface-strong)] text-[color:var(--foreground)]/70 disabled:opacity-30'
+                        : 'hover:bg-surface-strong text-foreground/70 disabled:opacity-30'
                     }`}
                     title={playerPlaying ? "Pause" : "Lire l'audio"}
                   >
@@ -2852,7 +2852,7 @@ export default function BibleReader({
                   <button
                     type="button"
                     onClick={nextChapter}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[color:var(--surface-strong)] transition-colors text-[color:var(--foreground)]/70"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-surface-strong transition-colors text-foreground/70"
                     title="Chapitre suivant"
                   >
                     <ChevronRight size={16} />
@@ -2990,14 +2990,14 @@ export default function BibleReader({
 
           {noteOpenFor && (
             <div className="fixed inset-0 z-[15000] flex items-center justify-center bg-black/55 p-4 backdrop-blur-sm">
-              <div className="max-h-[80vh] w-full max-w-md overflow-y-auto rounded-3xl border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)] p-6 text-[color:var(--foreground)] shadow-[var(--shadow-soft)]">
+              <div className="max-h-[80vh] w-full max-w-md overflow-y-auto rounded-3xl border border-border-soft bg-surface-strong p-6 text-foreground shadow-[var(--shadow-soft)]">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="font-bold">
                     Note pour {book.name} {chapter}:{selectedVerse?.number}
                   </h3>
                   <button
                     onClick={() => setNoteOpenFor(null)}
-                    className="text-[color:var(--foreground)]/55 transition-colors hover:text-[color:var(--foreground)]"
+                    className="text-foreground/55 transition-colors hover:text-foreground"
                   >
                     ✕
                   </button>
@@ -3009,7 +3009,7 @@ export default function BibleReader({
                     [noteOpenFor]: e.target.value,
                   }))}
                   placeholder="Écrivez votre note ici..."
-                  className="h-40 w-full rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-3 text-[color:var(--foreground)] outline-none"
+                  className="h-40 w-full rounded-lg border border-border-soft bg-surface p-3 text-foreground outline-none"
                 />
                 <div className="mt-4 flex justify-end">
                   <button

@@ -109,7 +109,7 @@ export default function SupabaseOnboardingModal({ isOpen, onClose }: SupabaseOnb
               </div>
               <div>
                 <p className="font-semibold text-sm">Créez un compte gratuit</p>
-                <p className="text-xs text-gray-600 mt-1">
+                <p className="text-xs text-muted mt-1">
                   Utilisez GitHub, Google ou votre email
                 </p>
               </div>
@@ -121,7 +121,7 @@ export default function SupabaseOnboardingModal({ isOpen, onClose }: SupabaseOnb
               </div>
               <div>
                 <p className="font-semibold text-sm">Créez un nouveau projet</p>
-                <p className="text-xs text-gray-600 mt-1">
+                <p className="text-xs text-muted mt-1">
                   Nommez-le "charishub" et choisissez la région la plus proche
                 </p>
               </div>
@@ -266,7 +266,7 @@ npm run dev`}</code>
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="fixed inset-4 md:inset-10 lg:inset-20 max-w-2xl mx-auto bg-white rounded-3xl shadow-2xl z-50 overflow-hidden flex flex-col"
+            className="fixed inset-4 md:inset-10 lg:inset-20 max-w-2xl mx-auto bg-surface rounded-3xl shadow-2xl z-50 overflow-hidden flex flex-col"
           >
             {/* Header */}
             <div className="px-6 py-5 bg-gradient-to-r from-[#D4AF37] to-[#B8941F] text-white">
@@ -293,7 +293,7 @@ npm run dev`}</code>
               {/* Progress bar */}
               <div className="mt-4 w-full h-1 bg-white/30 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-white transition-all duration-300"
+                  className="h-full bg-surface transition-all duration-300"
                   style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
                 />
               </div>
@@ -302,13 +302,13 @@ npm run dev`}</code>
             {/* Content */}
             <div className="flex-1 overflow-y-auto p-6">
               <div className="space-y-4">
-                <h3 className="text-xl font-bold text-gray-900">{currentStepData.title}</h3>
+                <h3 className="text-xl font-bold text-foreground">{currentStepData.title}</h3>
                 {currentStepData.content}
               </div>
             </div>
 
             {/* Footer */}
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+            <div className="px-6 py-4 bg-surface-strong border-t border-border-soft flex items-center justify-between">
               <button
                 onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
                 disabled={currentStep === 0}

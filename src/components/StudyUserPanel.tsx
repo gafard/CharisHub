@@ -36,25 +36,25 @@ function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <section className="overflow-hidden rounded-[30px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]/92 shadow-[0_14px_36px_rgba(16,24,40,0.06)]">
-      <div className="border-b border-[color:var(--border-soft)] px-5 py-5 sm:px-6">
+    <section className="overflow-hidden rounded-[30px] border border-border-soft bg-surface/92 shadow-[0_14px_36px_rgba(16,24,40,0.06)]">
+      <div className="border-b border-border-soft px-5 py-5 sm:px-6">
         <div className="flex items-start gap-4">
           {icon ? (
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[color:var(--surface-strong)] text-[color:var(--accent)] ring-1 ring-[color:var(--border-soft)]">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-surface-strong text-[color:var(--accent)] ring-1 ring-[color:var(--border-soft)]">
               {icon}
             </div>
           ) : null}
           <div className="min-w-0">
             {eyebrow ? (
-              <div className="text-[10px] font-black uppercase tracking-[0.18em] text-[color:var(--foreground)]/45">
+              <div className="text-[10px] font-black uppercase tracking-[0.18em] text-foreground/45">
                 {eyebrow}
               </div>
             ) : null}
-            <h3 className="mt-1 text-lg font-extrabold tracking-tight text-[color:var(--foreground)]">
+            <h3 className="mt-1 text-lg font-extrabold tracking-tight text-foreground">
               {title}
             </h3>
             {description ? (
-              <p className="mt-1 text-sm leading-6 text-[color:var(--foreground)]/62">
+              <p className="mt-1 text-sm leading-6 text-foreground/62">
                 {description}
               </p>
             ) : null}
@@ -99,14 +99,14 @@ function QuickMetric({
   icon: React.ReactNode;
 }) {
   return (
-    <div className="rounded-[22px] border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)]/70 p-4">
-      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-[color:var(--surface)] text-[color:var(--accent)] ring-1 ring-[color:var(--border-soft)]">
+    <div className="rounded-[22px] border border-border-soft bg-surface-strong/70 p-4">
+      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-surface text-[color:var(--accent)] ring-1 ring-[color:var(--border-soft)]">
         {icon}
       </div>
-      <div className="text-base font-black tracking-tight text-[color:var(--foreground)]">
+      <div className="text-base font-black tracking-tight text-foreground">
         {value}
       </div>
-      <div className="mt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[color:var(--foreground)]/46">
+      <div className="mt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/46">
         {label}
       </div>
     </div>
@@ -212,7 +212,7 @@ export default function StudyUserPanel({
             value={draftName}
             onChange={(event) => setDraftName(event.target.value)}
             placeholder={isAuthenticated ? "Nom d'affichage" : 'Pseudo invité'}
-            className="h-13 w-full rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)] px-4 text-sm font-medium outline-none transition focus:border-[color:var(--accent-border)] hover:border-[color:var(--border-strong)]"
+            className="h-13 w-full rounded-2xl border border-border-soft bg-surface-strong px-4 text-sm font-medium outline-none transition focus:border-[color:var(--accent-border)] hover:border-border-strong"
           />
           <button
             type="button"
@@ -229,7 +229,7 @@ export default function StudyUserPanel({
           </button>
         </div>
 
-        <div className="mt-4 rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)]/65 p-4 text-xs leading-6 text-[color:var(--foreground)]/62">
+        <div className="mt-4 rounded-2xl border border-border-soft bg-surface-strong/65 p-4 text-xs leading-6 text-foreground/62">
           {isAuthenticated ? (
             <>
               Votre nom est relié à votre compte et vous suit dans vos groupes, formations,
@@ -259,7 +259,7 @@ export default function StudyUserPanel({
               'inline-flex items-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition-all',
               notificationsEnabled
                 ? 'border-emerald-400/35 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
-                : 'border-[color:var(--border-soft)] bg-[color:var(--surface-strong)] text-[color:var(--foreground)]/80 hover:border-[color:var(--border-strong)]',
+                : 'border-border-soft bg-surface-strong text-foreground/80 hover:border-border-strong',
             ].join(' ')}
           >
             {notificationsEnabled ? <Bell size={15} /> : <BellOff size={15} />}
@@ -273,7 +273,7 @@ export default function StudyUserPanel({
           description="Choisissez la langue utilisée dans l’application."
           icon={<Globe size={20} />}
         >
-          <div className="inline-flex items-center gap-2 rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)] p-1">
+          <div className="inline-flex items-center gap-2 rounded-2xl border border-border-soft bg-surface-strong p-1">
             {[
               { value: 'fr', label: 'FR' },
               { value: 'en', label: 'EN' },
@@ -285,8 +285,8 @@ export default function StudyUserPanel({
                 className={[
                   'rounded-xl px-4 py-2 text-sm font-bold transition-all',
                   locale === item.value
-                    ? 'bg-white shadow-sm ring-1 ring-black/5 text-[color:var(--foreground)] dark:bg-[color:var(--surface-strong)]'
-                    : 'text-[color:var(--foreground)]/60 hover:text-[color:var(--foreground)]',
+                    ? 'bg-surface shadow-sm ring-1 ring-black/5 text-foreground dark:bg-surface-strong'
+                    : 'text-foreground/60 hover:text-foreground',
                 ].join(' ')}
               >
                 {item.label}
@@ -301,7 +301,7 @@ export default function StudyUserPanel({
           description="Ajustez l'apparence selon l'heure ou vos préférences."
           icon={theme === 'dark' ? <Moon size={20} /> : <Sun size={20} />}
         >
-          <div className="inline-flex items-center gap-2 rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)] p-1">
+          <div className="inline-flex items-center gap-2 rounded-2xl border border-border-soft bg-surface-strong p-1">
             {[
               { value: 'light', label: 'Clair', icon: <Sun size={14} /> },
               { value: 'dark', label: 'Sombre', icon: <Moon size={14} /> },
@@ -313,8 +313,8 @@ export default function StudyUserPanel({
                 className={[
                   'flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all',
                   theme === item.value
-                    ? 'bg-white shadow-sm ring-1 ring-black/5 text-[color:var(--foreground)] dark:bg-[color:var(--surface-strong)]'
-                    : 'text-[color:var(--foreground)]/60 hover:text-[color:var(--foreground)]',
+                    ? 'bg-surface shadow-sm ring-1 ring-black/5 text-foreground dark:bg-surface-strong'
+                    : 'text-foreground/60 hover:text-foreground',
                 ].join(' ')}
               >
                 {item.icon}
@@ -334,8 +334,8 @@ export default function StudyUserPanel({
           icon={<ShieldCheck size={20} />}
         >
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)]/70 px-4 py-3 text-sm text-[color:var(--foreground)]/70">
-              Connecté en tant que <span className="font-bold text-[color:var(--foreground)]">{user?.email || 'Utilisateur'}</span>
+            <div className="rounded-2xl border border-border-soft bg-surface-strong/70 px-4 py-3 text-sm text-foreground/70">
+              Connecté en tant que <span className="font-bold text-foreground">{user?.email || 'Utilisateur'}</span>
             </div>
 
             <button

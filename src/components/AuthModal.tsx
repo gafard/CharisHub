@@ -118,7 +118,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onSu
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             className="fixed inset-0 z-[201] flex items-center justify-center p-4 sm:p-6"
           >
-            <div className="relative flex w-full max-w-5xl flex-col overflow-hidden rounded-[2.5rem] bg-white shadow-[0_32px_80px_rgba(0,0,0,0.25)] md:flex-row lg:h-[720px]">
+            <div className="relative flex w-full max-w-5xl flex-col overflow-hidden rounded-[2.5rem] bg-surface shadow-[0_32px_80px_rgba(0,0,0,0.25)] md:flex-row lg:h-[720px]">
               
               {/* Left Side: Visual Experience */}
               <div className="relative hidden w-full overflow-hidden bg-[#121936] md:block md:w-[45%] lg:w-[50%]">
@@ -186,11 +186,11 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onSu
               </div>
 
               {/* Right Side: Authentication Form */}
-              <div className="relative flex w-full flex-col bg-white p-8 sm:p-12 md:w-[55%] lg:w-[50%] lg:p-16">
+              <div className="relative flex w-full flex-col bg-surface p-8 sm:p-12 md:w-[55%] lg:w-[50%] lg:p-16">
                 {/* Close Button */}
                 <button
                   onClick={onClose}
-                  className="absolute right-8 top-8 rounded-full bg-gray-50 p-2.5 text-gray-400 transition-all hover:bg-gray-100 hover:text-gray-900"
+                  className="absolute right-8 top-8 rounded-full bg-surface-strong p-2.5 text-gray-400 transition-all hover:bg-gray-100 hover:text-foreground"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -200,7 +200,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onSu
                     <h2 className="text-3xl font-black tracking-tight text-[#121936]">
                       {mode === 'login' ? 'Bon retour parmi nous' : 'Créer votre espace'}
                     </h2>
-                    <p className="mt-2 font-medium text-slate-500">
+                    <p className="mt-2 font-medium text-muted">
                       {mode === 'login' 
                         ? 'Accédez à vos groupes et formations en un clic.' 
                         : 'Commencez l’expérience CharisHub dès aujourd’hui.'}
@@ -211,9 +211,9 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onSu
                   <button
                     onClick={handleGoogleLogin}
                     disabled={loading}
-                    className="group relative flex w-full items-center justify-center gap-4 rounded-2xl border border-slate-200 bg-white py-4 text-sm font-bold text-slate-700 transition-all hover:border-[#D4AF37] hover:bg-amber-50/30 hover:shadow-[0_12px_30px_rgba(212,175,55,0.1)] active:scale-[0.98] disabled:opacity-50"
+                    className="group relative flex w-full items-center justify-center gap-4 rounded-2xl border border-border-soft bg-surface py-4 text-sm font-bold text-slate-700 transition-all hover:border-[#D4AF37] hover:bg-amber-50/30 hover:shadow-[0_12px_30px_rgba(212,175,55,0.1)] active:scale-[0.98] disabled:opacity-50"
                   >
-                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-slate-100">
+                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-surface shadow-sm ring-1 ring-slate-100">
                       <Chrome className="h-3.5 w-3.5 text-blue-500" />
                     </div>
                     Continuer avec Google
@@ -260,7 +260,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onSu
                           value={displayName}
                           onChange={(e) => setDisplayName(e.target.value)}
                           placeholder="Votre Nom ou Pseudo"
-                          className="w-full rounded-2xl border border-slate-100 bg-slate-50/50 py-4 pl-14 pr-5 text-sm font-semibold outline-none transition-all focus:border-[#D4AF37] focus:bg-white focus:ring-4 focus:ring-amber-500/5 placeholder:text-slate-400"
+                          className="w-full rounded-2xl border border-border-soft bg-slate-50/50 py-4 pl-14 pr-5 text-sm font-semibold outline-none transition-all focus:border-[#D4AF37] focus:bg-surface focus:ring-4 focus:ring-amber-500/5 placeholder:text-slate-400"
                           required={mode === 'register'}
                         />
                       </div>
@@ -273,7 +273,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onSu
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="Adresse Email"
-                        className="w-full rounded-2xl border border-slate-100 bg-slate-50/50 py-4 pl-14 pr-5 text-sm font-semibold outline-none transition-all focus:border-[#D4AF37] focus:bg-white focus:ring-4 focus:ring-amber-500/5 placeholder:text-slate-400"
+                        className="w-full rounded-2xl border border-border-soft bg-slate-50/50 py-4 pl-14 pr-5 text-sm font-semibold outline-none transition-all focus:border-[#D4AF37] focus:bg-surface focus:ring-4 focus:ring-amber-500/5 placeholder:text-slate-400"
                         required
                       />
                     </div>
@@ -285,14 +285,14 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onSu
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="Mot de Passe"
-                        className="w-full rounded-2xl border border-slate-100 bg-slate-50/50 py-4 pl-14 pr-14 text-sm font-semibold outline-none transition-all focus:border-[#D4AF37] focus:bg-white focus:ring-4 focus:ring-amber-500/5 placeholder:text-slate-400"
+                        className="w-full rounded-2xl border border-border-soft bg-slate-50/50 py-4 pl-14 pr-14 text-sm font-semibold outline-none transition-all focus:border-[#D4AF37] focus:bg-surface focus:ring-4 focus:ring-amber-500/5 placeholder:text-slate-400"
                         minLength={6}
                         required
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-900"
+                        className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-foreground"
                       >
                         {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                       </button>
@@ -316,7 +316,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onSu
 
                   {/* Switcher */}
                   <div className="mt-8 text-center">
-                    <p className="text-sm font-medium text-slate-500">
+                    <p className="text-sm font-medium text-muted">
                       {mode === 'login' ? "Nouveau sur CharisHub ?" : 'Déjà membre ?'}
                       <button
                         type="button"

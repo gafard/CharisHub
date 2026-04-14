@@ -155,7 +155,7 @@ function DailyVerseCard({ verse }: { verse: DailyVerse }) {
         <div className="mt-8 flex gap-3">
           <button 
             onClick={() => navigator.clipboard.writeText(`"${verse.text}" - ${verse.ref}`)}
-            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3 text-xs font-black uppercase tracking-wider text-black transition-transform active:scale-95"
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-surface px-4 py-3 text-xs font-black uppercase tracking-wider text-black transition-transform active:scale-95"
           >
             <Copy size={16} /> Copier
           </button>
@@ -390,7 +390,7 @@ export default function SpiritualDashboard() {
           </div>
           <div className="lg:w-1/3 flex flex-col gap-6">
              <div className="flex flex-col items-center justify-center rounded-[32px] border border-blue-200/50 bg-gradient-to-b from-blue-50/80 to-[#fffdf8] p-6 shadow-sm ring-1 ring-blue-100/50">
-               <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm mb-4">
+               <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-surface shadow-sm mb-4">
                   <Sun size={28} className="text-blue-600" />
                </div>
                <div className="text-center">
