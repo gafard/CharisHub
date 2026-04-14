@@ -3135,7 +3135,6 @@ export default function BibleReader({
               setMirrorLoading(false);
             });
         }}
-        onOpenReflection={() => setShowReflectionSheet(true)}
       />
       <BibleStudyRadar
         open={radarOpen}
