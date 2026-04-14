@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, Poppins, Merriweather } from 'next/font/google';
+import { Inter, Poppins, Merriweather, Almarai, Instrument_Serif } from 'next/font/google';
 import './globals.css';
 import { I18nProvider } from '../contexts/I18nContext';
 import { SettingsProvider } from '../contexts/SettingsContext';
@@ -29,6 +29,21 @@ const merriweather = Merriweather({
   display: 'swap',
 });
 
+const almarai = Almarai({
+  subsets: ['arabic', 'latin'],
+  weight: ['300', '400', '700', '800'],
+  variable: '--font-almarai',
+  display: 'swap',
+});
+
+const instrumentSerif = Instrument_Serif({
+  subsets: ['latin'],
+  weight: ['400'],
+  style: ['italic'],
+  variable: '--font-instrument-serif',
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
   title: 'CharisHub',
   description: "Connectés par la grâce — Vision Miroir",
@@ -50,7 +65,7 @@ export default function RootLayout({
     <html
       lang="fr"
       suppressHydrationWarning={true}
-      className={`${inter.variable} ${poppins.variable} ${merriweather.variable}`}
+      className={`${inter.variable} ${poppins.variable} ${merriweather.variable} ${almarai.variable} ${instrumentSerif.variable}`}
     >
       <body className="pb-[92px] font-sans antialiased md:pb-0" suppressHydrationWarning={true}>
         <AuthProvider>

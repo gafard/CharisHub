@@ -49,6 +49,7 @@ import { getActivePlan, isReadingChapterCompleted } from '../lib/readingPlans';
 import { graceService } from '../lib/graceService';
 import { pepitesStore } from '../lib/pepitesStore';
 import GraceMirrorModal from './bible/GraceMirrorModal';
+import { AnimatedLetter } from './ui/PrismaAnimations';
 
 // Traductions de la Bible provenant du fichier centralisé
 const LOCAL_BIBLE_TRANSLATIONS = [
@@ -1039,6 +1040,7 @@ export default function BibleReader({
   const [pendingAutoPlayAfterSync, setPendingAutoPlayAfterSync] = useState(false);
   const [immersiveEnabled, setImmersiveEnabled] = useState(true);
   const [immersiveMode, setImmersiveMode] = useState(false);
+  const [isPrismaMeditation, setIsPrismaMeditation] = useState(false);
   const [memoryMode, setMemoryMode] = useState(false);
   const [memoryMaskLevel, setMemoryMaskLevel] = useState(4);
   const [ambientEnabled, setAmbientEnabled] = useState(true);
@@ -2929,7 +2931,13 @@ export default function BibleReader({
                             className={`group relative w-full rounded-xl px-4 py-3 text-left transition-all duration-300 ${isSelected ? 'bg-[#c89f2d]/10' : 'hover:bg-[#161c35]/5'}`}
                           >
                             <span className={`mr-4 inline-block font-sans text-[10px] font-black uppercase tracking-widest ${isAudioActive ? 'text-[#c89f2d]' : 'text-[#161c35]/20'}`}>{verse.number}</span>
-                            <span className={`text-[1.05em] leading-[1.8] transition-colors duration-500 ${isAudioActive ? 'font-bold text-[#b78616]' : 'text-[#1a2142]/90'} ${verseHighlightColor ? `bg-${verseHighlightColor}-500/10 rounded-md px-1` : ''}`}>{verse.text}</span>
+                            <span className={`text-[1.05em] leading-[1.8] transition-colors duration-500 ${isAudioActive ? 'font-bold text-[#b78616]' : 'text-[#1a2142]/90'} ${verseHighlightColor ? `bg-${verseHighlightColor}-500/10 rounded-md px-1` : ''}`}>
+                              {isPrismaMeditation ? (
+                                <AnimatedLetter text={verse.text} />
+                              ) : (
+                                verse.text
+                              )}
+                            </span>
                             {isAudioActive && <motion.div layoutId="audio-indicator" className="absolute bottom-2 left-14 right-6 h-[1px] rounded-full bg-[#c89f2d]/30" initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} />}
                           </button>
                         );
@@ -3369,6 +3377,8 @@ export default function BibleReader({
             audioVerseSegments={audioVerseSegments}
             activeAudioVerseNumber={activeCueVerse}
             onSeekToAudioVerse={seekToAudioVerse}
+            isPrismaMeditation={isPrismaMeditation}
+            setIsPrismaMeditation={setIsPrismaMeditation}
           />
         </div>
       </div>

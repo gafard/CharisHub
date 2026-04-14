@@ -13,6 +13,7 @@ import {
   Pause,
   Play,
   Search,
+  Sparkles,
   Volume2,
 } from 'lucide-react';
 
@@ -142,6 +143,8 @@ export default function BibleToolbar({
   audioVerseSegments,
   activeAudioVerseNumber,
   onSeekToAudioVerse,
+  isPrismaMeditation,
+  setIsPrismaMeditation,
 }: {
   tool: ToolMode;
   setTool: (t: ToolMode) => void;
@@ -158,6 +161,8 @@ export default function BibleToolbar({
   audioVerseSegments: AudioVerseSegment[];
   activeAudioVerseNumber: number | null;
   onSeekToAudioVerse: (verse: number) => void;
+  isPrismaMeditation: boolean;
+  setIsPrismaMeditation: (v: boolean) => void;
 }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -278,6 +283,12 @@ export default function BibleToolbar({
                     label="Copier"
                     icon={<Clipboard size={15} />}
                     onClick={onCopy}
+                  />
+                  <ToolbarPill
+                    active={isPrismaMeditation}
+                    label="Méditer"
+                    icon={<Sparkles size={15} className={isPrismaMeditation ? "text-amber-500" : ""} />}
+                    onClick={() => setIsPrismaMeditation(!isPrismaMeditation)}
                   />
 
                   <div className="ml-auto flex items-center gap-2 rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface)] px-2 py-1.5 dark:border-white/15 dark:bg-white/8">

@@ -28,6 +28,7 @@ import { getAllSessions, type PrayerFlowSession } from '@/lib/prayerFlowStore';
 import { pepitesStore, type Pepite } from '@/lib/pepitesStore';
 import { useAuth } from '@/contexts/AuthContext';
 import { performInitialSync } from '@/lib/cloudSync';
+import { WordsPullUp, WordsPullUpMultiStyle } from './ui/PrismaAnimations';
 
 // ============================================================
 // Types & Data
@@ -143,9 +144,10 @@ function DailyVerseCard({ verse }: { verse: DailyVerse }) {
         </div>
 
         <Quote size={32} className="mb-4 opacity-30" />
-        <h3 className="text-xl md:text-2xl font-black leading-tight tracking-tight">
-          « {verse.text} »
-        </h3>
+        <WordsPullUp 
+          text={`« ${verse.text} »`}
+          className="text-xl md:text-2xl font-black leading-tight tracking-tight !justify-start !text-left"
+        />
         <p className="mt-4 text-sm font-bold text-white/70 uppercase tracking-widest">
           {verse.ref}
         </p>
@@ -159,6 +161,7 @@ function DailyVerseCard({ verse }: { verse: DailyVerse }) {
           </button>
         </div>
       </div>
+      <div className="noise-overlay opacity-[0.25]" />
     </motion.div>
   );
 }
@@ -195,11 +198,12 @@ function PastoralInsight() {
       <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#D4FF33] text-black shadow-inner">
         <Heart size={24} />
       </div>
-      <div>
+       <div>
         <h4 className="text-sm font-black text-[#141b37] uppercase tracking-wide">{word.title}</h4>
-        <p className="mt-1 text-xs leading-relaxed text-[#141b37]/60">
-          {word.text}
-        </p>
+        <WordsPullUpMultiStyle 
+          segments={[{ text: word.text, className: "mt-1 text-xs leading-relaxed text-[#141b37]/60" }]}
+          className="!justify-start !text-left"
+        />
       </div>
     </motion.div>
   );
@@ -350,7 +354,9 @@ export default function SpiritualDashboard() {
   }
 
   return (
-    <div className="relative space-y-8 pb-10">
+    <div className="relative space-y-8 pb-10 bg-noise min-h-screen">
+      <div className="noise-overlay fixed inset-0 z-0 opacity-[0.05] pointer-events-none" />
+      
       {/* Background Orbs */}
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
         <div className="absolute left-[10%] top-[5%] h-[400px] w-[400px] rounded-full bg-blue-500/5 blur-[120px]" />
