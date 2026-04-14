@@ -1721,22 +1721,24 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
       ) : (
         <>
           <section className="relative overflow-hidden bg-background px-6 py-12 sm:px-12 sm:py-20 lg:py-24">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(var(--accent-rgb),0.10),transparent_38%)]" />
+            {/* Dégradé d'ambiance */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(var(--accent-rgb),0.12),transparent_45%)]" />
 
-            <div className="absolute right-0 top-0 bottom-0 z-0 hidden w-[58%] lg:block">
+            {/* Hero Image avec masque adaptatif */}
+            <div className="absolute right-0 top-0 bottom-0 z-0 hidden w-[60%] lg:block">
               <img
                 src="/images/community_hero.webp"
                 alt=""
-                className="h-full w-full object-cover object-center opacity-80 mix-blend-luminosity"
+                className="h-full w-full object-cover object-center opacity-75 mix-blend-luminosity dark:opacity-40 dark:mix-blend-lighten"
                 aria-hidden="true"
               />
+              {/* Masque pour fondre l'image dans le noir absolu à gauche */}
+              <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent dark:from-black dark:via-black/90 dark:to-transparent" />
             </div>
-
-            <div className="absolute inset-y-0 right-0 z-[1] hidden w-[65%] bg-gradient-to-r from-background via-background/60 to-transparent lg:block" />
 
             <div className="relative z-10 mx-auto max-w-7xl">
               <div className="max-w-3xl text-center lg:text-left">
-                <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border-soft bg-surface/90 px-4 py-2 text-[11px] font-black uppercase tracking-[0.18em] text-accent shadow-[0_10px_24px_rgba(var(--foreground-rgb),0.05)]">
+                <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border-soft bg-surface/80 px-4 py-2 text-[11px] font-black uppercase tracking-[0.18em] text-accent shadow-xl backdrop-blur-md">
                   Plateforme chrétienne
                 </div>
 
@@ -1754,7 +1756,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
                 </p>
 
                 <div className="mt-10 grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3">
-                  <div className="rounded-2xl border border-border-soft bg-surface/80 px-4 py-4 shadow-[0_10px_24px_rgba(0,0,0,0.04)]">
+                  <div className="rounded-2xl border border-border-soft bg-surface/80 p-4 shadow-[0_10px_24px_rgba(0,0,0,0.2)] backdrop-blur-sm">
                     <div className="text-[10px] font-black uppercase tracking-[0.14em] text-accent">
                       Appels en direct
                     </div>
@@ -1763,7 +1765,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
                     </p>
                   </div>
 
-                  <div className="rounded-2xl border border-border-soft bg-surface/80 px-4 py-4 shadow-[0_10px_24px_rgba(0,0,0,0.04)]">
+                  <div className="rounded-2xl border border-border-soft bg-surface/80 p-4 shadow-[0_10px_24px_rgba(0,0,0,0.2)] backdrop-blur-sm">
                     <div className="text-[10px] font-black uppercase tracking-[0.14em] text-accent">
                       Étude biblique
                     </div>
@@ -1772,7 +1774,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
                     </p>
                   </div>
 
-                  <div className="rounded-2xl border border-border-soft bg-surface/80 px-4 py-4 shadow-[0_10px_24px_rgba(0,0,0,0.04)]">
+                  <div className="rounded-2xl border border-border-soft bg-surface/80 p-4 shadow-[0_10px_24px_rgba(0,0,0,0.2)] backdrop-blur-sm">
                     <div className="text-[10px] font-black uppercase tracking-[0.14em] text-accent">
                       Formations
                     </div>
