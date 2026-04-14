@@ -180,3 +180,53 @@ export function markPrayerCompleted(planId: string, dayIndex: number) {
 
   saveStore(store);
 }
+
+// ==========================================
+// Moteurs Standalone (hors plan de lecture)
+// ==========================================
+
+export function getStandaloneReflectionKey(bookId: string, chapter: number): string {
+  return `standalone:${bookId}:${chapter}`;
+}
+
+export function getStandaloneReflection(bookId: string, chapter: number): ChapterReflectionEntry | null {
+  const store = loadStore();
+  const dayKey = 'standalone_reflections';
+  const state = store[dayKey] ?? emptyDayState();
+  return state.chapterReflections[getStandaloneReflectionKey(bookId, chapter)] ?? null;
+}
+
+export function saveStandaloneReflection(
+  bookId: string,
+  bookName: string,
+  chapter: number,
+  answers: ChapterReflectionAnswers,
+) {
+  const store = loadStore();
+  const dayKey = 'standalone_reflections';
+  const previous = store[dayKey] ?? emptyDayState();
+  const chapterKey = getStandaloneReflectionKey(bookId, chapter);
+
+  store[dayKey] = {
+    ...previous,
+    chapterReflections: {
+      ...previous.chapterReflections,
+      [chapterKey]: {
+        readingId: `standalone-${bookId}`,
+        bookId,
+        bookName,
+        chapter,
+        answers,
+        updatedAt: new Date().toISOString(),
+      },
+    },
+  };
+
+  saveStore(store);
+}
+
+export function hasStandaloneReflection(bookId: string, chapter: number): boolean {
+  const entry = getStandaloneReflection(bookId, chapter);
+  if (!entry) return false;
+  return Object.values(entry.answers).some((value) => value.trim().length > 0);
+}

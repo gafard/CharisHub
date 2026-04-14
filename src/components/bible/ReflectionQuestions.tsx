@@ -19,6 +19,8 @@ import {
   getDayDailyPrompts,
   saveChapterReflection,
   saveDayDailyPrompts,
+  getStandaloneReflection,
+  saveStandaloneReflection,
 } from '../../lib/readingPlanReflectionStore';
 import { BIBLE_BOOKS } from '../../lib/bibleCatalog';
 
@@ -58,9 +60,9 @@ const DEFAULT_AI_QUESTIONS: AiQuestions = {
 };
 
 interface ReflectionQuestionsProps {
-  planId: string;
-  dayIndex: number;
-  readings: PlanReading[];
+  planId?: string;
+  dayIndex?: number;
+  readings?: PlanReading[];
   activeReading?: PlanReading | null;
   activeChapter?: number | null;
   finalChapter?: boolean;
@@ -70,13 +72,15 @@ interface ReflectionQuestionsProps {
 }
 
 function getFocusContext(
-  readings: PlanReading[],
+  readings: PlanReading[] | undefined,
   activeReading?: PlanReading | null,
   activeChapter?: number | null,
 ): FocusContext | null {
   if (activeReading && typeof activeChapter === 'number') {
     return { reading: activeReading, chapter: activeChapter };
   }
+
+  if (!readings || readings.length === 0) return null;
 
   const fallbackReading = readings[readings.length - 1];
   const fallbackChapter = fallbackReading?.chapters[fallbackReading.chapters.length - 1];
@@ -212,7 +216,7 @@ export default function ReflectionQuestions({
   );
 
   const readingLabel = useMemo(
-    () => (readings.length ? formatDayReadingsLabel(readings) : 'Lecture du jour'),
+    () => (readings?.length ? formatDayReadingsLabel(readings) : 'Lecture du jour'),
     [readings],
   );
 
@@ -223,7 +227,10 @@ export default function ReflectionQuestions({
 
   const focusStorageKey = useMemo(() => {
     if (!focus) return null;
-    return `${planId}:${dayIndex}:${focus.reading.id}:${focus.chapter}`;
+    if (planId && dayIndex !== undefined) {
+       return `${planId}:${dayIndex}:${focus.reading.id}:${focus.chapter}`;
+    }
+    return `standalone:${focus.reading.bookId}:${focus.chapter}`;
   }, [focus, planId, dayIndex]);
 
   const [showDailyPrompts, setShowDailyPrompts] = useState(finalChapter);
@@ -256,11 +263,17 @@ export default function ReflectionQuestions({
 
   const storedAnswers = useMemo(() => {
     if (!focus) return {};
-    return getChapterReflection(planId, dayIndex, focus.reading.id, focus.chapter)?.answers ?? {};
+    if (planId && dayIndex !== undefined) {
+      return getChapterReflection(planId, dayIndex, focus.reading.id, focus.chapter)?.answers ?? {};
+    }
+    return getStandaloneReflection(focus.reading.bookId, focus.chapter)?.answers ?? {};
   }, [focus, planId, dayIndex]);
 
   const storedDailyAnswers = useMemo(() => {
-    return getDayDailyPrompts(planId, dayIndex);
+    if (planId && dayIndex !== undefined) {
+      return getDayDailyPrompts(planId, dayIndex);
+    }
+    return {}; // Pas de prompts quotidiens en mode standalone pour le moment
   }, [planId, dayIndex]);
 
   useEffect(() => {
@@ -287,7 +300,11 @@ export default function ReflectionQuestions({
     setAiLoading(true);
 
     try {
-      const plan = findReadingPlan(planId);
+      let planCategory;
+      if (planId) {
+         const plan = findReadingPlan(planId);
+         planCategory = plan?.category;
+      }
       const bookName = getBookDisplayName(focus.reading.bookId);
 
       const res = await fetch('/api/bible/reflection-questions', {
@@ -297,7 +314,7 @@ export default function ReflectionQuestions({
           bookName,
           chapter: focus.chapter,
           passageText: passageText?.slice(0, 4000),
-          planCategory: plan?.category,
+          planCategory,
         }),
       });
 
@@ -348,7 +365,11 @@ export default function ReflectionQuestions({
       setAnswers(nextAnswers);
       if (!focus) return;
 
-      saveChapterReflection(planId, dayIndex, focus.reading, focus.chapter, nextAnswers);
+      if (planId && dayIndex !== undefined) {
+        saveChapterReflection(planId, dayIndex, focus.reading, focus.chapter, nextAnswers);
+      } else {
+        saveStandaloneReflection(focus.reading.bookId, focus.reading.bookName, focus.chapter, nextAnswers);
+      }
       onStateChange?.();
     },
     [focus, planId, dayIndex, onStateChange],
@@ -357,8 +378,10 @@ export default function ReflectionQuestions({
   const savePromptAnswer = useCallback(
     (nextDailyAnswers: Record<string, string>) => {
       setDailyAnswers(nextDailyAnswers);
-      saveDayDailyPrompts(planId, dayIndex, nextDailyAnswers);
-      onStateChange?.();
+      if (planId && dayIndex !== undefined) {
+         saveDayDailyPrompts(planId, dayIndex, nextDailyAnswers);
+         onStateChange?.();
+      }
     },
     [planId, dayIndex, onStateChange],
   );

@@ -29,6 +29,7 @@ import {
 import BibleStrongViewer from './BibleStrongViewer';
 import InterlinearViewer from './InterlinearViewer';
 import AdvancedStudyTools from './AdvancedStudyTools';
+import ReflectionSheet from './bible/ReflectionSheet';
 import BibleToolbar from './bible/BibleToolbar';
 import BibleLongPressSheet from './bible/BibleLongPressSheet';
 import ShareableVerseCard from './ShareableVerseCard';
@@ -1041,6 +1042,7 @@ export default function BibleReader({
   const [immersiveEnabled, setImmersiveEnabled] = useState(true);
   const [immersiveMode, setImmersiveMode] = useState(false);
   const [isPrismaMeditation, setIsPrismaMeditation] = useState(false);
+  const [showReflectionSheet, setShowReflectionSheet] = useState(false);
   const [memoryMode, setMemoryMode] = useState(false);
   const [memoryMaskLevel, setMemoryMaskLevel] = useState(4);
   const [ambientEnabled, setAmbientEnabled] = useState(true);
@@ -1084,6 +1086,13 @@ export default function BibleReader({
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  const standaloneReading = useMemo(() => ({
+    id: `standalone-${bookId}`,
+    bookId: bookId,
+    bookName: BIBLE_BOOKS.find(b => b.id === bookId)?.name ?? '',
+    chapters: [chapter]
+  }), [bookId, chapter]);
 
   useEffect(() => {
     return () => {
@@ -3126,6 +3135,7 @@ export default function BibleReader({
               setMirrorLoading(false);
             });
         }}
+        onOpenReflection={() => setShowReflectionSheet(true)}
       />
       <BibleStudyRadar
         open={radarOpen}
@@ -3379,6 +3389,7 @@ export default function BibleReader({
             onSeekToAudioVerse={seekToAudioVerse}
             isPrismaMeditation={isPrismaMeditation}
             setIsPrismaMeditation={setIsPrismaMeditation}
+            onOpenReflection={() => setShowReflectionSheet(true)}
           />
         </div>
       </div>
@@ -3401,12 +3412,21 @@ export default function BibleReader({
       />
       <AdvancedStudyTools
         isOpen={showAdvancedStudyTools}
-        onClose={() => setShowAdvancedStudyTools(false)}
+        onComplete={() => setShowAdvancedStudyTools(false)}
         bookId={book.id}
         chapter={chapter}
         verse={selectedVerse?.number || 1}
         selectedVerseText={selectedVerse?.text}
         strongTokens={strongTokens}
+      />
+
+      <ReflectionSheet
+        isOpen={showReflectionSheet}
+        onClose={() => setShowReflectionSheet(false)}
+        onComplete={() => setShowReflectionSheet(false)}
+        activeReading={standaloneReading}
+        activeChapter={chapter}
+        finalChapter={true}
       />
 
       {shareVerseTarget && (

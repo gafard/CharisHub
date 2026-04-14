@@ -14,6 +14,7 @@ import {
   Play,
   Search,
   Sparkles,
+  Sun,
   Volume2,
 } from 'lucide-react';
 
@@ -145,6 +146,7 @@ export default function BibleToolbar({
   onSeekToAudioVerse,
   isPrismaMeditation,
   setIsPrismaMeditation,
+  onOpenReflection,
 }: {
   tool: ToolMode;
   setTool: (t: ToolMode) => void;
@@ -163,6 +165,7 @@ export default function BibleToolbar({
   onSeekToAudioVerse: (verse: number) => void;
   isPrismaMeditation: boolean;
   setIsPrismaMeditation: (v: boolean) => void;
+  onOpenReflection: () => void;
 }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -285,8 +288,13 @@ export default function BibleToolbar({
                     onClick={onCopy}
                   />
                   <ToolbarPill
-                    active={isPrismaMeditation}
                     label="Méditer"
+                    icon={<Sun size={15} />}
+                    onClick={onOpenReflection}
+                  />
+                  <ToolbarPill
+                    active={isPrismaMeditation}
+                    label="Cinématique"
                     icon={<Sparkles size={15} className={isPrismaMeditation ? "text-amber-500" : ""} />}
                     onClick={() => setIsPrismaMeditation(!isPrismaMeditation)}
                   />

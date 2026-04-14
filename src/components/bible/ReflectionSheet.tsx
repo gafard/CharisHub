@@ -27,10 +27,9 @@ import {
   type PrayerAIResponse,
 } from '../../lib/prayerFlowStore';
 import {
-  getDayDailyPrompts,
-  getOrderedChapterReflections,
   getReflectionInsights,
   markPrayerCompleted,
+  getStandaloneReflection,
 } from '../../lib/readingPlanReflectionStore';
 
 type VerseSection = {
@@ -54,10 +53,10 @@ interface ReflectionSheetProps {
   isOpen: boolean;
   onClose: () => void;
   onComplete: () => void;
-  readings: PlanReading[];
-  planId: string;
-  dayIndex: number;
-  alreadyCompleted: boolean;
+  readings?: PlanReading[];
+  planId?: string;
+  dayIndex?: number;
+  alreadyCompleted?: boolean;
   activeReading?: PlanReading | null;
   activeChapter?: number | null;
   finalChapter?: boolean;
@@ -65,7 +64,7 @@ interface ReflectionSheetProps {
 }
 
 function getFocusContext(
-  readings: PlanReading[],
+  readings: PlanReading[] | undefined,
   activeReading?: PlanReading | null,
   activeChapter?: number | null,
 ): FocusContext | null {
@@ -75,6 +74,8 @@ function getFocusContext(
       chapter: activeChapter,
     };
   }
+
+  if (!readings || readings.length === 0) return null;
 
   const lastReading = readings[readings.length - 1];
   const lastChapter = lastReading?.chapters[lastReading.chapters.length - 1];
@@ -110,20 +111,27 @@ export default function ReflectionSheet({
 
   const prayerRequestRef = useRef(0);
 
+  const effectiveReadings = useMemo(
+    () => readings ?? (activeReading ? [activeReading] : []),
+    [readings, activeReading]
+  );
+
   const focus = useMemo(
-    () => getFocusContext(readings, activeReading, activeChapter),
-    [activeChapter, activeReading, readings],
+    () => getFocusContext(effectiveReadings, activeReading, activeChapter),
+    [activeChapter, activeReading, effectiveReadings],
   );
 
   const readingSummary = useMemo(
-    () => (readings.length ? formatDayReadingsLabel(readings) : 'Lecture du jour'),
-    [readings],
+    () => (effectiveReadings.length ? formatDayReadingsLabel(effectiveReadings) : 'Lecture du jour'),
+    [effectiveReadings],
   );
 
-  const chapterReflections = useMemo(
-    () => getOrderedChapterReflections(planId, dayIndex, readings),
-    [dayIndex, planId, readings, syncTick],
-  );
+  const chapterReflections = useMemo(() => {
+    if (planId && dayIndex !== undefined) {
+      return getOrderedChapterReflections(planId, dayIndex, effectiveReadings);
+    }
+    return [];
+  }, [dayIndex, planId, effectiveReadings, syncTick]);
 
   const priorReflections = useMemo(() => {
     if (!focus) return chapterReflections;
@@ -132,10 +140,18 @@ export default function ReflectionSheet({
     );
   }, [chapterReflections, focus]);
 
-  const reflectionInsights = useMemo(
-    () => getReflectionInsights(planId, dayIndex),
-    [dayIndex, planId, syncTick],
-  );
+  const reflectionInsights = useMemo(() => {
+    if (planId && dayIndex !== undefined) {
+      return getReflectionInsights(planId, dayIndex);
+    }
+    if (focus) {
+      const entry = getStandaloneReflection(focus.reading.bookId, focus.chapter);
+      if (entry) {
+        return Object.values(entry.answers).map(val => val.trim()).filter(Boolean);
+      }
+    }
+    return [];
+  }, [dayIndex, planId, syncTick, focus]);
 
   const passageText = useMemo(() => {
     return verses
@@ -186,7 +202,7 @@ export default function ReflectionSheet({
       const bible = await loadLocalBible('LSG');
       if (cancelled) return;
 
-      const sections: VerseSection[] = readings.map((reading) => {
+      const sections: VerseSection[] = effectiveReadings.map((reading) => {
         const catalogBook = getBookById(reading.bookId);
         const searchName = (catalogBook?.name || reading.bookName).toLowerCase();
 
@@ -228,7 +244,7 @@ export default function ReflectionSheet({
     return () => {
       cancelled = true;
     };
-  }, [finalChapter, isOpen, readings, versesExpanded]);
+  }, [finalChapter, isOpen, effectiveReadings, versesExpanded]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -251,8 +267,8 @@ export default function ReflectionSheet({
     if (loadingPrayer) return;
 
     const requestId = ++prayerRequestRef.current;
-    const dailyPrompts = getDayDailyPrompts(planId, dayIndex);
-    const insights = getReflectionInsights(planId, dayIndex);
+    const dailyPrompts = planId && dayIndex !== undefined ? getDayDailyPrompts(planId, dayIndex) : {};
+    const insights = reflectionInsights;
 
     let aiPrompts: PrayerAIResponse | null = null;
     const canCallAI = insights.length > 0 || passageText.length > 0;
@@ -297,7 +313,7 @@ export default function ReflectionSheet({
     if (prayerRequestRef.current !== requestId) return;
 
     const steps = buildPrayerSteps(
-      readings,
+      effectiveReadings,
       dailyPrompts,
       passageText || undefined,
       insights,
@@ -306,10 +322,12 @@ export default function ReflectionSheet({
 
     setPrayerSteps(steps);
     setShowPrayerFlow(true);
-  }, [dayIndex, loadingPrayer, passageText, planId, readingSummary, readings]);
+  }, [dayIndex, loadingPrayer, passageText, planId, reflectionInsights, readingSummary, effectiveReadings]);
 
   const handlePrayerComplete = useCallback(() => {
-    markPrayerCompleted(planId, dayIndex);
+    if (planId && dayIndex !== undefined) {
+      markPrayerCompleted(planId, dayIndex);
+    }
     setShowPrayerFlow(false);
     onComplete();
     onClose();
@@ -593,9 +611,9 @@ export default function ReflectionSheet({
       <GuidedPrayerFlow
         isOpen={showPrayerFlow}
         steps={prayerSteps}
-        planId={planId}
-        dayIndex={dayIndex}
-        readings={readings}
+        planId={planId ?? ''}
+        dayIndex={dayIndex ?? 0}
+        readings={effectiveReadings}
         onComplete={handlePrayerComplete}
         onClose={() => setShowPrayerFlow(false)}
       />
