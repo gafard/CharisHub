@@ -323,27 +323,17 @@ export function PlanStageCard({
           </p>
 
           <h3
-            className={`mt-3 font-display font-black leading-[0.95] tracking-tight text-[#fffaf2] ${
+            className={`mt-3 font-display font-black leading-[1.1] tracking-tight text-[#fffaf2] ${
               compact
-                ? 'max-w-[8.7ch] text-[22px]'
-                : 'max-w-[9.8ch] text-[30px] sm:text-[36px] lg:text-[42px] xl:text-[44px]'
+                ? 'max-w-[15ch] text-[22px]'
+                : 'max-w-[18ch] text-[30px] sm:text-[36px] lg:text-[42px] xl:text-[44px]'
             }`}
           >
             {plan.name}
           </h3>
         </div>
 
-        <div className="relative flex flex-1 items-center justify-center px-6">
-          <div
-            className="absolute rounded-full border border-white/16 bg-[rgba(255,255,255,0.08)] backdrop-blur-xl"
-            style={{
-              width: compact ? 78 : 108,
-              height: compact ? 78 : 108,
-              boxShadow: `0 0 0 ${compact ? '18px' : '28px'} ${wash.halo}, 0 24px 70px rgba(0,0,0,0.24)`,
-            }}
-          />
-          {/* Icône retirée à la demande de l'utilisateur */}
-        </div>
+        <div className="flex-1" />
 
         <div className="px-5 pb-5 sm:px-6 sm:pb-6">
           <div className="rounded-[26px] border border-white/12 bg-[rgba(10,10,14,0.16)] p-4 backdrop-blur-md">
