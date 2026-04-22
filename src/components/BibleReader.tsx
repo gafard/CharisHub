@@ -2760,7 +2760,7 @@ export default function BibleReader({
   return (
     <section
       ref={rootSectionRef}
-      className={`relative transition-all duration-700 ${embedded ? 'bible-embedded-shell bible-enter h-full flex flex-col p-0 bg-transparent' : 'px-6 pb-24 pt-12 md:px-12'
+      className={`relative transition-all duration-700 ${embedded ? 'bible-embedded-shell bible-enter h-full flex flex-col p-0 bg-transparent' : 'px-3 pb-24 pt-6 sm:px-6 sm:pt-12 md:px-12'
         } ${immersiveMode ? 'text-white' : ''} ${fullScreen ? 'fixed inset-0 z-[12000] overflow-hidden bg-background' : ''}`}
       style={{
         ['--accent' as any]: currentBookTheme.accent,
@@ -2782,8 +2782,8 @@ export default function BibleReader({
 
       <div className={`mx-auto w-full ${embedded ? 'h-full min-h-0 flex flex-col' : 'max-w-6xl space-y-6'}`}>
         {/* Header Section (Flexible for both standard and embedded mode) */}
-        <header className={`bible-paper rounded-[32px] border border-border-soft bg-surface shadow-sm transition-all duration-500 
-          ${embedded ? 'p-4 mb-2' : 'p-10 md:p-14 mb-6'} 
+        <header className={`bible-paper rounded-2xl sm:rounded-[32px] border border-border-soft bg-surface shadow-sm transition-all duration-500 
+          ${embedded ? 'p-4 mb-2' : 'p-4 sm:p-6 md:p-10 lg:p-14 mb-4 sm:mb-6'} 
           ${!embedded && (fullScreen || !isClient) ? 'hidden lg:block' : ''}`}
         >
           <div className={`${embedded ? 'flex flex-wrap items-center justify-between gap-4' : 'space-y-4'}`}>
@@ -2792,21 +2792,21 @@ export default function BibleReader({
                 <div className="text-[10px] font-black uppercase tracking-[0.3em] text-accent">
                   Parole
                 </div>
-                <h1 className="text-4xl font-black leading-tight tracking-tight text-foreground md:text-6xl font-display">
+                <h1 className="text-2xl sm:text-4xl font-black leading-tight tracking-tight text-foreground md:text-6xl font-display">
                   La Parole vivante
                 </h1>
-                <p className="max-w-2xl text-lg font-medium leading-relaxed text-muted">
+                <p className="hidden sm:block max-w-2xl text-base sm:text-lg font-medium leading-relaxed text-muted">
                   Lis, médite et laisse la Parole te transformer.
                 </p>
               </div>
             )}
 
-            <div className={`flex flex-wrap items-center gap-4 ${embedded ? 'flex-1' : 'mt-8'}`}>
+            <div className={`flex flex-wrap items-center gap-2 sm:gap-4 ${embedded ? 'flex-1' : 'mt-4 sm:mt-8'}`}>
               <div className="flex flex-wrap gap-2">
                 <select
                   value={translationId}
                   onChange={(e) => setTranslationId(e.target.value)}
-                  className="cursor-pointer appearance-none rounded-xl border border-border-soft bg-background px-4 py-2 text-sm font-semibold text-foreground outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
+                  className="cursor-pointer appearance-none rounded-lg sm:rounded-xl border border-border-soft bg-background px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-foreground outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
                 >
                   {LOCAL_BIBLE_TRANSLATIONS.map((t) => (
                     <option key={t.id} value={t.id}>
@@ -2821,7 +2821,7 @@ export default function BibleReader({
                     setBookId(e.target.value);
                     setChapter(1);
                   }}
-                  className="cursor-pointer appearance-none rounded-xl border border-border-soft bg-background px-4 py-2 text-sm font-semibold text-foreground outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
+                  className="cursor-pointer appearance-none rounded-lg sm:rounded-xl border border-border-soft bg-background px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-foreground outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
                 >
                   {BIBLE_BOOKS.map((b) => (
                     <option key={b.id} value={b.id}>
@@ -2833,7 +2833,7 @@ export default function BibleReader({
                 <select
                   value={chapter}
                   onChange={(e) => setChapter(Number(e.target.value))}
-                  className="cursor-pointer appearance-none rounded-xl border border-border-soft bg-background px-4 py-2 text-sm font-semibold text-foreground outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
+                  className="cursor-pointer appearance-none rounded-lg sm:rounded-xl border border-border-soft bg-background px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-foreground outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
                 >
                   {Array.from({ length: book.chapters }, (_, i) => i + 1).map((c) => (
                     <option key={c} value={c}>
@@ -2890,7 +2890,7 @@ export default function BibleReader({
                   </div>
                 )}
                 
-                <div className="flex items-center gap-2 whitespace-nowrap text-[9px] font-black uppercase tracking-[0.1em] text-amber-400 bg-amber-500/5 px-3 py-1.5 rounded-full border border-amber-500/10">
+                <div className="hidden sm:flex items-center gap-2 whitespace-nowrap text-[9px] font-black uppercase tracking-[0.1em] text-amber-400 bg-amber-500/5 px-3 py-1.5 rounded-full border border-amber-500/10">
                     <Flame size={12} className="fill-current" />
                     Pleine Puissance
                 </div>
@@ -2937,13 +2937,13 @@ export default function BibleReader({
                   className={`bible-paper-kindle relative overflow-hidden transition-all duration-500 ${
                     embedded
                       ? 'flex-1 min-h-0 rounded-xl'
-                      : 'mx-auto w-full max-w-4xl rounded-[20px]'
+                      : 'mx-auto w-full max-w-4xl rounded-2xl sm:rounded-[20px]'
                   }`}
                 >
                 <div 
                   ref={verseScrollRef}
-                  className={`custom-scrollbar touch-pan-y ${embedded ? 'flex-1 min-h-0 overflow-y-auto px-6 py-4' : 'px-6 py-8 pb-60 md:px-10 lg:px-14'}`}
-                  style={{ fontFamily: 'var(--font-merriweather), serif', fontSize: `${Math.round(20 * fontScale)}px`, lineHeight: 1.65 }}
+                  className={`custom-scrollbar touch-pan-y ${embedded ? 'flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-4' : 'px-4 py-5 pb-48 sm:px-6 sm:py-8 sm:pb-60 md:px-10 lg:px-14'}`}
+                  style={{ fontFamily: 'var(--font-merriweather), serif', fontSize: `${Math.round(18 * fontScale)}px`, lineHeight: 1.65 }}
                   onScroll={(e) => { const el = e.currentTarget; setScrollProgress(el.scrollTop / (el.scrollHeight - el.clientHeight)); }}
                 >
                   {loading ? (
@@ -2961,9 +2961,9 @@ export default function BibleReader({
                     <div className="space-y-0">
                       {/* Decorative Drop-cap */}
                       {visibleVerses.length > 0 && (
-                        <div className="mb-6 flex items-start gap-3 px-4">
+                        <div className="mb-4 sm:mb-6 flex items-start gap-3 px-2 sm:px-4">
                           <div
-                            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] font-extrabold text-white text-2xl shadow-lg"
+                            className="flex h-9 w-9 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-lg sm:rounded-[10px] font-extrabold text-white text-xl sm:text-2xl shadow-lg"
                             style={{
                               background: `linear-gradient(135deg, ${BOOK_AURA_COLORS[book.id] ?? BOOK_AURA_COLORS.default}, ${BOOK_AURA_COLORS[book.id] ?? BOOK_AURA_COLORS.default}99)`,
                             }}

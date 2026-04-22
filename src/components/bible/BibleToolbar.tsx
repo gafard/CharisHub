@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BookOpen,
@@ -167,7 +167,14 @@ export default function BibleToolbar({
   setIsPrismaMeditation: (v: boolean) => void;
   onOpenReflection: () => void;
 }) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
+
+  // Auto-collapse on mobile, expand on desktop
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsCollapsed(window.innerWidth < 640);
+    }
+  }, []);
 
   const COLOR_DOT: Record<HighlightColor, string> = {
     yellow: 'bg-yellow-300',
@@ -186,7 +193,7 @@ export default function BibleToolbar({
 
   return (
     <div className="w-full">
-      <div className="relative rounded-[26px] border border-border-soft bg-[rgba(255,255,255,0.82)] p-3 shadow-[0_18px_50px_rgba(22,28,53,0.10)] backdrop-blur-2xl ring-1 ring-black/5 dark:border-white/12 dark:bg-[rgba(15,23,42,0.72)] dark:ring-white/5">
+      <div className="relative rounded-2xl sm:rounded-[26px] border border-border-soft bg-[rgba(255,255,255,0.82)] p-2 sm:p-3 shadow-[0_18px_50px_rgba(22,28,53,0.10)] backdrop-blur-2xl ring-1 ring-black/5 dark:border-white/12 dark:bg-[rgba(15,23,42,0.72)] dark:ring-white/5">
         
         {/* Toggle Button */}
         <button
@@ -208,9 +215,9 @@ export default function BibleToolbar({
               transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
               className="overflow-hidden"
             >
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-2 sm:gap-3">
                 {/* Ligne 1 */}
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
                   <div className="mr-1 text-[10px] font-black uppercase tracking-[0.18em] text-foreground/48">
                     Mode
                   </div>
@@ -267,7 +274,7 @@ export default function BibleToolbar({
                 ) : null}
 
                 {/* Ligne 2 */}
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
                   <div className="mr-1 text-[10px] font-black uppercase tracking-[0.18em] text-foreground/48">
                     Outils
                   </div>
