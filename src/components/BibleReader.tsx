@@ -4,6 +4,7 @@ import logger from '@/lib/logger';
 
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import {
   Volume2, ChevronLeft, ChevronRight, Link2, Search, Sun, X, Settings, Maximize, Play, Pause, Bookmark, ListVideo, AlignLeft, BookmarkCheck, AlertCircle, Heart, Shield, Flame, User as UserIcon,
 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
