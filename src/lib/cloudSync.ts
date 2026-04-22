@@ -278,14 +278,14 @@ export async function fetchAllCloudData(): Promise<FullUserData | null> {
     };
   } catch (error: any) {
     // Erreur attendue si les tables n'existent pas encore
-    const errorMessage = error?.message || error?.details || 'Erreur inconnue';
+    const errorMessage = error?.message || error?.details || error?.hint || (typeof error === 'string' ? error : 'Erreur inconnue');
     
     if (errorMessage.includes('relation') || errorMessage.includes('does not exist')) {
       logger.warn('[CloudSync] ⚠️ Tables de backup non initialisées.');
       logger.warn('[CloudSync] Exécutez le schéma SQL : supabase-backup-sync.sql');
       logger.warn('[CloudSync] Ou utilisez l\'API : POST /api/admin/init-backup-schema');
     } else {
-      console.error('[CloudSync] Error fetching data:', error);
+      console.error('[CloudSync] Error fetching data:', errorMessage, error?.code ? `(Code: ${error.code})` : '');
     }
     
     return null;
