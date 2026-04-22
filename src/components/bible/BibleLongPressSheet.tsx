@@ -120,7 +120,7 @@ export default function BibleLongPressSheet({
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <div className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.24em] text-amber-600">
-                <Sun size={12} />
+                <Sparkles size={12} />
                 Miroir de grâce
               </div>
               <div className="mt-3 text-xl font-black tracking-tight text-foreground">
@@ -150,7 +150,7 @@ export default function BibleLongPressSheet({
               onClick={() => onAction('mirror')}
               className="flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 px-6 py-4 text-sm font-black uppercase tracking-[0.08em] text-white shadow-[0_12px_30px_rgba(245,158,11,0.28)] transition hover:scale-[1.01] active:scale-[0.98]"
             >
-              <Sun size={18} />
+              <Sparkles size={18} />
               Miroir de grâce
             </button>
 

@@ -3028,7 +3028,7 @@ export default function BibleReader({
                             className="group relative flex items-center gap-3 overflow-hidden rounded-full bg-foreground px-8 py-4 text-background shadow-xl transition-all hover:shadow-accent/20"
                           >
                             <div className="absolute inset-0 bg-gradient-to-r from-accent/20 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-                            <Sun size={18} className="text-accent" />
+                            <Sparkles size={18} className="text-accent" />
                             <span className="text-xs font-black uppercase tracking-[0.2em]">
                               {currentMatchingReading.isCompleted ? 'Revoir ma méditation' : 'Valider ma lecture'}
                             </span>

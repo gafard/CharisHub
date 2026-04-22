@@ -25,7 +25,7 @@ type SortType = 'recent' | 'oldest' | 'reference';
 function getTypeIcon(type: PepiteType) {
   switch (type) {
     case 'grace':
-      return <Sun className="h-4 w-4 text-emerald-500" />;
+      return <Sparkles className="h-4 w-4 text-emerald-500" />;
     case 'identity':
       return <ShieldCheck className="h-4 w-4 text-sky-500" />;
     case 'promise':
@@ -404,7 +404,7 @@ export default function IdentityTreasures() {
         ) : (
           <section className="flex flex-col items-center justify-center rounded-[48px] border-2 border-dashed border-border-soft bg-surface/40 px-6 py-24 text-center">
             <div className="mb-8 flex h-20 w-20 items-center justify-center rounded-[32px] bg-[color:var(--accent)]/5">
-              <Sun className="h-10 w-10 text-[color:var(--accent)] opacity-40" />
+              <Sparkles className="h-10 w-10 text-[color:var(--accent)] opacity-40" />
             </div>
 
             <h3 className="text-2xl font-black text-foreground">Aucune pépite à afficher</h3>

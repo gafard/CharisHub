@@ -66,7 +66,7 @@ export default function VerseOverlay({ reference, content, onClose, onOpenInterl
 
           <div className="flex items-center justify-between gap-4 pt-1">
             <div className="flex items-center gap-1.5 rounded-full bg-white/5 px-2.5 py-1 text-[10px] font-bold text-amber-200/40 border border-white/5">
-              <Sun size={10} className="text-amber-400" />
+              <Sparkles size={10} className="text-amber-400" />
               <span>Miroir</span>
             </div>
             <div className="text-[10px] font-medium text-muted italic">

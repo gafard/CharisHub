@@ -14,7 +14,7 @@ import {
   Play,
   Search,
   Sparkles,
-  Sun,
+  Flame,
   Volume2,
 } from 'lucide-react';
 
@@ -296,7 +296,7 @@ export default function BibleToolbar({
                   />
                   <ToolbarPill
                     label="Méditer"
-                    icon={<Sun size={15} />}
+                    icon={<Flame size={15} />}
                     onClick={onOpenReflection}
                   />
                   <ToolbarPill

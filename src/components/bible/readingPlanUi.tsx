@@ -17,11 +17,10 @@ import {
   Scroll,
   ScrollText,
   ShieldCheck,
-  Sun,
   Sprout,
-  Sunrise,
-  TreePine,
+  Star,
   Waypoints,
+  Sparkles,
 } from 'lucide-react';
 import {
   READING_PLANS,
@@ -131,9 +130,9 @@ const PLAN_SYMBOLS: Record<PlanSymbolId, typeof BookOpen> = {
   crown: Crown,
   scroll: Scroll,
   'scroll-text': ScrollText,
-  sunrise: Sunrise,
+  sunrise: Star,
   'library-big': LibraryBig,
-  sparkles: Sun,
+  sparkles: Sparkles,
   cross: Church,
 };
 

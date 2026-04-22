@@ -413,7 +413,7 @@ export default function ReflectionQuestions({
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-[rgba(255,255,255,0.05)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.22em] text-[rgba(255,240,222,0.72)]">
-                <Sun size={13} className="text-amber-400" />
+                <Sparkles size={13} className="text-amber-400" />
                 {finalChapter ? 'Réflexion finale du jour' : 'Réflexion du chapitre'}
                 {aiLoading ? <Loader2 size={12} className="ml-1 animate-spin" /> : null}
               </div>

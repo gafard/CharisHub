@@ -103,7 +103,7 @@ export default function BibleStudyRadar({
                 <div className="absolute inset-[8px] rounded-full border border-white/10 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.18),rgba(255,255,255,0.04))]" />
                 <div className="absolute inset-0 rounded-full shadow-[0_0_0_12px_rgba(255,255,255,0.05),0_0_0_24px_rgba(255,255,255,0.025)]" />
                 <div className="relative z-10 flex flex-col items-center justify-center">
-                  <Sun size={15} className="text-amber-300" />
+                  <Sparkles size={15} className="text-amber-300" />
                   <span className="mt-1 text-[9px] font-black uppercase tracking-[0.22em] text-white/80">
                     Étude
                   </span>

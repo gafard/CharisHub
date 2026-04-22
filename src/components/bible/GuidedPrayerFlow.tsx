@@ -40,7 +40,7 @@ const AMBIENT_SOUNDS = [
   { id: 'none', label: 'Silence', icon: Wind, url: '' },
   { id: 'rain', label: 'Pluie douce', icon: CloudRain, url: '/sounds/rain.mp3' },
   { id: 'forest', label: 'Forêt', icon: TreePine, url: '/sounds/forest.mp3' },
-  { id: 'elysian', label: 'Élysée', icon: Sunrise, url: '/sounds/Elysian.mp3' },
+  { id: 'elysian', label: 'Élysée', icon: Star, url: '/sounds/Elysian.mp3' },
   { id: 'mediterranean', label: 'Méditerranée', icon: Waves, url: '/sounds/mediterranean.mp3' },
   { id: 'eastern', label: 'Orient', icon: Music, url: '/sounds/eastern.mp3' },
   { id: 'harvest', label: 'Récolte', icon: Leaf, url: '/sounds/harvest.mp3' },
@@ -296,7 +296,7 @@ export default function GuidedPrayerFlow({
               </h2>
 
               <div className="flex items-center gap-2 text-[13px] font-semibold text-white/45">
-                <Sun size={14} className="opacity-60" />
+                <Sparkles size={14} className="opacity-60" />
                 <span>{readingSummary}</span>
               </div>
             </div>

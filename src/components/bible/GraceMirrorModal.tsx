@@ -98,7 +98,7 @@ export default function GraceMirrorModal({
                     <div className="relative shrink-0">
                       <div className="absolute inset-0 rounded-2xl bg-amber-400/20 blur-xl" />
                       <div className="relative grid h-14 w-14 place-items-center rounded-2xl border border-amber-300/20 bg-amber-400/10 text-amber-300">
-                        <Sun size={24} />
+                        <Sparkles size={24} />
                       </div>
                     </div>
 
@@ -110,7 +110,7 @@ export default function GraceMirrorModal({
                         Éclairage d’identité
                       </h2>
                       <div className="mt-2 inline-flex max-w-full items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-bold text-white/72">
-                        <Sun size={12} className="text-amber-300" />
+                        <Sparkles size={12} className="text-amber-300" />
                         <span className="truncate">{reference}</span>
                       </div>
                     </div>
@@ -139,7 +139,7 @@ export default function GraceMirrorModal({
                           transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
                           className="relative grid h-24 w-24 place-items-center rounded-full border border-dashed border-amber-300/30 bg-amber-400/6"
                         >
-                          <Sun size={34} className="text-amber-300" />
+                          <Sparkles size={34} className="text-amber-300" />
                         </motion.div>
                       </div>
 
@@ -199,7 +199,7 @@ export default function GraceMirrorModal({
                   <div className="flex flex-wrap items-center justify-center gap-2.5">
                     <FooterBadge icon={<Heart size={12} className="fill-current" />} label="Amour reçu" />
                     <FooterBadge icon={<Shield size={12} />} label="Position assurée" />
-                    <FooterBadge icon={<Sun size={12} />} label="Grâce révélée" />
+                    <FooterBadge icon={<Sparkles size={12} />} label="Grâce révélée" />
                   </div>
                 </div>
               ) : null}

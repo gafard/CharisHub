@@ -145,7 +145,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onSu
                       transition={{ delay: 0.3 }}
                       className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-[10px] font-bold uppercase tracking-widest backdrop-blur-md"
                     >
-                      <Sun size={14} className="text-amber-400" />
+                      <Sparkles size={14} className="text-amber-400" />
                       Miroir de Grâce
                     </motion.div>
                     

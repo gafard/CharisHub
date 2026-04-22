@@ -142,7 +142,7 @@ export default function BibleMeditationBar({
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
                   <div className="inline-flex items-center gap-2 rounded-full border border-amber-300/15 bg-amber-300/8 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-amber-200/90">
-                    <Sun size={11} />
+                    <Sparkles size={11} />
                     Lecture & discernement
                   </div>
 
@@ -210,7 +210,7 @@ export default function BibleMeditationBar({
                         shadow-[0_10px_30px_rgba(245,158,11,0.28)]
                       "
                     >
-                      <Sun size={18} />
+                      <Sparkles size={18} />
                     </div>
 
                     <div className="min-w-0">
