@@ -37,13 +37,9 @@ export default function LaunchPage() {
     if (mounted && !loading) {
       const hasSeenLaunch = sessionStorage.getItem('charishub_launch_seen') === 'true';
       
-      // Si l'utilisateur a une session Supabase ACTIVE, on redirige systématiquement
+      // Si l'utilisateur a une session Supabase ACTIVE, on redirige systématiquement vers la bible
       if (user || (hasSeenLaunch && isRegistered)) {
-        if (myGroupId) {
-          router.replace(`/groups?group=${myGroupId}`);
-        } else {
-          router.replace('/groups');
-        }
+        router.replace('/bible');
       }
     }
   }, [mounted, loading, user, isRegistered, myGroupId, router]);
@@ -86,11 +82,7 @@ export default function LaunchPage() {
   const handleMainAction = () => {
     if (isRegistered) {
       sessionStorage.setItem('charishub_launch_seen', 'true');
-      if (myGroupId) {
-        router.push(`/groups?group=${myGroupId}`);
-      } else {
-        router.push('/groups');
-      }
+      router.push('/bible');
     } else {
       setIsAuthModalOpen(true);
     }

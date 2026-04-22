@@ -41,6 +41,7 @@ interface ReadingPlanWidgetProps {
     currentBookId?: string;
     currentChapter?: number;
     passageText?: string;
+    variant?: 'banner' | 'button';
 }
 
 function getBookDisplayName(bookId: string): string {
@@ -53,6 +54,7 @@ export default function ReadingPlanWidget({
     currentBookId,
     currentChapter,
     passageText,
+    variant = 'banner',
 }: ReadingPlanWidgetProps) {
     const router = useRouter();
     const reducedMotion = useReducedMotion();
@@ -224,6 +226,38 @@ export default function ReadingPlanWidget({
             ? 'Retour au plan'
             : readingsLabel;
     const primaryLabel = !activePlan ? 'Voir' : 'Retour';
+
+    if (variant === 'button') {
+        return (
+            <>
+                <button
+                    onClick={() => router.push(primaryHref)}
+                    className="flex h-8 items-center justify-center gap-1.5 rounded-lg sm:rounded-xl border border-transparent bg-foreground/5 sm:bg-background px-2.5 sm:px-4 text-[11px] sm:text-sm font-bold text-foreground outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors hover:bg-foreground/10"
+                    title={title}
+                >
+                    <PlanSymbol symbolId={teaserPresentation.art.symbolId} size={14} />
+                    <span className="hidden sm:inline">Parcours</span>
+                    {activePlan && !todayDone && (
+                        <span className="ml-1 h-1.5 w-1.5 rounded-full bg-accent" />
+                    )}
+                </button>
+
+                {reflectionContext && (
+                    <ReflectionSheet
+                        context={{
+                            planId: activePlan!.planId,
+                            dayIndex: activePlan!.todayIndex,
+                            readingId: reflectionContext.readingId,
+                            bookId: reflectionContext.bookId,
+                            chapter: reflectionContext.chapter,
+                            passageText: reflectionContext.passageText,
+                        }}
+                        onClose={() => setReflectionContext(null)}
+                    />
+                )}
+            </>
+        );
+    }
 
     return (
         <>

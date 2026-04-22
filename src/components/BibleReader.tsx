@@ -2802,11 +2802,11 @@ export default function BibleReader({
             )}
 
             <div className={`flex flex-wrap items-center justify-center sm:justify-start gap-1 sm:gap-4 ${embedded ? 'flex-1' : 'mt-0 sm:mt-8'}`}>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar w-full sm:w-auto touch-pan-x pb-1 sm:pb-0">
                 <select
                   value={translationId}
                   onChange={(e) => setTranslationId(e.target.value)}
-                  className="cursor-pointer appearance-none rounded-lg sm:rounded-xl border border-transparent bg-foreground/5 sm:bg-background px-2.5 sm:px-4 py-1.5 sm:py-2 text-[11px] sm:text-sm font-bold text-foreground outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors"
+                  className="cursor-pointer appearance-none rounded-full sm:rounded-xl border border-transparent bg-foreground/5 sm:bg-background px-3 sm:px-4 py-1.5 sm:py-2 text-[12px] sm:text-sm font-bold text-foreground outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors whitespace-nowrap"
                 >
                   {LOCAL_BIBLE_TRANSLATIONS.map((t) => (
                     <option key={t.id} value={t.id}>
@@ -2821,7 +2821,7 @@ export default function BibleReader({
                     setBookId(e.target.value);
                     setChapter(1);
                   }}
-                  className="cursor-pointer appearance-none rounded-lg sm:rounded-xl border border-transparent bg-foreground/5 sm:bg-background px-2.5 sm:px-4 py-1.5 sm:py-2 text-[11px] sm:text-sm font-bold text-foreground outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors"
+                  className="cursor-pointer appearance-none rounded-full sm:rounded-xl border border-transparent bg-foreground/5 sm:bg-background px-3 sm:px-4 py-1.5 sm:py-2 text-[12px] sm:text-sm font-bold text-foreground outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors whitespace-nowrap"
                 >
                   {BIBLE_BOOKS.map((b) => (
                     <option key={b.id} value={b.id}>
@@ -2833,14 +2833,18 @@ export default function BibleReader({
                 <select
                   value={chapter}
                   onChange={(e) => setChapter(Number(e.target.value))}
-                  className="cursor-pointer appearance-none rounded-lg sm:rounded-xl border border-transparent bg-foreground/5 sm:bg-background px-2.5 sm:px-4 py-1.5 sm:py-2 text-[11px] sm:text-sm font-bold text-foreground outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors"
+                  className="cursor-pointer appearance-none rounded-full sm:rounded-xl border border-transparent bg-foreground/5 sm:bg-background px-3 sm:px-4 py-1.5 sm:py-2 text-[12px] sm:text-sm font-bold text-foreground outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors whitespace-nowrap"
                 >
                   {Array.from({ length: book.chapters }, (_, i) => i + 1).map((c) => (
                     <option key={c} value={c}>
-                      {c}
+                      Chap. {c}
                     </option>
                   ))}
                 </select>
+
+                <div className="shrink-0">
+                  <ReadingPlanWidget variant="button" />
+                </div>
               </div>
 
               <div className="flex flex-wrap items-center gap-3 ml-auto">
@@ -2902,17 +2906,7 @@ export default function BibleReader({
 
         {!embedded && (
           <>
-            {(() => {
-              const chapterText = visibleVerses.map(v => v.text).join(' ').trim();
-              return (
-                <ReadingPlanWidget
-                  triggerReflection={triggerReflection}
-                  currentBookId={book.id}
-                  currentChapter={chapter}
-                  passageText={chapterText}
-                />
-              );
-            })()}
+            {/* Removed ReadingPlanWidget as it's now in the App Bar */}
           </>
         )}
 
