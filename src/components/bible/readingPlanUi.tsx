@@ -342,15 +342,7 @@ export function PlanStageCard({
               boxShadow: `0 0 0 ${compact ? '18px' : '28px'} ${wash.halo}, 0 24px 70px rgba(0,0,0,0.24)`,
             }}
           />
-          <div
-            className="relative z-10 flex items-center justify-center rounded-full border border-white/18 bg-[rgba(255,255,255,0.10)] text-[#fffaf3] backdrop-blur-xl"
-            style={{
-              width: compact ? 62 : 84,
-              height: compact ? 62 : 84,
-            }}
-          >
-            <PlanSymbol symbolId={presentation.art.symbolId} size={compact ? 22 : 34} />
-          </div>
+          {/* Icône retirée à la demande de l'utilisateur */}
         </div>
 
         <div className="px-5 pb-5 sm:px-6 sm:pb-6">

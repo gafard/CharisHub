@@ -4,10 +4,11 @@ import logger from '@/lib/logger';
 
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import {
-  Volume2, ChevronLeft, ChevronRight, Link2, Search, Sun, X, Settings, Maximize, Play, Pause, Bookmark, ListVideo, AlignLeft, BookmarkCheck, AlertCircle, Heart, Shield, Flame,
+  Volume2, ChevronLeft, ChevronRight, Link2, Search, Sun, X, Settings, Maximize, Play, Pause, Bookmark, ListVideo, AlignLeft, BookmarkCheck, AlertCircle, Heart, Shield, Flame, User as UserIcon,
 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import { useAuth } from '../contexts/AuthContext';
 import { BIBLE_BOOKS, type BibleBook } from '../lib/bibleCatalog';
 import { getSelahAudioAlignedTranslationId, hasSelahAudio } from '../lib/bibleAudio';
 import { extractTreasuryRefs, type TreasuryRef } from '../lib/bibleStudyClient';
@@ -978,6 +979,7 @@ export default function BibleReader({
   initialVerse?: number;
 }) {
   const { t } = useI18n();
+  const { profile } = useAuth();
   const [isClient, setIsClient] = useState(false);
   const [translationId, setTranslationId] = useState(LOCAL_BIBLE_TRANSLATIONS[0]?.id ?? 'LSG');
   const [bookId, setBookId] = useState('jhn');
@@ -2783,8 +2785,8 @@ export default function BibleReader({
       <div className={`mx-auto w-full ${embedded ? 'h-full min-h-0 flex flex-col' : 'max-w-6xl space-y-6'}`}>
         {/* Header Section (Flexible for both standard and embedded mode) */}
         <header className={`bible-paper transition-all duration-500 sm:rounded-[32px] sm:border sm:border-border-soft sm:bg-surface sm:shadow-sm
-          ${embedded ? 'p-4 mb-2' : 'sticky top-0 z-40 w-full bg-surface/85 backdrop-blur-2xl border-b border-border-soft/50 py-2 sm:static sm:z-auto sm:border sm:border-border-soft sm:bg-surface sm:p-6 md:p-10 lg:p-14 mb-0 sm:mb-6'} 
-          ${!embedded && (fullScreen || !isClient) ? 'hidden lg:block' : ''}`}
+          ${embedded ? 'p-4 mb-2' : 'sticky top-0 z-40 w-full bg-surface/85 backdrop-blur-2xl border-b border-border-soft/50 py-2 sm:static sm:z-auto sm:border sm:border-border-soft sm:bg-surface sm:p-6 md:p-10 lg:p-14 mb-0 sm:mb-6'}`} 
+
         >
           <div className={`${embedded ? 'flex flex-wrap items-center justify-between gap-4' : 'space-y-4'}`}>
             {!embedded && (
@@ -2845,6 +2847,18 @@ export default function BibleReader({
                 <div className="shrink-0">
                   <ReadingPlanWidget variant="button" />
                 </div>
+
+                {/* Profile Avatar in App Bar (Mobile) */}
+                <Link 
+                  href="/profile" 
+                  className="ml-auto flex sm:hidden h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border-soft bg-surface-strong/60 overflow-hidden"
+                >
+                  {profile?.avatar_url ? (
+                    <img src={profile.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
+                  ) : (
+                    <UserIcon size={16} className="text-accent" />
+                  )}
+                </Link>
               </div>
 
               <div className="flex flex-wrap items-center gap-3 ml-auto">
