@@ -67,7 +67,7 @@ export default function RootLayout({
       suppressHydrationWarning={true}
       className={`${inter.variable} ${poppins.variable} ${merriweather.variable} ${almarai.variable} ${instrumentSerif.variable}`}
     >
-      <body className="overflow-x-hidden pb-[92px] font-sans antialiased md:pb-0" suppressHydrationWarning={true}>
+      <body className="pb-[92px] font-sans antialiased md:pb-0" suppressHydrationWarning={true}>
         <AuthProvider>
           <I18nProvider>
             <SettingsProvider>
