@@ -342,7 +342,7 @@ export default function IdentityTreasures() {
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:min-w-[560px]">
               <StatCard label="Trésors" value={stats.total} icon={<BookOpen className="h-5 w-5 text-[color:var(--accent)]" />} />
               <StatCard label="Identité" value={stats.identity} icon={<ShieldCheck className="h-5 w-5 text-sky-500" />} />
-              <StatCard label="Grâce" value={stats.grace} icon={<Sun className="h-5 w-5 text-emerald-500" />} />
+              <StatCard label="Grâce" value={stats.grace} icon={<Sparkles className="h-5 w-5 text-emerald-500" />} />
               <StatCard label="Promesses" value={stats.promise} icon={<Quote className="h-5 w-5 text-amber-500" />} />
             </div>
           </div>
@@ -353,7 +353,7 @@ export default function IdentityTreasures() {
           <div className="flex flex-wrap gap-2.5">
             <FilterPill active={filter === 'all'} label="Tout" count={stats.total} icon={<Filter className="h-3.5 w-3.5" />} onClick={() => setFilter('all')} />
             <FilterPill active={filter === 'identity'} label="Identité" count={stats.identity} icon={<ShieldCheck className="h-3.5 w-3.5" />} onClick={() => setFilter('identity')} />
-            <FilterPill active={filter === 'grace'} label="Grâce" count={stats.grace} icon={<Sun className="h-3.5 w-3.5" />} onClick={() => setFilter('grace')} />
+            <FilterPill active={filter === 'grace'} label="Grâce" count={stats.grace} icon={<Sparkles className="h-3.5 w-3.5" />} onClick={() => setFilter('grace')} />
             <FilterPill active={filter === 'promise'} label="Promesses" count={stats.promise} icon={<Quote className="h-3.5 w-3.5" />} onClick={() => setFilter('promise')} />
           </div>
 
