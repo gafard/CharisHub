@@ -88,14 +88,14 @@ html, body {
 /* ─── Bible Paper / Kindle Reader ─── */
 :root {
   --bible-paper-text: rgba(44, 42, 40, 0.88);
-  --bible-paper-verse-num: rgba(44, 42, 40, 0.3);
+  --bible-paper-verse-num: rgba(44, 42, 40, 0.65);
   --bible-paper-subtitle: rgba(44, 42, 40, 0.45);
   --bible-paper-rule: rgba(44, 42, 40, 0.1);
 }
 
 .dark {
   --bible-paper-text: rgba(245, 245, 240, 0.9);
-  --bible-paper-verse-num: rgba(245, 245, 240, 0.25);
+  --bible-paper-verse-num: rgba(245, 245, 240, 0.6);
   --bible-paper-subtitle: rgba(245, 245, 240, 0.5);
   --bible-paper-rule: rgba(245, 245, 240, 0.12);
 }

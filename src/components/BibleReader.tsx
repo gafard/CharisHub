@@ -2990,7 +2990,7 @@ export default function BibleReader({
                             onDoubleClick={() => handleVerseDoubleTap(verse)}
                             className={`group relative w-full rounded-lg px-4 py-2.5 text-left transition-all duration-300 ${isSelected ? 'bg-accent/8' : 'hover:bg-foreground/[0.03]'}`}
                           >
-                            <span className={`mr-3 inline-block font-sans text-[9px] font-black uppercase tracking-widest align-top mt-[5px] ${isAudioActive ? 'text-accent' : 'opacity-25'}`} style={{ color: isAudioActive ? undefined : 'var(--bible-paper-verse-num, currentColor)' }}>{verse.number}</span>
+                            <span className={`mr-2 inline-block font-sans text-[11px] font-extrabold align-super ${isAudioActive ? 'text-accent' : ''}`} style={{ color: isAudioActive ? undefined : 'var(--bible-paper-verse-num)' }}>{verse.number}</span>
                             <span className={`text-[1em] leading-[1.65] transition-colors duration-500 ${isAudioActive ? 'font-semibold text-accent' : ''} ${verseHighlightColor ? `bg-${verseHighlightColor}-500/10 rounded-md px-1` : ''}`} style={{ color: isAudioActive ? undefined : 'var(--bible-paper-text, rgba(0,0,0,0.85))' }}>
                               {isPrismaMeditation ? (
                                 <AnimatedLetter text={verse.text} />
