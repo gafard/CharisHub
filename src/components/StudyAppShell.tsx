@@ -119,9 +119,12 @@ export default function StudyAppShell({ children }: { children: ReactNode }) {
 
       <main className="relative mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-12">{children}</main>
 
-      {/* Mobile Bottom Nav — docked to edge */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 md:hidden">
-        <div className="flex items-center justify-around gap-1 border-t border-border-soft bg-white/80 px-2 py-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-2xl dark:border-white/10 dark:bg-[#0b1220]/85">
+      {/* Mobile Bottom Nav — Modern Premium Edge-to-Edge */}
+      <nav className="fixed inset-x-0 bottom-0 z-50 md:hidden">
+        {/* Glassy Background Layer */}
+        <div className="absolute inset-0 bg-surface/85 backdrop-blur-3xl border-t border-border-soft shadow-[0_-8px_30px_rgba(0,0,0,0.04)] dark:shadow-[0_-8px_20px_rgba(0,0,0,0.3)]" />
+        
+        <div className="relative flex items-center justify-around px-1 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const active = item.match(pathname);
@@ -129,30 +132,36 @@ export default function StudyAppShell({ children }: { children: ReactNode }) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={[
-                  'group relative flex flex-1 flex-col items-center justify-center gap-1 rounded-2xl py-2 transition-all duration-300 active:scale-90',
-                  active
-                    ? 'text-accent'
-                    : 'text-muted hover:text-foreground/60 dark:text-white/40 dark:hover:text-white/60',
-                ].join(' ')}
+                className="group relative flex w-[76px] flex-col items-center justify-center gap-1.5 py-1.5 transition-all duration-300 active:scale-90"
+                aria-label={item.label}
               >
+                {/* Subtle Active Pill Background */}
                 {active && (
                   <motion.div 
-                    layoutId="modern-nav-pill"
-                    className="absolute inset-0 z-0 rounded-2xl bg-gradient-to-br from-amber-100 to-amber-50 shadow-sm dark:from-amber-900/40 dark:to-amber-900/20"
+                    layoutId="nav-active-pill"
+                    className="absolute inset-0 z-0 rounded-2xl bg-gradient-to-b from-accent/10 to-transparent dark:from-accent/15"
+                    transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }}
+                  />
+                )}
+
+                {/* Top Glowing Indicator */}
+                {active && (
+                  <motion.div 
+                    layoutId="nav-active-indicator"
+                    className="absolute -top-2 left-1/2 h-[3px] w-5 -translate-x-1/2 rounded-full bg-accent shadow-[0_0_10px_rgba(200,159,45,0.6)]"
                     transition={{ type: 'spring', bounce: 0.25, duration: 0.5 }}
                   />
                 )}
 
-                <div className="relative z-10">
+                <div className="relative z-10 flex items-center justify-center">
                   <Icon 
-                    size={20} 
+                    size={22} 
                     strokeWidth={active ? 2.5 : 2} 
-                    className={`transition-all duration-300 ${active ? 'scale-110 drop-shadow-sm' : 'scale-100'}`}
+                    className={`transition-all duration-300 ${active ? 'text-accent scale-110 drop-shadow-[0_2px_8px_rgba(200,159,45,0.4)]' : 'text-muted hover:text-foreground/70'}`}
                   />
                 </div>
                 
-                <span className={`relative z-10 text-[10px] font-bold tracking-tight transition-all duration-300 ${active ? 'font-black' : ''}`}>
+                <span className={`relative z-10 text-[10px] tracking-wide transition-all duration-300 ${active ? 'font-black text-accent' : 'font-medium text-muted'}`}>
                   {item.label}
                 </span>
               </Link>
