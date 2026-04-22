@@ -8,7 +8,6 @@ import {
   Link2,
   NotebookPen,
   Sparkles,
-  Sun,
   SplitSquareHorizontal,
   X,
 } from 'lucide-react';

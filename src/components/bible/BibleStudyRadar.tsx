@@ -1,7 +1,7 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { BookText, Link2, NotebookPen, Sparkles, Sun, X } from 'lucide-react';
+import { BookText, Link2, NotebookPen, Sparkles, X } from 'lucide-react';
 
 export type RadarBubble = {
   id: 'strong' | 'refs' | 'note';

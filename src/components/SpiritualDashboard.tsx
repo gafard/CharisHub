@@ -18,7 +18,7 @@ import {
   RefreshCw,
   Share2,
   Star,
-  Sun,
+  Sparkles,
   TrendingUp,
   Users,
   Zap

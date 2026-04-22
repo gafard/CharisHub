@@ -16,7 +16,7 @@ import {
   Loader2,
   CheckCircle2,
   ChevronRight,
-  Sun
+  Sparkles
 } from 'lucide-react';
 
 interface AuthModalProps {

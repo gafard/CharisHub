@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   CloudRain,
   TreePine,
-  Sunrise,
   Waves,
   Music,
   Leaf,
@@ -16,7 +15,8 @@ import {
   Smile,
   Users,
   Target,
-  Sun,
+  Sparkles,
+  Star,
   X,
   type LucideIcon,
 } from 'lucide-react';

@@ -7,7 +7,6 @@ import {
   Search,
   Share2,
   Sparkles,
-  Sun,
   X,
 } from 'lucide-react';
 

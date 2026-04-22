@@ -11,7 +11,6 @@ import {
   Loader2,
   PenLine,
   Sparkles,
-  Sun,
 } from 'lucide-react';
 import { formatDayReadingsLabel, type PlanReading, findReadingPlan } from '../../lib/readingPlans';
 import {

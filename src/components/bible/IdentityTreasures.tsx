@@ -10,7 +10,6 @@ import {
   Search,
   ShieldCheck,
   Sparkles,
-  Sun,
   Trash2,
   X,
   ArrowUpDown,

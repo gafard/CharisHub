@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Sun, X, Search } from 'lucide-react';
+import { BookOpen, Sparkles, X, Search } from 'lucide-react';
 
 interface VerseOverlayProps {
   reference: string;

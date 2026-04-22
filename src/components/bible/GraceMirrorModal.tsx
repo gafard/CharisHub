@@ -6,7 +6,6 @@ import {
   Heart,
   Shield,
   Sparkles,
-  Sun,
   X,
 } from 'lucide-react';
 import { useEffect } from 'react';
