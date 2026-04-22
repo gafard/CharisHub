@@ -228,7 +228,7 @@ export default function ReadingPlanWidget({
     return (
         <>
             <motion.div
-                className="relative mx-auto w-full max-w-4xl overflow-hidden rounded-2xl border border-border-soft bg-surface/80 backdrop-blur-md shadow-sm"
+                className="relative mx-auto w-full max-w-4xl overflow-hidden rounded-none border-x-0 border-y sm:rounded-2xl sm:border border-border-soft bg-surface/80 backdrop-blur-md shadow-sm"
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}

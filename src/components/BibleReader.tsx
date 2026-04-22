@@ -2760,8 +2760,8 @@ export default function BibleReader({
   return (
     <section
       ref={rootSectionRef}
-      className={`relative transition-all duration-700 ${embedded ? 'bible-embedded-shell bible-enter h-full flex flex-col p-0 bg-transparent' : 'px-3 pb-24 pt-6 sm:px-6 sm:pt-12 md:px-12'
-        } ${immersiveMode ? 'text-white' : ''} ${fullScreen ? 'fixed inset-0 z-[12000] overflow-hidden bg-background' : ''}`}
+      className={`relative transition-all duration-700 ${embedded ? 'bible-embedded-shell bible-enter h-full flex flex-col p-0 bg-transparent' : 'pb-24 sm:px-6 sm:pt-12 md:px-12'} 
+        ${immersiveMode ? 'text-white' : ''} ${fullScreen ? 'fixed inset-0 z-[12000] overflow-hidden bg-background' : ''}`}
       style={{
         ['--accent' as any]: currentBookTheme.accent,
       }}
@@ -2782,8 +2782,8 @@ export default function BibleReader({
 
       <div className={`mx-auto w-full ${embedded ? 'h-full min-h-0 flex flex-col' : 'max-w-6xl space-y-6'}`}>
         {/* Header Section (Flexible for both standard and embedded mode) */}
-        <header className={`bible-paper rounded-2xl sm:rounded-[32px] border border-border-soft bg-surface shadow-sm transition-all duration-500 
-          ${embedded ? 'p-4 mb-2' : 'p-4 sm:p-6 md:p-10 lg:p-14 mb-4 sm:mb-6'} 
+        <header className={`bible-paper rounded-none sm:rounded-[32px] border-y sm:border border-border-soft bg-surface shadow-sm transition-all duration-500 
+          ${embedded ? 'p-4 mb-2' : 'p-4 px-5 sm:p-6 md:p-10 lg:p-14 mb-0 sm:mb-6'} 
           ${!embedded && (fullScreen || !isClient) ? 'hidden lg:block' : ''}`}
         >
           <div className={`${embedded ? 'flex flex-wrap items-center justify-between gap-4' : 'space-y-4'}`}>
@@ -2801,7 +2801,7 @@ export default function BibleReader({
               </div>
             )}
 
-            <div className={`flex flex-wrap items-center gap-2 sm:gap-4 ${embedded ? 'flex-1' : 'mt-4 sm:mt-8'}`}>
+            <div className={`flex flex-wrap items-center gap-2 sm:gap-4 ${embedded ? 'flex-1' : 'mt-3 sm:mt-8'}`}>
               <div className="flex flex-wrap gap-2">
                 <select
                   value={translationId}
@@ -2937,7 +2937,7 @@ export default function BibleReader({
                   className={`bible-paper-kindle relative overflow-hidden transition-all duration-500 ${
                     embedded
                       ? 'flex-1 min-h-0 rounded-xl'
-                      : 'mx-auto w-full max-w-4xl rounded-2xl sm:rounded-[20px]'
+                      : 'mx-auto w-full max-w-4xl rounded-none border-x-0 sm:border-x sm:rounded-[20px]'
                   }`}
                 >
                 <div 

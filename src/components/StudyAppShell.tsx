@@ -117,7 +117,7 @@ export default function StudyAppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="relative mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-12">{children}</main>
+      <main className={`relative mx-auto max-w-7xl ${pathname.startsWith('/bible') ? 'px-0 py-0 sm:px-8 sm:py-12' : 'px-5 py-8 sm:px-8 sm:py-12'}`}>{children}</main>
 
       {/* Mobile Bottom Nav — Modern Premium Edge-to-Edge */}
       <nav className="fixed inset-x-0 bottom-0 z-50 md:hidden">
