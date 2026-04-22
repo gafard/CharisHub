@@ -55,7 +55,7 @@ export default function StudyAppShell({ children }: { children: ReactNode }) {
     <div className="relative min-h-screen bg-background text-foreground">
       <div className="grace-particles" />
 
-      <header className={`sticky top-0 z-40 border-b border-border-soft bg-surface/70 backdrop-blur-2xl transition-all ${pathname.startsWith('/bible') ? 'hidden md:block' : ''}`}>
+      <header className={`sticky top-0 z-40 border-b border-border-soft bg-surface/70 backdrop-blur-2xl transition-all ${pathname === '/bible' ? 'hidden md:block' : ''}`}>
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 sm:px-8">
           <div className="min-w-0">
             <Link href="/" className="group inline-flex items-center gap-3 rounded-full text-left transition-transform active:scale-95">
@@ -117,7 +117,7 @@ export default function StudyAppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className={`relative mx-auto max-w-7xl ${pathname.startsWith('/bible') ? 'px-0 py-0 sm:px-8 sm:py-12' : 'px-5 py-8 sm:px-8 sm:py-12'}`}>{children}</main>
+      <main className={`relative mx-auto max-w-7xl ${pathname === '/bible' ? 'px-0 py-0 sm:px-8 sm:py-12' : 'px-5 py-8 sm:px-8 sm:py-12'}`}>{children}</main>
 
       {/* Mobile Bottom Nav — Modern Premium Edge-to-Edge */}
       <nav className="fixed inset-x-0 bottom-0 z-50 md:hidden">
