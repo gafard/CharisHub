@@ -217,7 +217,7 @@ export default function BibleToolbar({
             >
               <div className="flex flex-col gap-2 sm:gap-3">
                 {/* Ligne 1 */}
-                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar touch-pan-x">
                   <div className="mr-1 text-[10px] font-black uppercase tracking-[0.18em] text-foreground/48">
                     Mode
                   </div>
@@ -274,7 +274,7 @@ export default function BibleToolbar({
                 ) : null}
 
                 {/* Ligne 2 */}
-                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar touch-pan-x">
                   <div className="mr-1 text-[10px] font-black uppercase tracking-[0.18em] text-foreground/48">
                     Outils
                   </div>
