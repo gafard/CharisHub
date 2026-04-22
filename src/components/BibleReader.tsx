@@ -187,6 +187,28 @@ const BOOK_THEMES: Record<string, { accent: string; background: string }> = {
   },
 };
 
+// Aura colors for dynamic book-specific backgrounds (dark mode)
+const BOOK_AURA_COLORS: Record<string, string> = {
+  psa: '#4F46E5', // Indigo for Psalms
+  pro: '#F59E0B', // Amber for Proverbs
+  ecc: '#D97706', // Deep amber for Ecclesiastes
+  sng: '#EC4899', // Pink for Song of Solomon
+  jhn: '#0EA5E9', // Sky blue for John
+  rom: '#8B5CF6', // Violet for Romans
+  rev: '#B91C1C', // Deep red for Revelation
+  gen: '#8B5CF6', // Violet for Genesis
+  exo: '#7C3AED', // Purple for Exodus
+  isa: '#2563EB', // Blue for Isaiah
+  mat: '#059669', // Emerald for Matthew
+  act: '#06B6D4', // Cyan for Acts
+  heb: '#D946EF', // Fuchsia for Hebrews
+  luk: '#10B981', // Green for Luke
+  mrk: '#F97316', // Orange for Mark
+  dan: '#6366F1', // Indigo for Daniel
+  job: '#78716C', // Stone for Job
+  default: '#1553FF', // Default blue
+};
+
 const OSIS_MAP: Record<string, string> = {
   gen: 'Gen',
   exo: 'Exod',
@@ -2744,15 +2766,17 @@ export default function BibleReader({
         ['--accent' as any]: currentBookTheme.accent,
       }}
     >
+      {/* Dynamic book-specific aura backgrounds */}
       {embedded ? (
         <>
-          <div className="pointer-events-none absolute -top-20 left-1/3 h-52 w-52 rounded-full bg-amber-200/10 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-20 right-8 h-56 w-56 rounded-full bg-blue-300/10 blur-3xl" />
+          <div className="pointer-events-none absolute -top-20 left-1/3 h-52 w-52 rounded-full blur-3xl opacity-10" style={{ background: BOOK_AURA_COLORS[book.id] ?? BOOK_AURA_COLORS.default }} />
+          <div className="pointer-events-none absolute -bottom-20 right-8 h-56 w-56 rounded-full blur-3xl opacity-10" style={{ background: BOOK_AURA_COLORS[book.id] ?? BOOK_AURA_COLORS.default }} />
         </>
       ) : (
         <>
-          <div className="absolute -top-24 right-6 h-48 w-48 rounded-full bg-amber-200/30 blur-3xl" />
-          <div className="absolute bottom-0 left-0 h-44 w-72 rounded-full bg-orange-200/25 blur-3xl" />
+          <div className="pointer-events-none absolute -top-32 -left-16 h-[500px] w-[500px] rounded-full blur-3xl transition-colors duration-1000" style={{ background: `radial-gradient(circle, ${BOOK_AURA_COLORS[book.id] ?? BOOK_AURA_COLORS.default}18 0%, ${BOOK_AURA_COLORS[book.id] ?? BOOK_AURA_COLORS.default}05 40%, transparent 70%)` }} />
+          <div className="pointer-events-none absolute -bottom-24 -right-20 h-[450px] w-[450px] rounded-full blur-3xl transition-colors duration-1000" style={{ background: `radial-gradient(circle, ${BOOK_AURA_COLORS[book.id] ?? BOOK_AURA_COLORS.default}14 0%, ${BOOK_AURA_COLORS[book.id] ?? BOOK_AURA_COLORS.default}04 40%, transparent 70%)` }} />
+          <div className="pointer-events-none absolute inset-0 transition-colors duration-1000" style={{ background: `${BOOK_AURA_COLORS[book.id] ?? BOOK_AURA_COLORS.default}02` }} />
         </>
       )}
 
@@ -2908,10 +2932,18 @@ export default function BibleReader({
                 transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                 className="flex-1 flex flex-col min-h-0 overflow-hidden"
               >
+                {/* Paper/Kindle container */}
+                <div
+                  className={`bible-paper-kindle relative overflow-hidden transition-all duration-500 ${
+                    embedded
+                      ? 'flex-1 min-h-0 rounded-xl'
+                      : 'mx-auto w-full max-w-4xl rounded-[20px]'
+                  }`}
+                >
                 <div 
                   ref={verseScrollRef}
-                  className={`custom-scrollbar touch-pan-y ${embedded ? 'flex-1 min-h-0 overflow-y-auto px-6' : 'px-4 pb-60 md:px-0'}`}
-                  style={{ fontFamily: 'var(--font-merriweather), serif', fontSize: `${Math.round(20 * fontScale)}px`, lineHeight: 1.9 }}
+                  className={`custom-scrollbar touch-pan-y ${embedded ? 'flex-1 min-h-0 overflow-y-auto px-6 py-4' : 'px-6 py-8 pb-60 md:px-10 lg:px-14'}`}
+                  style={{ fontFamily: 'var(--font-merriweather), serif', fontSize: `${Math.round(20 * fontScale)}px`, lineHeight: 1.65 }}
                   onScroll={(e) => { const el = e.currentTarget; setScrollProgress(el.scrollTop / (el.scrollHeight - el.clientHeight)); }}
                 >
                   {loading ? (
@@ -2926,7 +2958,27 @@ export default function BibleReader({
                   ) : error ? (
                      <div className="rounded-3xl border border-rose-500/20 bg-rose-500/5 p-12 text-center text-rose-500 backdrop-blur-md"><p className="font-bold">{error}</p></div>
                   ) : (
-                    <div className="space-y-1">
+                    <div className="space-y-0">
+                      {/* Decorative Drop-cap */}
+                      {visibleVerses.length > 0 && (
+                        <div className="mb-6 flex items-start gap-3 px-4">
+                          <div
+                            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] font-extrabold text-white text-2xl shadow-lg"
+                            style={{
+                              background: `linear-gradient(135deg, ${BOOK_AURA_COLORS[book.id] ?? BOOK_AURA_COLORS.default}, ${BOOK_AURA_COLORS[book.id] ?? BOOK_AURA_COLORS.default}99)`,
+                            }}
+                          >
+                            {(visibleVerses[0]?.text?.[0] ?? '').toUpperCase()}
+                          </div>
+                          <div className="flex flex-col justify-center gap-1.5 pt-0.5">
+                            <span className="text-[12px] font-semibold tracking-wide" style={{ color: 'var(--bible-paper-subtitle, rgba(0,0,0,0.45))' }}>
+                              {book.name} {chapter}
+                            </span>
+                            <div className="h-[2px] w-10 rounded-full" style={{ background: 'var(--bible-paper-rule, rgba(0,0,0,0.1))' }} />
+                          </div>
+                        </div>
+                      )}
+
                       {visibleVerses.map((verse) => {
                         const isSelected = selectedVerse?.number === verse.number;
                         const isAudioActive = activeCueVerse === verse.number;
@@ -2936,17 +2988,17 @@ export default function BibleReader({
                             key={verse.number}
                             onClick={(e) => handleVerseTap(verse, e)}
                             onDoubleClick={() => handleVerseDoubleTap(verse)}
-                            className={`group relative w-full rounded-xl px-4 py-3 text-left transition-all duration-300 ${isSelected ? 'bg-accent/10' : 'hover:bg-foreground/5'}`}
+                            className={`group relative w-full rounded-lg px-4 py-2.5 text-left transition-all duration-300 ${isSelected ? 'bg-accent/8' : 'hover:bg-foreground/[0.03]'}`}
                           >
-                            <span className={`mr-4 inline-block font-sans text-[10px] font-black uppercase tracking-widest ${isAudioActive ? 'text-accent' : 'text-muted/30'}`}>{verse.number}</span>
-                            <span className={`text-[1.05em] leading-[1.8] transition-colors duration-500 ${isAudioActive ? 'font-bold text-accent' : 'text-foreground/90'} ${verseHighlightColor ? `bg-${verseHighlightColor}-500/10 rounded-md px-1` : ''}`}>
+                            <span className={`mr-3 inline-block font-sans text-[9px] font-black uppercase tracking-widest align-top mt-[5px] ${isAudioActive ? 'text-accent' : 'opacity-25'}`} style={{ color: isAudioActive ? undefined : 'var(--bible-paper-verse-num, currentColor)' }}>{verse.number}</span>
+                            <span className={`text-[1em] leading-[1.65] transition-colors duration-500 ${isAudioActive ? 'font-semibold text-accent' : ''} ${verseHighlightColor ? `bg-${verseHighlightColor}-500/10 rounded-md px-1` : ''}`} style={{ color: isAudioActive ? undefined : 'var(--bible-paper-text, rgba(0,0,0,0.85))' }}>
                               {isPrismaMeditation ? (
                                 <AnimatedLetter text={verse.text} />
                               ) : (
-                                verse.text
+                                searchVerse ? renderTextWithSearchMatch(verse.text, searchVerse) : verse.text
                               )}
                             </span>
-                            {isAudioActive && <motion.div layoutId="audio-indicator" className="absolute bottom-2 left-14 right-6 h-[1px] rounded-full bg-[#c89f2d]/30" initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} />}
+                            {isAudioActive && <motion.div layoutId="audio-indicator" className="absolute bottom-1.5 left-12 right-5 h-[1.5px] rounded-full" style={{ background: `${BOOK_AURA_COLORS[book.id] ?? BOOK_AURA_COLORS.default}40` }} initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} />}
                           </button>
                         );
                       })}
@@ -2983,6 +3035,7 @@ export default function BibleReader({
                     </div>
                   )}
                 </div>
+                </div>{/* end paper container */}
               </motion.div>
             </AnimatePresence>
           </main>
