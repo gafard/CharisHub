@@ -119,9 +119,9 @@ export default function StudyAppShell({ children }: { children: ReactNode }) {
 
       <main className="relative mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-12">{children}</main>
 
-      {/* Mobile Bottom Nav - Premium Floating Design */}
-      <nav className="fixed inset-x-0 bottom-6 z-40 mx-auto max-w-sm md:hidden">
-        <div className="mx-4 flex items-center justify-around gap-1 rounded-[2.5rem] border border-white/20 bg-white/60 p-2 shadow-[0_20px_50px_rgba(0,0,0,0.1)] backdrop-blur-3xl dark:border-white/10 dark:bg-[#0b1220]/70">
+      {/* Mobile Bottom Nav — docked to edge */}
+      <nav className="fixed inset-x-0 bottom-0 z-40 md:hidden">
+        <div className="flex items-center justify-around gap-1 border-t border-border-soft bg-white/80 px-2 py-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-2xl dark:border-white/10 dark:bg-[#0b1220]/85">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const active = item.match(pathname);
@@ -130,24 +130,23 @@ export default function StudyAppShell({ children }: { children: ReactNode }) {
                 key={item.href}
                 href={item.href}
                 className={[
-                  'group relative flex flex-1 flex-col items-center justify-center gap-1.5 rounded-[2rem] py-3 transition-all duration-300 active:scale-90',
+                  'group relative flex flex-1 flex-col items-center justify-center gap-1 rounded-2xl py-2 transition-all duration-300 active:scale-90',
                   active
                     ? 'text-accent'
                     : 'text-muted hover:text-foreground/60 dark:text-white/40 dark:hover:text-white/60',
                 ].join(' ')}
               >
-                {/* Slidding Indicator Background */}
                 {active && (
                   <motion.div 
                     layoutId="modern-nav-pill"
-                    className="absolute inset-0 z-0 rounded-[2rem] bg-gradient-to-br from-amber-100 to-amber-50 shadow-sm dark:from-amber-900/40 dark:to-amber-900/20"
+                    className="absolute inset-0 z-0 rounded-2xl bg-gradient-to-br from-amber-100 to-amber-50 shadow-sm dark:from-amber-900/40 dark:to-amber-900/20"
                     transition={{ type: 'spring', bounce: 0.25, duration: 0.5 }}
                   />
                 )}
 
                 <div className="relative z-10">
                   <Icon 
-                    size={22} 
+                    size={20} 
                     strokeWidth={active ? 2.5 : 2} 
                     className={`transition-all duration-300 ${active ? 'scale-110 drop-shadow-sm' : 'scale-100'}`}
                   />
@@ -156,14 +155,6 @@ export default function StudyAppShell({ children }: { children: ReactNode }) {
                 <span className={`relative z-10 text-[10px] font-bold tracking-tight transition-all duration-300 ${active ? 'font-black' : ''}`}>
                   {item.label}
                 </span>
-
-                {active && (
-                  <motion.div 
-                    layoutId="modern-nav-dot"
-                    className="absolute -bottom-0.5 h-1.5 w-1.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 shadow-sm" 
-                    transition={{ type: 'spring', bounce: 0.3, duration: 0.6 }}
-                  />
-                )}
               </Link>
             );
           })}

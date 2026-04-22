@@ -228,92 +228,60 @@ export default function ReadingPlanWidget({
     return (
         <>
             <motion.div
-                className="relative mx-auto w-full max-w-[800px] overflow-hidden rounded-[28px] border border-border-soft bg-surface shadow-[0_24px_80px_rgba(22,28,53,0.08)] sm:p-6"
-                initial={{ opacity: 0, y: 20 }}
+                className="relative mx-auto w-full max-w-4xl overflow-hidden rounded-2xl border border-border-soft bg-surface/80 backdrop-blur-md shadow-sm"
+                initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
             >
-                {/* Effet de lumière de fond adaptatif */}
-                <div
-                    className="pointer-events-none absolute inset-0 transition-opacity duration-1000"
-                    style={{
-                        background: `
-                            radial-gradient(circle at 0% 0%, ${activePlan ? teaserPresentation.theme.accentSoft : 'rgba(200,159,45,0.08)'} 0%, transparent 40%),
-                            radial-gradient(circle at 100% 100%, rgba(200,159,45,0.04) 0%, transparent 30%),
-                            linear-gradient(180deg, var(--surface) 0%, transparent 100%)
-                        `,
-                    }}
-                />
-
-                {/* Texture de grain subtile */}
-                <div className="pointer-events-none absolute inset-0 opacity-[0.02] mix-blend-multiply" style={{ backgroundImage: 'radial-gradient(var(--foreground) 0.8px, transparent 1px)', backgroundSize: '24px 24px', backgroundPosition: 'center center' }} />
-
-                <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-6">
-                    <div className="flex flex-1 items-center gap-5">
-                        {/* Icône principale avec halo */}
-                        <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-[20px] border border-border-soft bg-surface-strong/60 shadow-inner sm:h-16 sm:w-16 sm:rounded-[22px]">
-                            <div
-                                className="absolute inset-0 rounded-[inherit] blur-2xl"
-                                style={{ background: activePlan ? teaserPresentation.theme.accentSoft : 'rgba(200,159,45,0.15)' }}
-                            />
-                            <div className="relative z-10 flex items-center justify-center text-foreground">
-                                <PlanSymbol symbolId={teaserPresentation.art.symbolId} size={24} />
-                            </div>
+                <div className="flex items-center gap-3 px-4 py-3">
+                    {/* Small icon */}
+                    <div
+                        className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border-soft bg-surface-strong/60 shadow-inner"
+                    >
+                        <div className="relative z-10 flex items-center justify-center text-foreground">
+                            <PlanSymbol symbolId={teaserPresentation.art.symbolId} size={18} />
                         </div>
+                    </div>
 
-                        <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-2.5 text-[10px] font-black uppercase tracking-[0.25em] text-muted/60">
-                                {activePlan && <Sun size={10} className="text-accent animate-pulse" />}
-                                <span>{eyebrow}</span>
-                            </div>
-
-                            <h3 className="mt-1.5 font-display text-[20px] font-black leading-tight text-foreground sm:text-[23px] tracking-tight">
+                    {/* Text */}
+                    <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted/60">
+                                {eyebrow}
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5">
+                            <h3 className="font-display text-[14px] font-bold leading-tight text-foreground truncate">
                                 {title}
                             </h3>
+                            <span className="hidden sm:inline text-[12px] text-muted truncate">· {subtitle}</span>
+                        </div>
 
-                            <div className="mt-2 flex items-center gap-3 text-[13px] text-muted">
-                                <span className="truncate">{subtitle}</span>
-                                {detail && (
-                                    <>
-                                        <span className="h-1 w-1 rounded-full bg-border-soft" />
-                                        <span className="truncate font-medium text-accent">{detail}</span>
-                                    </>
-                                )}
-                            </div>
-
-                            {/* Barre de progression si actif */}
-                            {activePlan && (
-                                <div className="mt-4 flex items-center gap-3">
-                                    <div className="h-1 flex-1 overflow-hidden rounded-full bg-foreground/5">
-                                        <motion.div
-                                            className="h-full bg-accent"
-                                            initial={{ width: 0 }}
-                                            animate={{ width: `${(activePlan.completedDays.length / activePlan.plan.days.length) * 100}%` }}
-                                            transition={{ duration: 1, ease: 'circOut' }}
-                                        />
-                                    </div>
-                                    <span className="text-[10px] font-bold text-muted uppercase tracking-widest">{Math.round((activePlan.completedDays.length / activePlan.plan.days.length) * 100)}%</span>
+                        {/* Progress bar (active plan only) */}
+                        {activePlan && (
+                            <div className="mt-1.5 flex items-center gap-2">
+                                <div className="h-1 flex-1 overflow-hidden rounded-full bg-foreground/5">
+                                    <motion.div
+                                        className="h-full bg-accent"
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${(activePlan.completedDays.length / activePlan.plan.days.length) * 100}%` }}
+                                        transition={{ duration: 1, ease: 'circOut' }}
+                                    />
                                 </div>
-                            )}
-                        </div>
+                                <span className="text-[9px] font-bold text-muted tracking-wide">{Math.round((activePlan.completedDays.length / activePlan.plan.days.length) * 100)}%</span>
+                            </div>
+                        )}
                     </div>
 
-                    <div className="flex items-center justify-between gap-4 border-t border-border-soft/60 pt-4 md:border-t-0 md:pt-0">
-                        <div className={`${activePlan ? 'hidden' : 'block'} lg:block`}>
-                           <CompactPlanStack entries={teaserEntries} primaryPlanId={activePlan?.plan.id ?? ''} />
-                        </div>
-
-                        <motion.button
-                            type="button"
-                            onClick={() => router.push(primaryHref)}
-                            className="inline-flex shrink-0 items-center gap-2.5 rounded-full bg-foreground text-background px-6 py-3 text-[12px] font-black uppercase tracking-[0.18em] shadow-[0_10px_30px_rgba(0,0,0,0.15)]"
-                            whileHover={{ y: -4, scale: 1.02 }}
-                            whileTap={{ scale: 0.97 }}
-                        >
-                            {primaryLabel}
-                            <ArrowUpRight size={16} strokeWidth={2.8} />
-                        </motion.button>
-                    </div>
+                    {/* CTA */}
+                    <button
+                        type="button"
+                        onClick={() => router.push(primaryHref)}
+                        className="flex shrink-0 items-center gap-1.5 rounded-full bg-foreground text-background px-3.5 py-2 text-[10px] font-black uppercase tracking-[0.12em] shadow-sm transition hover:scale-[1.02] active:scale-95"
+                    >
+                        {primaryLabel}
+                        <ArrowUpRight size={13} strokeWidth={2.8} />
+                    </button>
                 </div>
             </motion.div>
             {reflectionContext ? (

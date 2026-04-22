@@ -3408,12 +3408,12 @@ export default function BibleReader({
         </div>
       ) : null}
       {toast ? (
-        <div className="fixed bottom-[calc(142px+env(safe-area-inset-bottom))] left-1/2 z-[13000] -translate-x-1/2 rounded-full bg-black/72 px-4 py-2 text-sm font-bold text-white shadow-xl backdrop-blur-md md:bottom-24">
+        <div className="fixed bottom-[calc(110px+env(safe-area-inset-bottom))] left-1/2 z-[13000] -translate-x-1/2 rounded-full bg-black/72 px-4 py-2 text-sm font-bold text-white shadow-xl backdrop-blur-md md:bottom-24">
           {toast}
         </div>
       ) : null}
 
-      <div className="fixed bottom-[calc(84px+env(safe-area-inset-bottom))] left-0 right-0 z-[12500] px-4 md:bottom-6 md:left-[90px] md:px-6 pointer-events-none">
+      <div className="fixed bottom-[calc(56px+env(safe-area-inset-bottom))] left-0 right-0 z-[12500] px-3 sm:px-4 md:bottom-6 md:left-[90px] md:px-6 pointer-events-none">
         <div className="mx-auto max-w-4xl pointer-events-auto">
           <BibleToolbar
             tool={tool}

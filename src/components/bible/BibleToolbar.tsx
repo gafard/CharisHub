@@ -374,33 +374,30 @@ export default function BibleToolbar({
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 5 }}
-              className="flex items-center justify-between px-2 py-1"
+              className="flex items-center justify-between px-1 py-0.5"
             >
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-amber-300/30 bg-amber-400/10 text-amber-500 dark:text-amber-300">
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-amber-300/30 bg-amber-400/10 text-amber-500 dark:text-amber-300">
                   {toolIcons[tool]}
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-muted">Mode actif</span>
-                  <span className="text-[12px] font-bold capitalize text-slate-700 dark:text-slate-200">{tool === 'read' ? 'Lecture' : tool === 'highlight' ? 'Surlignage' : 'Note'}</span>
-                </div>
+                <span className="text-[11px] font-bold text-foreground/70">{tool === 'read' ? 'Lecture' : tool === 'highlight' ? 'Surlignage' : 'Note'}</span>
               </div>
 
-              {audioAvailable && (
-                <div className="flex items-center gap-3">
-                  <div className="flex flex-col items-end">
-                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Audio</span>
-                    <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400">{playerPlaying ? 'En lecture' : 'En pause'}</span>
-                  </div>
+              <div className="flex items-center gap-1.5">
+                {audioAvailable && (
                   <button
                     type="button"
                     onClick={onTogglePlayer}
-                    className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-400/15 text-amber-600 dark:bg-amber-400/10 dark:text-amber-300 transition hover:scale-105 active:scale-95"
+                    className={`flex h-8 w-8 items-center justify-center rounded-full transition active:scale-95 ${
+                      playerPlaying
+                        ? 'bg-accent text-white shadow-sm'
+                        : 'bg-amber-400/15 text-amber-600 dark:bg-amber-400/10 dark:text-amber-300'
+                    }`}
                   >
-                    {playerPlaying ? <Pause size={18} /> : <Play size={18} className="translate-x-[1px]" />}
+                    {playerPlaying ? <Pause size={14} /> : <Play size={14} className="translate-x-[1px]" />}
                   </button>
-                </div>
-              )}
+                )}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
