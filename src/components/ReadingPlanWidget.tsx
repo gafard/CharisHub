@@ -244,15 +244,21 @@ export default function ReadingPlanWidget({
 
                 {reflectionContext && (
                     <ReflectionSheet
-                        context={{
-                            planId: activePlan!.planId,
-                            dayIndex: activePlan!.todayIndex,
-                            readingId: reflectionContext.readingId,
-                            bookId: reflectionContext.bookId,
-                            chapter: reflectionContext.chapter,
-                            passageText: reflectionContext.passageText,
-                        }}
+                        isOpen
                         onClose={() => setReflectionContext(null)}
+                        onComplete={() => {
+                            const nextPlan = getPlanProgress(reflectionContext.planId);
+                            setTodayDone(nextPlan ? isTodayCompleted(nextPlan.planId) : false);
+                            setActivePlan(getActivePlan());
+                        }}
+                        readings={reflectionContext.readings}
+                        planId={reflectionContext.planId}
+                        dayIndex={reflectionContext.dayIndex}
+                        alreadyCompleted={reflectionContext.finalChapter}
+                        activeReading={reflectionContext.activeReading}
+                        activeChapter={reflectionContext.activeChapter}
+                        finalChapter={reflectionContext.finalChapter}
+                        preloadedQuestions={preloadedQuestions ?? undefined}
                     />
                 )}
             </>
