@@ -55,7 +55,7 @@ export default function StudyAppShell({ children }: { children: ReactNode }) {
     <div className="relative min-h-screen bg-background text-foreground">
       <div className="grace-particles" />
 
-      <header className="sticky top-0 z-40 border-b border-border-soft bg-surface/70 backdrop-blur-2xl">
+      <header className={`sticky top-0 z-40 border-b border-border-soft bg-surface/70 backdrop-blur-2xl transition-all ${pathname.startsWith('/bible') ? 'hidden md:block' : ''}`}>
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 sm:px-8">
           <div className="min-w-0">
             <Link href="/" className="group inline-flex items-center gap-3 rounded-full text-left transition-transform active:scale-95">

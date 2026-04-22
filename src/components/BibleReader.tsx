@@ -2782,31 +2782,31 @@ export default function BibleReader({
 
       <div className={`mx-auto w-full ${embedded ? 'h-full min-h-0 flex flex-col' : 'max-w-6xl space-y-6'}`}>
         {/* Header Section (Flexible for both standard and embedded mode) */}
-        <header className={`bible-paper rounded-none sm:rounded-[32px] border-y sm:border border-border-soft bg-surface shadow-sm transition-all duration-500 
-          ${embedded ? 'p-4 mb-2' : 'p-4 px-5 sm:p-6 md:p-10 lg:p-14 mb-0 sm:mb-6'} 
+        <header className={`bible-paper transition-all duration-500 sm:rounded-[32px] sm:border sm:border-border-soft sm:bg-surface sm:shadow-sm
+          ${embedded ? 'p-4 mb-2' : 'sticky top-0 z-40 w-full bg-surface/85 backdrop-blur-2xl border-b border-border-soft/50 py-2 sm:static sm:z-auto sm:border sm:border-border-soft sm:bg-surface sm:p-6 md:p-10 lg:p-14 mb-0 sm:mb-6'} 
           ${!embedded && (fullScreen || !isClient) ? 'hidden lg:block' : ''}`}
         >
           <div className={`${embedded ? 'flex flex-wrap items-center justify-between gap-4' : 'space-y-4'}`}>
             {!embedded && (
-              <div>
+              <div className="hidden sm:block">
                 <div className="text-[10px] font-black uppercase tracking-[0.3em] text-accent">
                   Parole
                 </div>
                 <h1 className="text-2xl sm:text-4xl font-black leading-tight tracking-tight text-foreground md:text-6xl font-display">
                   La Parole vivante
                 </h1>
-                <p className="hidden sm:block max-w-2xl text-base sm:text-lg font-medium leading-relaxed text-muted">
+                <p className="max-w-2xl text-base sm:text-lg font-medium leading-relaxed text-muted">
                   Lis, médite et laisse la Parole te transformer.
                 </p>
               </div>
             )}
 
-            <div className={`flex flex-wrap items-center gap-2 sm:gap-4 ${embedded ? 'flex-1' : 'mt-3 sm:mt-8'}`}>
+            <div className={`flex flex-wrap items-center justify-center sm:justify-start gap-1 sm:gap-4 ${embedded ? 'flex-1' : 'mt-0 sm:mt-8'}`}>
               <div className="flex flex-wrap gap-2">
                 <select
                   value={translationId}
                   onChange={(e) => setTranslationId(e.target.value)}
-                  className="cursor-pointer appearance-none rounded-lg sm:rounded-xl border border-border-soft bg-background px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-foreground outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
+                  className="cursor-pointer appearance-none rounded-lg sm:rounded-xl border border-transparent bg-foreground/5 sm:bg-background px-2.5 sm:px-4 py-1.5 sm:py-2 text-[11px] sm:text-sm font-bold text-foreground outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors"
                 >
                   {LOCAL_BIBLE_TRANSLATIONS.map((t) => (
                     <option key={t.id} value={t.id}>
@@ -2821,7 +2821,7 @@ export default function BibleReader({
                     setBookId(e.target.value);
                     setChapter(1);
                   }}
-                  className="cursor-pointer appearance-none rounded-lg sm:rounded-xl border border-border-soft bg-background px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-foreground outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
+                  className="cursor-pointer appearance-none rounded-lg sm:rounded-xl border border-transparent bg-foreground/5 sm:bg-background px-2.5 sm:px-4 py-1.5 sm:py-2 text-[11px] sm:text-sm font-bold text-foreground outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors"
                 >
                   {BIBLE_BOOKS.map((b) => (
                     <option key={b.id} value={b.id}>
@@ -2833,7 +2833,7 @@ export default function BibleReader({
                 <select
                   value={chapter}
                   onChange={(e) => setChapter(Number(e.target.value))}
-                  className="cursor-pointer appearance-none rounded-lg sm:rounded-xl border border-border-soft bg-background px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-foreground outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
+                  className="cursor-pointer appearance-none rounded-lg sm:rounded-xl border border-transparent bg-foreground/5 sm:bg-background px-2.5 sm:px-4 py-1.5 sm:py-2 text-[11px] sm:text-sm font-bold text-foreground outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors"
                 >
                   {Array.from({ length: book.chapters }, (_, i) => i + 1).map((c) => (
                     <option key={c} value={c}>
