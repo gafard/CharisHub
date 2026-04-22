@@ -361,6 +361,7 @@ function CompactPlanStack({
 
                 return (
                     <div
+                        key={entry.plan.id}
                         className="absolute h-[54px] w-[40px] overflow-hidden rounded-[14px] border border-border-strong/10 bg-surface/40 shadow-[0_14px_28px_rgba(0,0,0,0.22)] backdrop-blur-md"
                         style={{
                             left: `${layout.left}px`,
