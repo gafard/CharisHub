@@ -1088,6 +1088,36 @@ html[data-data-saver="1"] .hero-float {
   padding-top: 2px;
 }
 
+/* ─── Bible Paper / Kindle Reader ─── */
+:root {
+  --bible-paper-text: rgba(44, 42, 40, 0.88);
+  --bible-paper-verse-num: rgba(44, 42, 40, 0.65);
+  --bible-paper-subtitle: rgba(44, 42, 40, 0.45);
+  --bible-paper-rule: rgba(44, 42, 40, 0.1);
+}
+
+.dark {
+  --bible-paper-text: rgba(245, 245, 240, 0.9);
+  --bible-paper-verse-num: rgba(245, 245, 240, 0.6);
+  --bible-paper-subtitle: rgba(245, 245, 240, 0.5);
+  --bible-paper-rule: rgba(245, 245, 240, 0.12);
+}
+
+/* Light mode: beige/cream Kindle paper */
+.bible-paper-kindle {
+  background: linear-gradient(135deg, #F7F3E8 0%, #F5F1E8 50%, #F4EFE4 100%);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.08), 0 4px 20px rgba(0,0,0,0.04);
+  border: 1px solid rgba(232, 221, 203, 0.6);
+  transition: background 0.5s ease, box-shadow 0.5s ease, border-color 0.5s ease;
+}
+
+/* Dark mode: dark surface paper */
+.dark .bible-paper-kindle {
+  background: #1C1C1E;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.35), 0 4px 20px rgba(0,0,0,0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
 /* Texte du verset */
 .verse-text {
   color: var(--foreground);
