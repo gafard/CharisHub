@@ -21,6 +21,7 @@ import {
   Star,
   Waypoints,
   Sparkles,
+  TreePine,
 } from 'lucide-react';
 import {
   READING_PLANS,
