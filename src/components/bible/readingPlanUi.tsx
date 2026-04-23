@@ -20,7 +20,6 @@ import {
   Sprout,
   Star,
   Waypoints,
-  Sparkles,
   TreePine,
 } from 'lucide-react';
 import {
@@ -133,7 +132,7 @@ const PLAN_SYMBOLS: Record<PlanSymbolId, typeof BookOpen> = {
   'scroll-text': ScrollText,
   sunrise: Star,
   'library-big': LibraryBig,
-  sparkles: Sparkles,
+  star: Star,
   cross: Church,
 };
 

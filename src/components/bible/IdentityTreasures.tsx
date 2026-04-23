@@ -9,10 +9,11 @@ import {
   Quote,
   Search,
   ShieldCheck,
-  Sparkles,
+  Gem,
   Trash2,
   X,
   ArrowUpDown,
+  Star,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -24,7 +25,7 @@ type SortType = 'recent' | 'oldest' | 'reference';
 function getTypeIcon(type: PepiteType) {
   switch (type) {
     case 'grace':
-      return <Sparkles className="h-4 w-4 text-emerald-500" />;
+      return <Star className="h-4 w-4 text-emerald-500" />;
     case 'identity':
       return <ShieldCheck className="h-4 w-4 text-sky-500" />;
     case 'promise':
@@ -325,7 +326,7 @@ export default function IdentityTreasures() {
           <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-xl">
               <div className="inline-flex items-center gap-2.5 rounded-full border border-[color:var(--accent)]/10 bg-[color:var(--accent)]/5 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.25em] text-[color:var(--accent)]">
-                <Sparkles className="h-3.5 w-3.5" />
+                <Star className="h-3.5 w-3.5" />
                 Patrimoine Spirituel
               </div>
 
@@ -340,9 +341,9 @@ export default function IdentityTreasures() {
             </div>
 
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:min-w-[560px]">
-              <StatCard label="Trésors" value={stats.total} icon={<BookOpen className="h-5 w-5 text-[color:var(--accent)]" />} />
-              <StatCard label="Identité" value={stats.identity} icon={<ShieldCheck className="h-5 w-5 text-sky-500" />} />
-              <StatCard label="Grâce" value={stats.grace} icon={<Sparkles className="h-5 w-5 text-emerald-500" />} />
+              <StatCard label="Trésors" value={stats.total} icon={<Gem className="h-5 w-5 text-[color:var(--accent)]" />} />
+              <StatCard label="Identité" value={stats.identity} icon={<Star className="h-5 w-5 text-sky-500" />} />
+              <StatCard label="Grâce" value={stats.grace} icon={<Star className="h-5 w-5 text-emerald-500" />} />
               <StatCard label="Promesses" value={stats.promise} icon={<Quote className="h-5 w-5 text-amber-500" />} />
             </div>
           </div>
@@ -352,8 +353,8 @@ export default function IdentityTreasures() {
         <section className="flex flex-col gap-5 rounded-[36px] border border-border-soft bg-surface/80 p-5 shadow-sm lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap gap-2.5">
             <FilterPill active={filter === 'all'} label="Tout" count={stats.total} icon={<Filter className="h-3.5 w-3.5" />} onClick={() => setFilter('all')} />
-            <FilterPill active={filter === 'identity'} label="Identité" count={stats.identity} icon={<ShieldCheck className="h-3.5 w-3.5" />} onClick={() => setFilter('identity')} />
-            <FilterPill active={filter === 'grace'} label="Grâce" count={stats.grace} icon={<Sparkles className="h-3.5 w-3.5" />} onClick={() => setFilter('grace')} />
+            <FilterPill active={filter === 'identity'} label="Identité" count={stats.identity} icon={<Star className="h-3.5 w-3.5" />} onClick={() => setFilter('identity')} />
+            <FilterPill active={filter === 'grace'} label="Grâce" count={stats.grace} icon={<Star className="h-3.5 w-3.5" />} onClick={() => setFilter('grace')} />
             <FilterPill active={filter === 'promise'} label="Promesses" count={stats.promise} icon={<Quote className="h-3.5 w-3.5" />} onClick={() => setFilter('promise')} />
           </div>
 
@@ -403,7 +404,7 @@ export default function IdentityTreasures() {
         ) : (
           <section className="flex flex-col items-center justify-center rounded-[48px] border-2 border-dashed border-border-soft bg-surface/40 px-6 py-24 text-center">
             <div className="mb-8 flex h-20 w-20 items-center justify-center rounded-[32px] bg-[color:var(--accent)]/5">
-              <Sparkles className="h-10 w-10 text-[color:var(--accent)] opacity-40" />
+              <Gem className="h-10 w-10 text-[color:var(--accent)] opacity-40" />
             </div>
 
             <h3 className="text-2xl font-black text-foreground">Aucune pépite à afficher</h3>

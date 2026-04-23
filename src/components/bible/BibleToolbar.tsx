@@ -13,7 +13,8 @@ import {
   Pause,
   Play,
   Search,
-  Sparkles,
+  Star,
+  Settings2,
   Flame,
   Volume2,
 } from 'lucide-react';
@@ -302,7 +303,7 @@ export default function BibleToolbar({
                   <ToolbarPill
                     active={isPrismaMeditation}
                     label="Cinématique"
-                    icon={<Sparkles size={15} className={isPrismaMeditation ? "text-amber-500" : ""} />}
+                    icon={<Star size={15} className={isPrismaMeditation ? "text-amber-500" : ""} />}
                     onClick={() => setIsPrismaMeditation(!isPrismaMeditation)}
                   />
 

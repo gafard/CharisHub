@@ -15,7 +15,6 @@ import {
   Smile,
   Users,
   Target,
-  Sparkles,
   Star,
   X,
   type LucideIcon,
@@ -296,7 +295,7 @@ export default function GuidedPrayerFlow({
               </h2>
 
               <div className="flex items-center gap-2 text-[13px] font-semibold text-white/45">
-                <Sparkles size={14} className="opacity-60" />
+                <Star size={14} className="opacity-60" />
                 <span>{readingSummary}</span>
               </div>
             </div>

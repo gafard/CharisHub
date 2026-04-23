@@ -8,7 +8,7 @@ import {
   ChevronDown,
   ChevronUp,
   Layers3,
-  Sparkles,
+  ScrollText,
   Flame,
   X,
 } from 'lucide-react';
@@ -357,7 +357,7 @@ export default function ReflectionSheet({
             <div className="relative z-10 flex items-start justify-between gap-4 border-b border-white/8 px-5 pb-4 pt-5 sm:px-7 sm:pb-5 sm:pt-6">
               <div className="min-w-0">
                 <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.22em] text-[rgba(255,240,222,0.7)]">
-                  <Sparkles size={13} className="text-amber-400" />
+                  <ScrollText size={13} className="text-amber-400" />
                   {finalChapter ? 'Miroir de Grâce' : 'Cœur à Cœur'}
                 </div>
 
