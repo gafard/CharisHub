@@ -10,7 +10,7 @@ import {
   Languages,
   ScrollText,
   Library,
-  Sparkles,
+  BookOpenText,
   ChevronRight,
 } from 'lucide-react';
 import StrongService, { type StrongEntry, type StrongOccurrence } from '../services/strong-service';
@@ -265,10 +265,10 @@ export default function BibleStrongViewer({
         <div className="relative z-10 border-b border-white/10 px-5 py-5 sm:px-6">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-300">
-                <Sparkles size={12} />
-                Concordance Strong
-              </div>
+                <div className="flex items-center gap-1.5 rounded-full bg-amber-400/10 px-2 py-0.5 text-[10px] font-bold text-amber-500">
+                  <BookOpenText size={12} />
+                  <span>Concordance</span>
+                </div>
 
               <h2 className="mt-3 flex items-center gap-3 text-2xl font-black tracking-tight text-white">
                 <BookOpen size={24} className="text-amber-300" />

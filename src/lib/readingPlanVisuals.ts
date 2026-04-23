@@ -20,9 +20,8 @@ export type PlanSymbolId =
     | 'crown'
     | 'scroll'
     | 'scroll-text'
-    | 'sunrise'
     | 'library-big'
-    | 'sparkles';
+    | 'star';
 
 export type PlanArtDirection = {
     planId: string;
@@ -392,7 +391,7 @@ const PLAN_PRESETS: Record<
             tone: 'stone',
             eyebrow: 'Consolation',
             focus: 'Traverser l épreuve avec espérance et présence de Dieu',
-            symbolId: 'sunrise',
+            symbolId: 'star',
         },
     },
     'couple-family-10': {
@@ -405,7 +404,7 @@ const PLAN_PRESETS: Record<
             tone: 'warm',
             eyebrow: 'Foyer',
             focus: 'Former le coeur du couple et de la famille dans la Parole',
-            symbolId: 'sparkles',
+            symbolId: 'star',
         },
     },
     'genesis-25': {
@@ -431,7 +430,7 @@ const PLAN_PRESETS: Record<
             tone: 'night',
             eyebrow: 'Consecration',
             focus: 'Entrer dans un rythme de jeûne, d écoute et de disponibilité',
-            symbolId: 'sparkles',
+            symbolId: 'star',
         },
     },
     'torah-90': {
@@ -483,7 +482,7 @@ const PLAN_PRESETS: Record<
             tone: 'ceremonial',
             eyebrow: 'Saison',
             focus: 'Attendre, contempler, accueillir',
-            symbolId: 'sunrise',
+            symbolId: 'star',
         },
     },
     'passion-resurrection-8': {
@@ -496,7 +495,7 @@ const PLAN_PRESETS: Record<
             tone: 'ceremonial',
             eyebrow: 'Paques',
             focus: 'Traverser la Passion jusqu à la résurrection avec gravité et espérance',
-            symbolId: 'sunrise',
+            symbolId: 'star',
         },
     },
 };

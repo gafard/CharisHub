@@ -130,7 +130,6 @@ const PLAN_SYMBOLS: Record<PlanSymbolId, typeof BookOpen> = {
   crown: Crown,
   scroll: Scroll,
   'scroll-text': ScrollText,
-  sunrise: Star,
   'library-big': LibraryBig,
   star: Star,
   cross: Church,

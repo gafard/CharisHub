@@ -11,7 +11,7 @@ import {
   BookText,
   BookOpen,
   Hash,
-  Sparkles,
+  BookOpenText,
   Plus,
   ChevronRight,
   ChevronDown,
@@ -516,7 +516,7 @@ export default function AdvancedStudyTools({
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-300">
-                <Sparkles size={12} />
+                <BookOpenText size={12} />
                 Étude avancée
               </div>
               <h2 className="mt-3 text-2xl font-black tracking-tight text-white">

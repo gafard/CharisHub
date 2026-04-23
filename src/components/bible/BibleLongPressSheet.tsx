@@ -7,6 +7,7 @@ import {
   Search,
   Share2,
   Star,
+  Gem,
   X,
 } from 'lucide-react';
 
@@ -100,7 +101,7 @@ const actions: Array<{
   {
     label: 'Pépite',
     action: 'pepite',
-    icon: <Sparkles size={15} className="text-[color:var(--accent)]" />,
+    icon: <Gem size={15} className="text-[color:var(--accent)]" />,
   },
 ];
 
