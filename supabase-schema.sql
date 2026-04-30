@@ -754,7 +754,7 @@ USING (bucket_id = 'community-media');
 
 CREATE POLICY "Authenticated users can delete from community-media"
 ON storage.objects FOR DELETE
-USING (bucket_id = 'community-media' AND auth.uid() = owner);
+USING (bucket_id = 'community-media' AND auth.uid()::text = owner::text);
 
 -- Policy pour stories
 CREATE POLICY "Authenticated users can upload stories"
@@ -767,7 +767,7 @@ USING (bucket_id = 'stories');
 
 CREATE POLICY "Authenticated users can delete stories"
 ON storage.objects FOR DELETE
-USING (bucket_id = 'stories' AND auth.uid() = owner);
+USING (bucket_id = 'stories' AND auth.uid()::text = owner::text);
 
 -- ============================================================
 -- FIN DU SCHÉMA
