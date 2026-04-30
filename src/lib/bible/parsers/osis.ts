@@ -1,4 +1,4 @@
-import { BibleBook } from '../../bibleData';
+import { BibleBook } from '../../bibleCatalog';
 import { BibleParser, VerseRow } from './types';
 
 // Map for OSIS IDs if they differ from our internal IDs

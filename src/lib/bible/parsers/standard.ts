@@ -1,4 +1,4 @@
-import { BibleBook } from '../../bibleData';
+import { BibleBook } from '../../bibleCatalog';
 import { BibleParser, VerseRow } from './types';
 import { normalize, extractVerseNumber, extractVerseText } from './utils';
 import { BIBLE_BOOKS } from '../../bibleCatalog';

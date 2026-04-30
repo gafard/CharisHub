@@ -1,4 +1,4 @@
-import { BibleBook } from '../../bibleData';
+import { BibleBook } from '../../bibleCatalog';
 
 export interface VerseRow {
   number: number;
