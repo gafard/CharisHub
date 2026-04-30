@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import logger from '@/lib/logger';
 import {
   X,
   Search,
@@ -169,7 +170,7 @@ export default function BibleStrongViewer({
         .catch((err: unknown) => {
           if (cancelled) return;
           setError(`Erreur lors du chargement de l'entrée Strong: ${errorMessage(err)}`);
-          console.error(err);
+          logger.error('[StrongViewer] Entry load error:', err);
         })
         .finally(() => {
           if (cancelled) return;
@@ -204,7 +205,7 @@ export default function BibleStrongViewer({
       setActiveTab('search');
     } catch (err: unknown) {
       setError(`Erreur lors de la recherche: ${errorMessage(err)}`);
-      console.error(err);
+      logger.error('[StrongViewer] Search error:', err);
     } finally {
       setLoading(false);
     }
@@ -224,7 +225,7 @@ export default function BibleStrongViewer({
       const items = await StrongService.getOccurrences(result.number, result.language, 12);
       setOccurrences(items || []);
     } catch (err) {
-       console.error(err);
+       logger.error('[StrongViewer] Occurrences load error:', err);
     } finally {
       setOccurrencesLoading(false);
     }

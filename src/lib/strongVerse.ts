@@ -1,6 +1,8 @@
 // Mapping de correspondance entre les versets et les numéros Strong
 // Structure pour lier chaque verset aux mots Strong correspondants
 
+import logger from '@/lib/logger';
+
 export type StrongToken = {
   w: string; // mot (ou translit)
   lang: 'hebrew' | 'greek'; // langue du mot original
@@ -82,7 +84,7 @@ export async function getStrongTokens(params: {
         phonetic: w.phonetic
       }));
   } catch (error) {
-    console.error('Erreur lors de la récupération des tokens Strong:', error);
+    logger.error('[strongVerse] Erreur lors de la récupération des tokens Strong:', error);
     return [];
   }
 }

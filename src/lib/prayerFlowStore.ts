@@ -7,6 +7,7 @@
 
 import type { PlanReading } from './readingPlanCatalog';
 import { formatDayReadingsLabel } from './readingPlans';
+import logger from '@/lib/logger';
 
 const STORE_KEY = 'formation_biblique_prayer_flow_v1';
 
@@ -395,6 +396,6 @@ export function savePrayerFlowToJournal(session: PrayerFlowSession) {
 
         localStorage.setItem(JOURNAL_KEY, JSON.stringify(entries));
     } catch (err) {
-        console.error('Failed to save prayer flow to journal', err);
+        logger.error('[prayerFlowStore] Failed to save prayer flow to journal:', err);
     }
 }

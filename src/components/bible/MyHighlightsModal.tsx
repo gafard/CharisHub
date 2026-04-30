@@ -24,6 +24,24 @@ export default function MyHighlightsModal({
 }: MyHighlightsModalProps) {
     const [search, setSearch] = useState('');
 
+    const COLOR_DOT: Record<HighlightColor, string> = {
+        yellow: 'bg-yellow-400',
+        green: 'bg-emerald-400',
+        pink: 'bg-pink-400',
+        blue: 'bg-sky-400',
+        orange: 'bg-orange-400',
+        purple: 'bg-purple-400',
+    };
+
+    const COLOR_LABEL: Record<HighlightColor, string> = {
+        yellow: 'Jaune',
+        green: 'Vert',
+        pink: 'Rose',
+        blue: 'Bleu',
+        orange: 'Orange',
+        purple: 'Violet',
+    };
+
     // Convert the nested Record<string, HighlightMap> into a flat array of highlights
     const flatHighlights = useMemo(() => {
         const arr: Array<{
@@ -138,9 +156,9 @@ export default function MyHighlightsModal({
                                     >
                                         <span className="text-sm font-bold text-foreground">{h.displayRef}</span>
                                         <div className="flex items-center gap-2 mt-1">
-                                            <div className={`h-2 w-2 rounded-full bg-${h.color}-400`} />
+                                            <div className={`h-2 w-2 rounded-full ${COLOR_DOT[h.color]}`} />
                                             <span className="text-[10px] uppercase tracking-wider text-muted font-bold">
-                                                Surligné en {h.color}
+                                                Surligné en {COLOR_LABEL[h.color] || h.color}
                                             </span>
                                         </div>
                                     </button>

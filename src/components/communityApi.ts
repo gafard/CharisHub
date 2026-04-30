@@ -1102,7 +1102,7 @@ export async function triggerGroupCallPush(payload: {
                   },
                 });
               } catch (e) {
-                console.error(`[triggerGroupCallPush] Broadcast failed on ${channelName}:`, e);
+                logger.error(`[triggerGroupCallPush] Broadcast failed on ${channelName}:`, e);
               } finally {
                 resolve();
               }
@@ -1122,7 +1122,7 @@ export async function triggerGroupCallPush(payload: {
               });
             }
           } catch (e) {
-            console.error(`[triggerGroupCallPush] Error on ${channelName}:`, e);
+            logger.error(`[triggerGroupCallPush] Error on ${channelName}:`, e);
             resolve();
           }
         });
@@ -1983,7 +1983,7 @@ export async function fetchGroups(limit = 40, deviceId?: string, userId?: string
         } else if (isMissingTableError(error, 'charishub_groups')) {
           // No remote groups table yet
         } else {
-          console.error('[fetchGroups] Supabase error:', error);
+          logger.error('[fetchGroups] Supabase error:', error);
         }
       } else {
         remoteGroups = (data ?? []).map((row: any) => normalizeGroup(row));
@@ -2034,7 +2034,7 @@ export async function fetchGroups(limit = 40, deviceId?: string, userId?: string
         });
       }
     } catch (err) {
-      console.error('[fetchGroups] Remote fetch failed:', err);
+      logger.error('[fetchGroups] Remote fetch failed:', err);
     }
   }
 
@@ -2368,10 +2368,10 @@ export async function upsertGroupCallPresence(payload: {
     if (missingExpectedColumn || invalidConflict) continue;
 
     if (isMissingTableError(result.error, 'community_group_call_presence')) {
-      console.error('Table community_group_call_presence manquante dans Supabase.');
+      logger.error('[communityApi] Table community_group_call_presence manquante dans Supabase.');
       return false;
     }
-    console.error('Erreur lors de l\'upsert de présence d\'appel:', result.error);
+    logger.error('[communityApi] Erreur upsert de présence d\'appel:', result.error);
     return false;
   }
 
@@ -2467,10 +2467,10 @@ export async function logGroupCallEvent(payload: {
       ('payload' in variant && isMissingColumnError(result.error, 'payload'));
     if (missingExpectedColumn) continue;
     if (isMissingTableError(result.error, 'community_group_call_events')) {
-      console.error('Table community_group_call_events manquante dans Supabase.');
+      logger.error('[communityApi] Table community_group_call_events manquante dans Supabase.');
       return false;
     }
-    console.error('Erreur lors du log d\'événement d\'appel:', result.error);
+    logger.error('[communityApi] Erreur log d\'événement d\'appel:', result.error);
     return false;
   }
 

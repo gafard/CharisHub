@@ -54,6 +54,10 @@ Le projet nécessite les clés suivantes dans `.env.local` :
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `OPENAI_API_KEY` (ou Google Generative AI)
 - `NEXT_PUBLIC_WEBRTC_TURN_URLS` (pour la vidéo en réseau strict)
+- `SUPABASE_SERVICE_ROLE_KEY` (routes serveur/admin)
+- `ADMIN_API_KEY` ou `CHARISHUB_ADMIN_KEY` (accès aux routes `/api/admin/*` via `x-admin-key`)
+- `ADMIN_USER_IDS` / `ADMIN_EMAILS` (liste séparée par des virgules pour les admins authentifiés)
+- `AI_RATE_LIMIT_PER_WINDOW` (optionnel, défaut : 30 requêtes / 10 minutes / IP)
 
 ---
 

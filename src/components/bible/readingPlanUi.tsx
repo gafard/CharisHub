@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { motion } from 'framer-motion';
 import {
   BookOpen,
@@ -226,7 +227,7 @@ export function PlanTeaserPreview({
   );
 }
 
-export function PlanStageCard({
+export const PlanStageCard = React.memo(function PlanStageCard({
   entry,
   completion,
   reducedMotion,
@@ -365,4 +366,4 @@ export function PlanStageCard({
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-[linear-gradient(180deg,transparent,rgba(6,7,12,0.18)_36%,rgba(6,7,12,0.52)_100%)]" />
     </motion.div>
   );
-}
+});

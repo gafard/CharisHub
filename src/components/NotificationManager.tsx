@@ -31,7 +31,7 @@ export default function NotificationManager() {
                 const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
                 logger.log('[NotificationManager] SW registered successfully:', reg.scope);
             } catch (err) {
-                console.error('[NotificationManager] SW registration failed:', err);
+                logger.error('[NotificationManager] SW registration failed:', err);
             }
         });
     }, []);

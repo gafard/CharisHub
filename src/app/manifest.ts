@@ -9,9 +9,11 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: '/',
     scope: '/',
     display: 'standalone',
+    orientation: 'portrait',
     background_color: '#0B1F3A',
     theme_color: '#D4AF37',
     categories: ['education', 'productivity', 'lifestyle'],
+    prefer_related_applications: false,
     icons: [
       {
         src: '/icon.png',
@@ -49,12 +51,26 @@ export default function manifest(): MetadataRoute.Manifest {
     shortcuts: [
       {
         name: 'Ouvrir la Bible',
+        short_name: 'Bible',
         url: '/bible',
         icons: [{ src: '/icon.png', sizes: '192x192' }],
       },
       {
+        name: 'Tableau de bord',
+        short_name: 'Dashboard',
+        url: '/dashboard',
+        icons: [{ src: '/icon.png', sizes: '192x192' }],
+      },
+      {
         name: 'Communauté',
+        short_name: 'Groupes',
         url: '/groups',
+        icons: [{ src: '/icon.png', sizes: '192x192' }],
+      },
+      {
+        name: 'Plans de lecture',
+        short_name: 'Plans',
+        url: '/bible/plans',
         icons: [{ src: '/icon.png', sizes: '192x192' }],
       },
     ],

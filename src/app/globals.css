@@ -105,6 +105,112 @@ body {
   --text-muted: rgba(225, 224, 204, 0.6);
 }
 
+/* Sepia — Warm parchment reading mode */
+:root[data-theme="sepia"] {
+  --background: #f4ead5;
+  --foreground: #3e2c1a;
+  --surface: rgba(244, 234, 213, 0.92);
+  --surface-strong: rgba(236, 222, 196, 0.95);
+  --border-soft: rgba(139, 109, 71, 0.12);
+  --border-strong: rgba(139, 109, 71, 0.22);
+  --shadow-soft: 0 2px 8px rgba(80, 50, 20, 0.08);
+  --shadow-strong: 0 4px 24px rgba(80, 50, 20, 0.12);
+  --accent-soft: rgba(200, 159, 45, 0.15);
+  --app-bg: #f4ead5;
+  --panel-bg: rgba(244, 234, 213, 0.92);
+  --panel-border: rgba(139, 109, 71, 0.15);
+  --text: #3e2c1a;
+  --text-muted: #8b6d47;
+}
+
+/* Deep Night — AMOLED-friendly pure black */
+:root[data-theme="deep-night"] {
+  --background: #000000;
+  --foreground: #c8c8c8;
+  --surface: #050505;
+  --surface-strong: #0c0c0c;
+  --border-soft: rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(255, 255, 255, 0.12);
+  --shadow-soft: none;
+  --shadow-strong: none;
+  --accent-soft: rgba(200, 159, 45, 0.12);
+  --app-bg: #000000;
+  --panel-bg: #050505;
+  --panel-border: rgba(255, 255, 255, 0.08);
+  --text: #c8c8c8;
+  --text-muted: rgba(200, 200, 200, 0.5);
+}
+
+.sepia {
+  --background: #f4ead5;
+  --foreground: #3e2c1a;
+  --surface: rgba(244, 234, 213, 0.92);
+  --surface-strong: rgba(236, 222, 196, 0.95);
+  --border-soft: rgba(139, 109, 71, 0.12);
+  --border-strong: rgba(139, 109, 71, 0.22);
+  --shadow-soft: 0 2px 8px rgba(80, 50, 20, 0.08);
+  --shadow-strong: 0 4px 24px rgba(80, 50, 20, 0.12);
+  --accent-soft: rgba(200, 159, 45, 0.15);
+  --app-bg: #f4ead5;
+  --panel-bg: rgba(244, 234, 213, 0.92);
+  --panel-border: rgba(139, 109, 71, 0.15);
+  --text: #3e2c1a;
+  --text-muted: #8b6d47;
+}
+
+.deep-night {
+  --background: #000000;
+  --foreground: #c8c8c8;
+  --surface: #050505;
+  --surface-strong: #0c0c0c;
+  --border-soft: rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(255, 255, 255, 0.12);
+  --shadow-soft: none;
+  --shadow-strong: none;
+  --accent-soft: rgba(200, 159, 45, 0.12);
+  --app-bg: #000000;
+  --panel-bg: #050505;
+  --panel-border: rgba(255, 255, 255, 0.08);
+  --text: #c8c8c8;
+  --text-muted: rgba(200, 200, 200, 0.5);
+}
+
+/* ─── Design Tokens ──────────────────────────────── */
+:root {
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-card: 24px;
+  --radius-modal: 32px;
+  --radius-pill: 9999px;
+  --radius-input: 12px;
+}
+
+/* ─── iOS Safe Area Utilities ────────────────────── */
+.safe-top { padding-top: env(safe-area-inset-top, 0px); }
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom, 16px); }
+.safe-left { padding-left: env(safe-area-inset-left, 0px); }
+.safe-right { padding-right: env(safe-area-inset-right, 0px); }
+.safe-x { padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
+.safe-y { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 16px); }
+.safe-all {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* ─── Reduced Motion (Accessibility) ─────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Prisma Noise Utilities */
 .noise-overlay {
   position: absolute;

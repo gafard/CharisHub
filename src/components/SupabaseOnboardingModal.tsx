@@ -33,6 +33,12 @@ export default function SupabaseOnboardingModal({ isOpen, onClose }: SupabaseOnb
   const [currentStep, setCurrentStep] = useState(0);
   const [copiedVar, setCopiedVar] = useState<string | null>(null);
 
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedVar(text === 'url' ? 'url' : 'key');
+    setTimeout(() => setCopiedVar(null), 2000);
+  };
+
   const steps = [
     {
       title: 'Pourquoi configurer Supabase ?',
@@ -238,12 +244,6 @@ npm run dev`}</code>
       ),
     },
   ];
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedVar(text === 'url' ? 'url' : 'key');
-    setTimeout(() => setCopiedVar(null), 2000);
-  };
 
   const currentStepData = steps[currentStep];
   const IconComponent = currentStepData.icon;

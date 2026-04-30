@@ -1,6 +1,7 @@
 'use client';
 
 import logger from '@/lib/logger';
+import dynamic from 'next/dynamic';
 
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -27,21 +28,25 @@ import {
   subscribeAudioFocus,
 } from '../lib/audioFocus';
 
-// Import des composants pour les fonctionnalités avancées
-import BibleStrongViewer from './BibleStrongViewer';
-import InterlinearViewer from './InterlinearViewer';
-import AdvancedStudyTools from './AdvancedStudyTools';
-import ReflectionSheet from './bible/ReflectionSheet';
+// Import des composants légers (toujours chargés)
 import BibleToolbar from './bible/BibleToolbar';
 import BibleLongPressSheet from './bible/BibleLongPressSheet';
-import ShareableVerseCard from './ShareableVerseCard';
 import ReadingPlanWidget from './ReadingPlanWidget';
-import BibleCompareModal from './bible/BibleCompareModal';
-import BibleStudyRadar from './bible/BibleStudyRadar';
 import BibleMeditationBar from './bible/BibleMeditationBar';
 import { useActiveVerse } from './bible/useActiveVerse';
 import { useVerseSync } from '../hooks/useVerseSync';
-import MyHighlightsModal from './bible/MyHighlightsModal';
+
+// Lazy loading des composants lourds (modales et panneaux secondaires)
+const BibleStrongViewer = dynamic(() => import('./BibleStrongViewer'), { ssr: false });
+const InterlinearViewer = dynamic(() => import('./InterlinearViewer'), { ssr: false });
+const AdvancedStudyTools = dynamic(() => import('./AdvancedStudyTools'), { ssr: false });
+const ReflectionSheet = dynamic(() => import('./bible/ReflectionSheet'), { ssr: false });
+const ShareableVerseCard = dynamic(() => import('./ShareableVerseCard'), { ssr: false });
+const BibleCompareModal = dynamic(() => import('./bible/BibleCompareModal'), { ssr: false });
+const BibleStudyRadar = dynamic(() => import('./bible/BibleStudyRadar'), { ssr: false });
+const MyHighlightsModal = dynamic(() => import('./bible/MyHighlightsModal'), { ssr: false });
+const GraceMirrorModal = dynamic(() => import('./bible/GraceMirrorModal'), { ssr: false });
+const BibleReaderSkeleton = dynamic(() => import('./bible/BibleReaderSkeleton'), { ssr: false });
 
 // Import des services Strong
 import strongService, { type StrongEntry } from '../services/strong-service';
@@ -51,8 +56,8 @@ import { getActivePlan, isReadingChapterCompleted } from '../lib/readingPlans';
 
 import { graceService } from '../lib/graceService';
 import { pepitesStore } from '../lib/pepitesStore';
-import GraceMirrorModal from './bible/GraceMirrorModal';
 import { AnimatedLetter } from './ui/PrismaAnimations';
+import { safeParseLooseJson } from '../lib/utils';
 
 // Traductions de la Bible provenant du fichier centralisé
 const LOCAL_BIBLE_TRANSLATIONS = [
@@ -552,22 +557,8 @@ function readErrorMessage(err: unknown, fallback = 'Erreur inconnue') {
 function parseBiblePayload(raw: string) {
   const cleaned = raw.replace(/^\uFEFF/, '').trim();
   if (!cleaned) throw new Error('Fichier Bible vide');
-  try {
-    return JSON.parse(cleaned);
-  } catch {
-    try {
-      // Certains dumps sont des objets JS (clés non quotées), pas du JSON strict.
-      return Function(`"use strict"; return (${cleaned});`)();
-    } catch {
-      try {
-        // Quelques fichiers contiennent des sauts de ligne bruts dans des chaînes.
-        const flattened = cleaned.replace(/\r?\n+/g, ' ');
-        return Function(`"use strict"; return (${flattened});`)();
-      } catch (err) {
-        throw new Error(`Format invalide: ${readErrorMessage(err)}`);
-      }
-    }
-  }
+  // Utilise un parser JSON sûr sans eval/Function
+  return safeParseLooseJson(cleaned);
 }
 
 async function loadBiblePayload(translationId: string) {
@@ -1674,7 +1665,7 @@ export default function BibleReader({
       }
       return true;
     } catch (error) {
-      console.error(error);
+      logger.error('[BibleReader] Audio focus error:', error);
       failAudioFocus(requestId, "Impossible de lancer l'audio");
       showToast("Impossible de lancer l'audio");
       return false;
@@ -1705,7 +1696,7 @@ export default function BibleReader({
         await root.requestFullscreen();
       }
     } catch (err) {
-      console.error(err);
+      logger.error('[BibleReader] Fullscreen toggle error:', err);
       showToast('Plein écran indisponible');
     }
   };
@@ -2054,7 +2045,7 @@ export default function BibleReader({
         audio.pause();
       }
     } catch (error) {
-      console.error(error);
+      logger.error('[BibleReader] Strong token fetch error:', error);
       showToast("Impossible de lancer l'audio");
     }
   };
@@ -2956,14 +2947,7 @@ export default function BibleReader({
                   onScroll={(e) => { const el = e.currentTarget; setScrollProgress(el.scrollTop / (el.scrollHeight - el.clientHeight)); }}
                 >
                   {loading ? (
-                    <div className="flex h-64 flex-col items-center justify-center space-y-4">
-                      <div className="flex space-x-2">
-                        <div className="h-3 w-3 animate-bounce rounded-full bg-orange-500 [animation-delay:-0.3s]" />
-                        <div className="h-3 w-3 animate-bounce rounded-full bg-orange-500 [animation-delay:-0.15s]" />
-                        <div className="h-3 w-3 animate-bounce rounded-full bg-orange-500" />
-                      </div>
-                      <span className="text-xs font-bold uppercase tracking-widest text-[#161c35]/20">Chargement de la Parole</span>
-                    </div>
+                    <BibleReaderSkeleton />
                   ) : error ? (
                      <div className="rounded-3xl border border-rose-500/20 bg-rose-500/5 p-12 text-center text-rose-500 backdrop-blur-md"><p className="font-bold">{error}</p></div>
                   ) : (

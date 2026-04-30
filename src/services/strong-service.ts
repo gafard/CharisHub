@@ -3,6 +3,7 @@
 // Inclut un mécanisme de repli avec des données locales
 
 import { localStrongData } from './strong-local-data';
+import logger from '@/lib/logger';
 
 // Types pour les données Strong
 export interface StrongEntry {
@@ -128,8 +129,8 @@ class StrongService {
       this.loadingPromise = null;
       return data;
     } catch (error) {
-      console.error("Erreur lors du chargement des données Strong distantes:", error);
-      console.log("Utilisation des données locales de repli...");
+      logger.error('[StrongService] Erreur chargement données distantes:', error);
+      logger.log('[StrongService] Utilisation des données locales de repli...');
       
       // Utiliser les données locales comme solution de repli
       this.data = localStrongData;

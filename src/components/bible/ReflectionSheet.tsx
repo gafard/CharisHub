@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import logger from '@/lib/logger';
 import {
   ArrowRight,
   BookOpen,
@@ -233,7 +234,7 @@ export default function ReflectionSheet({
         setVerses(sections);
       }
     } catch (error) {
-      console.error('Failed to load verses', error);
+      logger.error('[ReflectionSheet] Failed to load verses:', error);
       if (!cancelled) {
         setVerses([]);
       }
@@ -304,7 +305,7 @@ export default function ReflectionSheet({
           }
         }
       } catch (error) {
-        console.error('AI Prayer failed, falling back to static', error);
+        logger.error('[ReflectionSheet] AI Prayer failed, falling back to static:', error);
       } finally {
         if (prayerRequestRef.current === requestId) {
           setLoadingPrayer(false);

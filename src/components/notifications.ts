@@ -143,7 +143,7 @@ export async function syncPushSubscription(
 
     const vapidPublicKey = (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '').trim();
     if (!vapidPublicKey) {
-      console.error('[Notifications] Missing VAPID key in env');
+      logger.error('[Notifications] Missing VAPID key in env');
       return { ok: false, error: 'Configuration error: NEXT_PUBLIC_VAPID_PUBLIC_KEY missing' };
     }
 
@@ -171,7 +171,7 @@ export async function syncPushSubscription(
     });
     if (!response.ok) {
       const text = await response.text();
-      console.error('[Notifications] Server sync failed:', text);
+      logger.error('[Notifications] Server sync failed:', text);
       return { ok: false, error: `Server error: ${text || response.statusText}` };
     }
 
@@ -179,7 +179,7 @@ export async function syncPushSubscription(
     return { ok: true };
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error during subscription';
-    console.error('[Notifications] Exception:', error);
+    logger.error('[Notifications] Exception:', error);
     return { ok: false, error: message };
   }
 }

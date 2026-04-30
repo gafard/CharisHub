@@ -1,16 +1,20 @@
 'use client';
 
+import logger from '@/lib/logger';
+
 import {
   Bell,
   BellOff,
   CheckCircle2,
   Cloud,
   CloudOff,
+  Contrast,
   Globe,
   Moon,
   Save,
   ShieldCheck,
   Sun,
+  Sunrise,
   UserRound,
   LogOut,
 } from 'lucide-react';
@@ -152,7 +156,7 @@ export default function StudyUserPanel({
       setSaved(true);
       window.setTimeout(() => setSaved(false), 2000);
     } catch (err) {
-      console.error('Failed to save name:', err);
+      logger.error('[StudyUserPanel] Failed to save name:', err);
     } finally {
       setSaving(false);
     }
@@ -299,17 +303,19 @@ export default function StudyUserPanel({
           eyebrow="Préférences"
           title="Thème"
           description="Ajustez l'apparence selon l'heure ou vos préférences."
-          icon={theme === 'dark' ? <Moon size={20} /> : <Sun size={20} />}
+          icon={theme === 'dark' ? <Moon size={20} /> : theme === 'sepia' ? <Sunrise size={20} /> : theme === 'deep-night' ? <Contrast size={20} /> : <Sun size={20} />}
         >
-          <div className="inline-flex items-center gap-2 rounded-2xl border border-border-soft bg-surface-strong p-1">
+          <div className="inline-flex flex-wrap items-center gap-2 rounded-2xl border border-border-soft bg-surface-strong p-1">
             {[
               { value: 'light', label: 'Clair', icon: <Sun size={14} /> },
+              { value: 'sepia', label: 'Sépia', icon: <Sunrise size={14} /> },
               { value: 'dark', label: 'Sombre', icon: <Moon size={14} /> },
+              { value: 'deep-night', label: 'Nuit', icon: <Contrast size={14} /> },
             ].map((item) => (
               <button
                 key={item.value}
                 type="button"
-                onClick={() => setTheme(item.value as 'light' | 'dark')}
+                onClick={() => setTheme(item.value as 'light' | 'dark' | 'sepia' | 'deep-night')}
                 className={[
                   'flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all',
                   theme === item.value

@@ -1,4 +1,5 @@
 import logger from '@/lib/logger';
+import { checkRateLimit } from '@/lib/rateLimit';
 import { NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
@@ -147,6 +148,18 @@ function fallbackPrompts(input: PrayerPromptInput): PrayerPromptsOutput {
 
 export async function POST(req: Request) {
     try {
+        const rateLimit = checkRateLimit(req, {
+            keyPrefix: 'api:prayer-prompts',
+            limit: Number(process.env.AI_RATE_LIMIT_PER_WINDOW || 30),
+            windowMs: 10 * 60 * 1000,
+        });
+        if (!rateLimit.allowed) {
+            return NextResponse.json(
+                { error: 'Trop de requêtes. Veuillez réessayer dans quelques instants.' },
+                { status: 429, headers: rateLimit.headers }
+            );
+        }
+
         const body = (await req.json()) as PrayerPromptInput;
         if (!body.chapterLabel || !body.reflectionInsights?.length) {
             return NextResponse.json({ error: 'Paramètres manquants.' }, { status: 400 });

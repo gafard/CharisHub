@@ -4,9 +4,10 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, type ReactNode, useEffect } from 'react';
 import { BookOpen, Home, Settings, Users, LogIn, User as UserIcon, TrendingUp } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthModal from './AuthModal';
+import logger from '@/lib/logger';
 
 const NAV_ITEMS = [
   {
@@ -46,7 +47,7 @@ export default function StudyAppShell({ children }: { children: ReactNode }) {
       if (!window.localStorage.getItem(purgeKey)) {
         window.localStorage.removeItem('formation_biblique_local_groups_v1');
         window.localStorage.setItem(purgeKey, 'done');
-        console.log('[CharisHub] Purge du stockage local effectuée.');
+        logger.log('[CharisHub] Purge du stockage local effectuée.');
       }
     }
   }, []);
@@ -117,7 +118,19 @@ export default function StudyAppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className={`relative mx-auto max-w-7xl ${pathname === '/bible' ? 'px-0 py-0 sm:px-8 sm:py-12' : 'px-5 py-8 sm:px-8 sm:py-12'}`}>{children}</main>
+      <main className={`relative mx-auto max-w-7xl ${pathname === '/bible' ? 'px-0 py-0 sm:px-8 sm:py-12' : 'px-5 py-8 sm:px-8 sm:py-12'}`}>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={pathname}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+          >
+            {children}
+          </motion.div>
+        </AnimatePresence>
+      </main>
 
       {/* Mobile Bottom Nav — Modern Premium Edge-to-Edge */}
       <nav className="fixed inset-x-0 bottom-0 z-50 md:hidden">

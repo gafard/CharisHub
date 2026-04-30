@@ -873,7 +873,7 @@ export default function CommunityGroupCall({
           
           logger.log('[Résumé] Appel terminé:', summary);
         } catch (err) {
-          console.error('[Résumé] Échec génération résumé:', err);
+          logger.error('[GroupCall] Échec génération résumé:', err);
         }
       }
 
@@ -1284,7 +1284,7 @@ export default function CommunityGroupCall({
 
       void sendBroadcast('recording.started', { peerId: deviceId });
     } catch (err) {
-      console.error('[Enregistrement] Échec:', err);
+      logger.error('[GroupCall] Échec enregistrement:', err);
       setError('Impossible de démarrer l\'enregistrement');
     }
   }, [deviceId, sendBroadcast]);

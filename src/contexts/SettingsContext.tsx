@@ -14,7 +14,7 @@ const STORAGE_KEYS = {
   theme: 'formation_biblique_theme',
 } as const;
 
-type Theme = 'light' | 'dark';
+type Theme = 'light' | 'dark' | 'sepia' | 'deep-night';
 
 type AudioQuality = 'auto' | 'low' | 'high';
 type TextScale = 1 | 1.1 | 1.2;
@@ -110,7 +110,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         setDataSaver(savedData === '1');
       }
       const savedTheme = localStorage.getItem(STORAGE_KEYS.theme) as Theme;
-      if (savedTheme === 'dark' || savedTheme === 'light') {
+      if (savedTheme === 'dark' || savedTheme === 'light' || savedTheme === 'sepia' || savedTheme === 'deep-night') {
         setThemeState(savedTheme);
       } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
         setThemeState('dark');
@@ -157,12 +157,19 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       localStorage.setItem(STORAGE_KEYS.theme, theme);
-      if (theme === 'dark') {
-        document.documentElement.classList.add('dark');
-        document.documentElement.dataset.theme = 'dark';
-      } else {
-        document.documentElement.classList.remove('dark');
-        document.documentElement.dataset.theme = 'light';
+      const root = document.documentElement;
+      // Remove all theme classes
+      root.classList.remove('dark', 'sepia', 'deep-night');
+      // Apply the correct class and data attribute
+      root.dataset.theme = theme;
+      if (theme === 'dark' || theme === 'deep-night') {
+        root.classList.add('dark');
+      }
+      if (theme === 'sepia') {
+        root.classList.add('sepia');
+      }
+      if (theme === 'deep-night') {
+        root.classList.add('deep-night');
       }
     }
   }, [theme]);

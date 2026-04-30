@@ -1,5 +1,7 @@
 'use client';
 
+import logger from '@/lib/logger';
+
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -1040,7 +1042,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
         setGroups(list);
         setFeedback(action === 'approve' ? 'Membre approuvé' : 'Membre refusé');
       } catch (e) {
-        console.error('Moderation failed', e);
+        logger.error('[CommunityGroups] Moderation failed:', e);
         setFeedback('Échec de la modération');
       }
     },
@@ -1541,7 +1543,7 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
             adminName: actor.displayName,
           });
         } catch (e) {
-          console.error('Failed to trigger scheduled call push', e);
+          logger.error('[CommunityGroups] Failed to trigger scheduled call push:', e);
         }
       }
 

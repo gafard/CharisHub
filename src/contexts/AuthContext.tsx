@@ -55,12 +55,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await createProfile(userId);
           return;
         }
-        console.error('Error fetching profile:', error);
+        logger.error('[Auth] Error fetching profile:', error);
         return;
       }
       setProfile(data);
     } catch (err) {
-      console.error('Unexpected error fetching profile:', err);
+      logger.error('[Auth] Unexpected error fetching profile:', err);
     }
   };
 
@@ -72,14 +72,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .insert({ id: userId, display_name: displayName || null });
 
       if (error) {
-        console.error('Error creating profile:', error);
+        logger.error('[Auth] Error creating profile:', error);
         return;
       }
 
       // Re-fetch after creation
       await fetchProfile(userId);
     } catch (err) {
-      console.error('Unexpected error creating profile:', err);
+      logger.error('[Auth] Unexpected error creating profile:', err);
     }
   };
 
@@ -177,7 +177,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.rpc('link_device_to_user', { p_device_id: deviceId });
       
       if (error) {
-        console.error('[Auth] Erreur RPC link_device_to_user:', error.message);
+        logger.error('[Auth] Erreur RPC link_device_to_user:', error.message);
         // Fallback optionnel vers l'ancienne méthode si la RPC n'est pas encore déployée
         await claimLegacyData(deviceId, userId);
       }
@@ -187,7 +187,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       identity.userId = userId;
       localStorage.setItem('formation_biblique_identity_v1', JSON.stringify(identity));
     } catch (err) {
-      console.error('[Auth] Erreur migration donnees locales:', err);
+      logger.error('[Auth] Erreur migration donnees locales:', err);
     }
   };
 
@@ -273,13 +273,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('id', user.id);
 
       if (error) {
-        console.error('Error updating profile:', error);
+        logger.error('[Auth] Error updating profile:', error);
         throw error;
       }
 
       await fetchProfile(user.id);
     } catch (err) {
-      console.error('Unexpected error updating profile:', err);
+      logger.error('[Auth] Unexpected error updating profile:', err);
       throw err;
     }
   };

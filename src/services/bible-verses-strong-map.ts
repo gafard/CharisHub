@@ -2,6 +2,8 @@
 // Structure simplifiée pour démonstration - dans une implémentation complète,
 // cela serait alimenté par une base de données avec les positions exactes
 
+import logger from '@/lib/logger';
+
 interface StrongMapping {
   bookId: string;
   chapter: number;
@@ -144,7 +146,7 @@ class BibleVersesStrongMap {
         }))
       };
     } catch (error) {
-      console.error('Erreur BibleVersesStrongMap:', error);
+      logger.error('[BibleVersesStrongMap] Erreur:', error);
       return null;
     }
   }

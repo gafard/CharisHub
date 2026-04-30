@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from 'react';
 import { Download, Share2, X } from 'lucide-react';
+import logger from '@/lib/logger';
 
 interface ShareableVerseCardProps {
     reference: string;   // e.g. "Jean 3:16"
@@ -121,7 +122,7 @@ export default function ShareableVerseCard({ reference, text, translation = 'LSG
             a.click();
             URL.revokeObjectURL(url);
         } catch (err) {
-            console.error('Download failed:', err);
+            logger.error('[ShareableVerseCard] Download failed:', err);
         } finally {
             setGenerating(false);
         }
@@ -145,7 +146,7 @@ export default function ShareableVerseCard({ reference, text, translation = 'LSG
             }
         } catch (err: any) {
             if (err?.name !== 'AbortError') {
-                console.error('Share failed:', err);
+                logger.error('[ShareableVerseCard] Share failed:', err);
                 handleDownload();
             }
         } finally {

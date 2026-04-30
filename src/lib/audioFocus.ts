@@ -1,3 +1,5 @@
+import logger from '@/lib/logger';
+
 export type AudioFocusKind = 'radio' | 'audio' | 'video' | 'bible-audio' | 'call';
 export type AudioFocusTarget = 'mobile' | 'desktop' | 'page' | 'any';
 
@@ -37,7 +39,7 @@ function emit(nextState: AudioFocusState) {
     try {
       listener(state);
     } catch (error) {
-      console.error('Erreur dans un listener audioFocus:', error);
+      logger.error('[audioFocus] Erreur dans un listener:', error);
     }
   }
 }

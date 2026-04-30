@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, type MouseEvent } from 'react';
+import logger from '@/lib/logger';
 import {
   X,
   Search,
@@ -242,7 +243,7 @@ export default function AdvancedStudyTools({
         setVerseWords([]);
       }
     } catch (error) {
-      console.error('Erreur lors du chargement des mots Strong:', error);
+      logger.error('[StudyTools] Strong word load error:', error);
       setVerseWords([]);
     } finally {
       setLoading(false);
@@ -305,7 +306,7 @@ export default function AdvancedStudyTools({
         setNaveTopics(data.topics);
       } catch (error) {
         if (!active) return;
-        console.error('Erreur Nave:', error);
+        logger.error('[StudyTools] Nave error:', error);
         setNaveError('Impossible de charger les thèmes Nave.');
         setNaveTopics([]);
       } finally {
@@ -326,7 +327,7 @@ export default function AdvancedStudyTools({
         setTreasuryRefs(extractTreasuryRefs(data.entries));
       } catch (error) {
         if (!active) return;
-        console.error('Erreur Treasury:', error);
+        logger.error('[StudyTools] Treasury error:', error);
         setTreasuryError('Impossible de charger les références Treasury.');
         setTreasuryRefs([]);
       } finally {
@@ -347,7 +348,7 @@ export default function AdvancedStudyTools({
         setMhSections(data.sections);
       } catch (error) {
         if (!active) return;
-        console.error('Erreur commentaire biblique:', error);
+        logger.error('[StudyTools] Commentary error:', error);
         setMhError('Impossible de charger le commentaire biblique.');
         setMhSections([]);
       } finally {
@@ -482,7 +483,7 @@ export default function AdvancedStudyTools({
       }));
       setStrongResults(formattedResults);
     } catch (error) {
-      console.error('Erreur lors de la recherche Strong:', error);
+      logger.error('[StudyTools] Strong search error:', error);
       setStrongResults([]);
     } finally {
       setLoading(false);

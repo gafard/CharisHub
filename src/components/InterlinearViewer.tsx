@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, BookOpen, Search, Info, ExternalLink } from 'lucide-react';
+import logger from '@/lib/logger';
 
 // Types pour les données interlinéaires réelles
 interface InterlinearWord {
@@ -72,7 +73,7 @@ const InterlinearViewer = ({
         setInterlinearData(formatted);
       } catch (err) {
         setError("Impossible de charger les données interlinéaires pour ce verset.");
-        console.error(err);
+        logger.error('[InterlinearViewer] Load error:', err);
       } finally {
         setLoading(false);
       }

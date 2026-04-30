@@ -54,19 +54,11 @@ function readErrorMessage(err: unknown, fallback = 'Erreur inconnue') {
   return err instanceof Error ? err.message : fallback;
 }
 
+import { safeParseLooseJson } from './utils';
+import { getCachedBibleData, cacheBible } from './bibleOfflineStore';
+
 function parseBiblePayload(raw: string) {
-  const cleaned = raw.replace(/^\uFEFF/, '').trim();
-  if (!cleaned) throw new Error('Fichier Bible vide');
-  try {
-    return JSON.parse(cleaned);
-  } catch {
-    try {
-      return Function(`"use strict"; return (${cleaned});`)();
-    } catch {
-      const flattened = cleaned.replace(/\r?\n+/g, ' ');
-      return Function(`"use strict"; return (${flattened});`)();
-    }
-  }
+  return safeParseLooseJson(raw);
 }
 
 export async function loadLocalBible(translationId: string = 'LSG'): Promise<LocalBible> {
@@ -95,10 +87,23 @@ export async function loadLocalBible(translationId: string = 'LSG'): Promise<Loc
         }
         const text = await res.text();
         const raw = parseBiblePayload(text);
-        return normalizeBible(raw as LocalBible);
+        const bible = normalizeBible(raw as LocalBible);
+        // Cache in IndexedDB for offline access (non-blocking)
+        void cacheBible(id, raw, bible.version || id);
+        return bible;
       } catch (err) {
         errors.push(`${url} (${readErrorMessage(err)})`);
       }
+    }
+
+    // Fallback: try IndexedDB cache (offline mode)
+    for (const id of candidateIds) {
+      try {
+        const cached = await getCachedBibleData(id);
+        if (cached) {
+          return normalizeBible(cached as LocalBible);
+        }
+      } catch { /* ignore */ }
     }
 
     throw new Error(

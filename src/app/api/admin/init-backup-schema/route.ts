@@ -1,6 +1,46 @@
 import logger from '@/lib/logger';
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { verifyAdmin } from '@/lib/adminAuth';
+import { supabaseServer } from '@/lib/supabaseServer';
+
+export const runtime = 'nodejs';
+
+const tablesToCheck = [
+  'user_sync_metadata',
+  'user_bible_highlights',
+  'user_bible_notes',
+  'user_bible_bookmarks',
+  'user_pepites',
+  'user_reading_progress',
+  'user_reading_streak',
+  'user_prayer_sessions',
+  'user_prayer_journal',
+  'user_study_tags',
+  'user_data_exports',
+  'user_reading_reflections',
+];
+
+async function requireAdminClient(req: Request) {
+  if (!supabaseServer) {
+    return {
+      response: NextResponse.json(
+        { error: 'Supabase server client is not configured.' },
+        { status: 503 }
+      ),
+      client: null,
+    };
+  }
+
+  const admin = await verifyAdmin(req);
+  if (!admin) {
+    return {
+      response: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }),
+      client: null,
+    };
+  }
+
+  return { response: null, client: supabaseServer };
+}
 
 /**
  * API pour initialiser le schéma de backup-sync dans Supabase
@@ -9,39 +49,19 @@ import { supabase } from '@/lib/supabase';
  * 
  * ⚠️ À exécuter UNE SEULE FOIS pour créer les tables de backup
  */
-export async function POST() {
-  if (!supabase) {
-    return NextResponse.json(
-      { error: 'Supabase non configuré' },
-      { status: 500 }
-    );
-  }
+export async function POST(req: Request) {
+  const guard = await requireAdminClient(req);
+  if (!guard.client) return guard.response;
 
   try {
-    // Liste des tables à créer
-    const tablesToCreate = [
-      'user_sync_metadata',
-      'user_bible_highlights',
-      'user_bible_notes',
-      'user_bible_bookmarks',
-      'user_pepites',
-      'user_reading_progress',
-      'user_reading_streak',
-      'user_prayer_sessions',
-      'user_prayer_journal',
-      'user_study_tags',
-      'user_data_exports',
-      'user_reading_reflections',
-    ];
-
     const createdTables = [];
     const errors = [];
 
     // Créer chaque table
-    for (const table of tablesToCreate) {
+    for (const table of tablesToCheck) {
       try {
         // Vérifier si la table existe déjà
-        const { data: existing, error: checkError } = await supabase
+        const { error: checkError } = await guard.client
           .from(table)
           .select('id')
           .limit(1);
@@ -70,7 +90,7 @@ export async function POST() {
       return NextResponse.json({
         message: 'Les tables n\'existent pas encore. Vous devez exécuter le schéma SQL.',
         instructions: {
-          step1: 'Allez sur https://kcseueoxjzqhwwjevcge.supabase.co',
+          step1: 'Ouvrez le dashboard Supabase de votre projet',
           step2: 'Dashboard → SQL Editor',
           step3: 'Copiez le contenu de supabase-backup-sync.sql',
           step4: 'Exécutez le script',
@@ -94,33 +114,14 @@ export async function POST() {
 }
 
 // GET pour vérifier l'état des tables
-export async function GET() {
-  if (!supabase) {
-    return NextResponse.json(
-      { error: 'Supabase non configuré' },
-      { status: 500 }
-    );
-  }
-
-  const tablesToCheck = [
-    'user_sync_metadata',
-    'user_bible_highlights',
-    'user_bible_notes',
-    'user_bible_bookmarks',
-    'user_pepites',
-    'user_reading_progress',
-    'user_reading_streak',
-    'user_prayer_sessions',
-    'user_prayer_journal',
-    'user_study_tags',
-    'user_data_exports',
-    'user_reading_reflections',
-  ];
+export async function GET(req: Request) {
+  const guard = await requireAdminClient(req);
+  if (!guard.client) return guard.response;
 
   const results = await Promise.all(
     tablesToCheck.map(async (table) => {
       try {
-        const { data, error } = await supabase
+        const { error } = await guard.client
           .from(table)
           .select('id')
           .limit(1);

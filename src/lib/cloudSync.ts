@@ -285,7 +285,7 @@ export async function fetchAllCloudData(): Promise<FullUserData | null> {
       logger.warn('[CloudSync] Exécutez le schéma SQL : supabase-backup-sync.sql');
       logger.warn('[CloudSync] Ou utilisez l\'API : POST /api/admin/init-backup-schema');
     } else {
-      console.error('[CloudSync] Error fetching data:', errorMessage, error?.code ? `(Code: ${error.code})` : '');
+      logger.error('[CloudSync] Error fetching data:', errorMessage, error?.code ? `(Code: ${error.code})` : '');
     }
     
     return null;
@@ -326,7 +326,7 @@ export async function syncLocalToCloud(
           data.highlights.map(h => ({ ...h, device_id: deviceId, user_id: authId || null })),
           { onConflict: 'device_id,book_slug,chapter,verse,translation' }
         );
-      if (error) console.error('[CloudSync] Highlights sync error:', error);
+      if (error) logger.error('[CloudSync] Highlights sync error:', error);
     }
 
     // 2. Sync notes (upsert)
@@ -338,7 +338,7 @@ export async function syncLocalToCloud(
           data.notes.map(n => ({ ...n, device_id: deviceId, user_id: authId || null })),
           { onConflict: 'id' }
         );
-      if (error) console.error('[CloudSync] Notes sync error:', error);
+      if (error) logger.error('[CloudSync] Notes sync error:', error);
     }
 
     // 3. Sync bookmarks
@@ -350,7 +350,7 @@ export async function syncLocalToCloud(
           data.bookmarks.map(b => ({ ...b, device_id: deviceId, user_id: authId || null })),
           { onConflict: 'device_id,book_slug,chapter,translation' }
         );
-      if (error) console.error('[CloudSync] Bookmarks sync error:', error);
+      if (error) logger.error('[CloudSync] Bookmarks sync error:', error);
     }
 
     // 4. Sync pépites
@@ -362,7 +362,7 @@ export async function syncLocalToCloud(
           data.pepites.map(p => ({ ...p, device_id: deviceId, user_id: authId || null })),
           { onConflict: 'device_id,reference,verse_text' }
         );
-      if (error) console.error('[CloudSync] Pepites sync error:', error);
+      if (error) logger.error('[CloudSync] Pepites sync error:', error);
     }
 
     // 5. Sync reading progress
@@ -374,7 +374,7 @@ export async function syncLocalToCloud(
           data.readingProgress.map(r => ({ ...r, device_id: deviceId, user_id: authId || null })),
           { onConflict: 'device_id,plan_id,day_index,reading_index' }
         );
-      if (error) console.error('[CloudSync] Reading progress sync error:', error);
+      if (error) logger.error('[CloudSync] Reading progress sync error:', error);
     }
 
     // 5b. Sync reflections
@@ -392,7 +392,7 @@ export async function syncLocalToCloud(
           })),
           { onConflict: 'device_id,plan_id,day_index,reading_id,chapter' }
         );
-      if (error) console.error('[CloudSync] Reflections sync error:', error);
+      if (error) logger.error('[CloudSync] Reflections sync error:', error);
     }
 
     // 6. Sync streak
@@ -424,7 +424,7 @@ export async function syncLocalToCloud(
           data.prayerSessions.map(s => ({ ...s, device_id: deviceId, user_id: authId || null })),
           { onConflict: 'device_id,session_date,plan_id,day_index' }
         );
-      if (error) console.error('[CloudSync] Prayer sessions sync error:', error);
+      if (error) logger.error('[CloudSync] Prayer sessions sync error:', error);
     }
 
     // 8. Sync prayer journal
@@ -436,7 +436,7 @@ export async function syncLocalToCloud(
           data.prayerJournal.map(j => ({ ...j, device_id: deviceId, user_id: authId || null })),
           { onConflict: 'id' }
         );
-      if (error) console.error('[CloudSync] Prayer journal sync error:', error);
+      if (error) logger.error('[CloudSync] Prayer journal sync error:', error);
     }
 
     // 9. Update sync metadata
@@ -452,7 +452,7 @@ export async function syncLocalToCloud(
     logger.log('[CloudSync] Sync completed successfully');
     return true;
   } catch (error) {
-    console.error('[CloudSync] Sync failed:', error);
+    logger.error('[CloudSync] Sync failed:', error);
     return false;
   }
 }
@@ -613,7 +613,7 @@ export function mergeCloudToLocal(
     logger.log('[CloudSync] Merge completed:', counts);
     return { success: true, counts };
   } catch (error) {
-    console.error('[CloudSync] Merge failed:', error);
+    logger.error('[CloudSync] Merge failed:', error);
     return { success: false, counts: {} };
   }
 }
@@ -729,7 +729,7 @@ export function importData(data: ExportData): { success: boolean; counts: Record
 
     return { success: true, counts };
   } catch (error) {
-    console.error('[CloudSync] Import failed:', error);
+    logger.error('[CloudSync] Import failed:', error);
     return { success: false, counts };
   }
 }
@@ -858,7 +858,7 @@ export async function performInitialSync(
     syncInProgress = false;
     return { success: false, direction: 'none' };
   } catch (error) {
-    console.error('[CloudSync] Initial sync failed:', error);
+    logger.error('[CloudSync] Initial sync failed:', error);
     syncInProgress = false;
     return { success: false, direction: 'none' };
   }

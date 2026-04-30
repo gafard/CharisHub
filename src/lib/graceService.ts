@@ -1,3 +1,5 @@
+import logger from '@/lib/logger';
+
 export interface GraceAnalysisResponse {
     content: string;
     error?: string;
@@ -27,7 +29,7 @@ export const graceService = {
             }
             return { content: data.content };
         } catch (e) {
-            console.error('[graceService] Analyse échouée:', e);
+            logger.error('[graceService] Analyse échouée:', e);
             return { content: '', error: (e as Error).message };
         }
     }

@@ -538,7 +538,7 @@ export default function CommunityGroupChat({
       setMessages(next);
       setStatus('ready');
     } catch (err) {
-      console.error('[Chat] loadMessages error:', err);
+      logger.error('[Chat] loadMessages error:', err);
       setMessages([]);
       setStatus('error');
     }

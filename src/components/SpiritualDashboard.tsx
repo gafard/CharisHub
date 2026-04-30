@@ -165,7 +165,7 @@ function DailyVerseCard({ verse }: { verse: DailyVerse }) {
   );
 }
 
-function PepiteCard({ pepite }: { pepite: Pepite }) {
+const PepiteCard = React.memo(function PepiteCard({ pepite }: { pepite: Pepite }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -182,9 +182,9 @@ function PepiteCard({ pepite }: { pepite: Pepite }) {
       <div className="mt-4 text-[10px] font-bold text-muted uppercase tracking-wider">{pepite.reference}</div>
     </motion.div>
   );
-}
+});
 
-function PastoralInsight() {
+const PastoralInsight = React.memo(function PastoralInsight() {
   const word = getPastoralWord();
 
   return (
@@ -206,9 +206,9 @@ function PastoralInsight() {
       </div>
     </motion.div>
   );
-}
+});
 
-function StatCard({ icon, label, value, subtext, color, delay = 0 }: {
+const StatCard = React.memo(function StatCard({ icon, label, value, subtext, color, delay = 0 }: {
   icon: React.ReactNode;
   label: string;
   value: string | number;
@@ -237,9 +237,9 @@ function StatCard({ icon, label, value, subtext, color, delay = 0 }: {
       {subtext && <div className="mt-1 text-[9px] font-bold text-muted italic">{subtext}</div>}
     </motion.div>
   );
-}
+});
 
-function WeekHeatmap({ days }: { days: WeekDay[] }) {
+const WeekHeatmap = React.memo(function WeekHeatmap({ days }: { days: WeekDay[] }) {
   const intensityColors = [
     'bg-[#f0ede6]',
     'bg-amber-100',
@@ -279,7 +279,7 @@ function WeekHeatmap({ days }: { days: WeekDay[] }) {
       </div>
     </motion.div>
   );
-}
+});
 
 // ============================================================
 // Main Component

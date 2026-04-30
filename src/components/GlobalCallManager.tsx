@@ -91,7 +91,7 @@ export default function GlobalCallManager() {
             // Auto-stop après 30s
             setTimeout(stopRinging, 30000);
         } catch (e) {
-            console.error('[GlobalCallManager] Erreur Web Audio fallback:', e);
+            logger.error('[GlobalCallManager] Erreur Web Audio fallback:', e);
         }
     }, [stopRinging, playRingtonePattern]);
 
@@ -312,7 +312,7 @@ export default function GlobalCallManager() {
 
                 logger.log(`[GlobalCallManager] ✅ Listening on ${groupsToListen.length} groups`);
             } catch (e) {
-                console.error('[GlobalCallManager] Setup error:', e);
+                logger.error('[GlobalCallManager] Setup error:', e);
             }
         };
 

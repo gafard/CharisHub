@@ -27,14 +27,7 @@ import {
 import { hasChapterReflection } from '../lib/readingPlanReflectionStore';
 import { BIBLE_BOOKS } from '../lib/bibleCatalog';
 
-// On redéfinit AiQuestions ici pour plus de sûreté ou on l'importe si possible.
-// Puisqu'il est défini dans ReflectionQuestions.tsx, on va le dupliquer ici ou le passer en Any si besoin.
-type AiQuestions = {
-    q1: string; q1_suggestions: string[];
-    q2: string; q2_suggestions: string[];
-    q3: string; q3_suggestions: string[];
-    q4: string; q4_suggestions: string[];
-};
+import type { AiQuestions } from '../types/reflection';
 
 interface ReadingPlanWidgetProps {
     triggerReflection?: number;
@@ -344,54 +337,5 @@ export default function ReadingPlanWidget({
                 />
             ) : null}
         </>
-    );
-}
-
-function CompactPlanStack({
-    entries,
-    primaryPlanId,
-}: {
-    entries: PlanEntry[];
-    primaryPlanId: string;
-}) {
-    const previewEntries = entries.slice(0, 3);
-    const layouts = [
-        { left: 0, top: 14, rotate: -12, opacity: 0.52, zIndex: 10 },
-        { left: 22, top: 0, rotate: -1, opacity: 1, zIndex: 20 },
-        { left: 50, top: 12, rotate: 11, opacity: 0.52, zIndex: 10 },
-    ];
-
-    return (
-        <div className="relative h-[68px] w-[112px]">
-            {previewEntries.map((entry, index) => {
-                const layout = layouts[index] ?? layouts[1];
-                const isPrimary = entry.plan.id === primaryPlanId || (!primaryPlanId && index === 1);
-
-                return (
-                    <div
-                        key={entry.plan.id}
-                        className="absolute h-[54px] w-[40px] overflow-hidden rounded-[14px] border border-border-strong/10 bg-surface/40 shadow-[0_14px_28px_rgba(0,0,0,0.22)] backdrop-blur-md"
-                        style={{
-                            left: `${layout.left}px`,
-                            top: `${layout.top}px`,
-                            transform: `rotate(${layout.rotate}deg) scale(${isPrimary ? 1 : 0.96})`,
-                            opacity: isPrimary ? 1 : layout.opacity,
-                            zIndex: isPrimary ? 30 : layout.zIndex,
-                        }}
-                    >
-                        <div
-                            className="absolute inset-0"
-                            style={{
-                                background: `linear-gradient(180deg, ${entry.presentation.theme.accent} 0%, rgba(14,10,8,0.9) 100%)`,
-                            }}
-                        />
-                        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.16),rgba(255,255,255,0.03)_34%,rgba(4,7,14,0.22)_68%,rgba(4,7,14,0.4)_100%)]" />
-                        <div className="relative flex h-full items-center justify-center text-[#fff8ef]">
-                            <PlanSymbol symbolId={entry.presentation.art.symbolId} size={11} />
-                        </div>
-                    </div>
-                );
-            })}
-        </div>
     );
 }
