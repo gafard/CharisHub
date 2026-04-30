@@ -2060,29 +2060,7 @@ export default function BibleReader({
     void loadStrongTokensForVerse(selectedVerse);
   }, [selectedVerse?.number, book.id, chapter, strongOpenFor, strongTokens.length]);
 
-  const clearVerseTapTimer = () => {
-    if (verseTapTimerRef.current) {
-      clearTimeout(verseTapTimerRef.current);
-      verseTapTimerRef.current = null;
-    }
-  };
 
-  function clearSuppressedVerseClick() {
-    if (suppressNextVerseClickTimerRef.current) {
-      clearTimeout(suppressNextVerseClickTimerRef.current);
-      suppressNextVerseClickTimerRef.current = null;
-    }
-    suppressNextVerseClickRef.current = false;
-  }
-
-  function suppressNextVerseClick() {
-    clearSuppressedVerseClick();
-    suppressNextVerseClickRef.current = true;
-    suppressNextVerseClickTimerRef.current = setTimeout(() => {
-      suppressNextVerseClickRef.current = false;
-      suppressNextVerseClickTimerRef.current = null;
-    }, 350);
-  }
 
   const commitVersePrimaryAction = (verse: VerseRow) => {
     setRadarOpen(false);
