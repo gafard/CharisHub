@@ -11,7 +11,7 @@ export function useLongPress<T extends HTMLElement>(
   options: Options = {}
 ) {
   const { delay = 520, moveThreshold = 12 } = options;
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const startPosRef = useRef({ x: 0, y: 0 });
   const isLongPressTriggered = useRef(false);
 
