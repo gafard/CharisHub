@@ -43,6 +43,7 @@ export interface ReadingStats {
   totalChaptersRead: number;
   averageChaptersPerDay: number;
   favoriteBook: BookStat | null;
+  favoriteTranslation: string | null;
   bookStats: BookStat[];
   weeklyTrends: WeeklyTrend[];
   totalSessions: number;
@@ -106,6 +107,17 @@ export function computeStats(): ReadingStats {
   const bookStats = Array.from(bookMap.values()).sort((a, b) => b.chaptersRead - a.chaptersRead);
   const favoriteBook = bookStats.length > 0 ? bookStats[0] : null;
 
+  // ─── Favorite translation ────────────────────
+  const translationCount = new Map<string, number>();
+  for (const entry of history) {
+    if (entry.translationId) {
+      translationCount.set(entry.translationId, (translationCount.get(entry.translationId) ?? 0) + 1);
+    }
+  }
+  const favoriteTranslation = translationCount.size > 0
+    ? Array.from(translationCount.entries()).sort((a, b) => b[1] - a[1])[0][0]
+    : null;
+
   // ─── Reading time ───────────────────────────
   const totalReadingTimeSec = history.reduce((sum, e) => sum + e.durationSec, 0);
   const totalPrayerTimeSec = sessions.reduce((sum, s) => sum + s.totalDurationSec, 0);
@@ -161,6 +173,7 @@ export function computeStats(): ReadingStats {
     totalChaptersRead: streak.totalChapters,
     averageChaptersPerDay,
     favoriteBook,
+    favoriteTranslation,
     bookStats,
     weeklyTrends,
     totalSessions: sessions.length,

@@ -13,6 +13,7 @@ import {
   Flame,
   Heart,
   Info,
+  Languages,
   MessageCircle,
   Quote,
   RefreshCw,
@@ -26,6 +27,7 @@ import { getStreak, type StreakData } from '@/lib/bibleStreak';
 import { getAllSessions, type PrayerFlowSession } from '@/lib/prayerFlowStore';
 import { pepitesStore, type Pepite } from '@/lib/pepitesStore';
 import { memorizationStore } from '@/lib/memorizationStore';
+import { computeStats } from '@/lib/readingStats';
 import { useAuth } from '@/contexts/AuthContext';
 import { performInitialSync } from '@/lib/cloudSync';
 import { WordsPullUp, WordsPullUpMultiStyle } from './ui/PrismaAnimations';
@@ -303,6 +305,7 @@ export default function SpiritualDashboard() {
   const [lastSyncDate, setLastSyncDate] = useState<string | null>(null);
   const [dueCards, setDueCards] = useState(0);
   const [showMemorizationSession, setShowMemorizationSession] = useState(false);
+  const [favoriteTranslation, setFavoriteTranslation] = useState<string | null>(null);
 
   const refreshLocalState = () => {
     setStreak(getStreak());
@@ -310,6 +313,7 @@ export default function SpiritualDashboard() {
     setPepites(pepitesStore.load());
     setLocalData(collectLocalData());
     setDueCards(memorizationStore.getDueCount());
+    setFavoriteTranslation(computeStats().favoriteTranslation);
   };
 
   useEffect(() => {
@@ -435,7 +439,7 @@ export default function SpiritualDashboard() {
             <StatCard icon={<BookOpen size={20} />} label="Paroles méditées" value={streak.totalChapters} subtext="Trésors ouverts" color="#3b82f6" delay={0.1} />
             <StatCard icon={<Clock size={20} />} label="Intimité" value={`${totalPrayerMinutes}m`} subtext={`${sessions.length} rencontres`} color="#ec4899" delay={0.15} />
             <StatCard icon={<Star size={20} />} label="Favoris" value={pepites.length} subtext="Lumières d'identité" color="#D4AF37" delay={0.2} />
-            <StatCard icon={<Star size={20} />} label="Réflexions" value={localData.highlights} subtext={`${localData.notes} notes`} color="#8b5cf6" delay={0.25} />
+            <StatCard icon={<Languages size={20} />} label="Traduction" value={favoriteTranslation ?? '—'} subtext="Version favorite" color="#8b5cf6" delay={0.25} />
           </div>
 
           {/* Memorization CTA */}

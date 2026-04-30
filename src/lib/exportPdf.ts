@@ -1,5 +1,5 @@
 /**
- * Export PDF — Generates downloadable PDFs for notes, highlights, and bookmarks.
+ * Export PDF — Generates downloadable PDFs for notes, highlights, bookmarks, and reading plan reflections.
  *
  * Uses the browser's print API with a styled hidden iframe to generate
  * clean, formatted PDFs without any external dependency.
@@ -26,10 +26,17 @@ export interface ExportBookmark {
   date?: string;
 }
 
+export interface ExportReflection {
+  reference: string;  // e.g. "Jean 3 · Jour 4"
+  answers: string[];
+  date?: string;
+}
+
 export interface ExportData {
   highlights: ExportHighlight[];
   notes: ExportNote[];
   bookmarks: ExportBookmark[];
+  reflections: ExportReflection[];
   userName?: string;
 }
 
@@ -40,7 +47,7 @@ function formatDate(iso?: string): string {
 }
 
 function generateHtml(data: ExportData): string {
-  const title = data.userName ? `Notes Bibliques — ${data.userName}` : 'Notes Bibliques — CharisHub';
+  const title = data.userName ? `Journal Spirituel — ${data.userName}` : 'Journal Spirituel — CharisHub';
   const now = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 
   const highlightRows = data.highlights.map(h => `
@@ -64,6 +71,14 @@ function generateHtml(data: ExportData): string {
     `<li>${b.reference}${b.date ? ` <span class="date">(${formatDate(b.date)})</span>` : ''}</li>`
   ).join('');
 
+  const reflectionCards = data.reflections.map(r => `
+    <div class="note-card">
+      <div class="note-ref">${r.reference}</div>
+      ${r.date ? `<div class="note-date">${formatDate(r.date)}</div>` : ''}
+      <ul class="refl-list">${r.answers.map(a => `<li>${a}</li>`).join('')}</ul>
+    </div>
+  `).join('');
+
   return `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -76,7 +91,7 @@ function generateHtml(data: ExportData): string {
   h1 { font-size: 28px; font-weight: 700; margin-bottom: 4px; color: #0f172a; }
   .subtitle { font-size: 13px; color: #64748b; margin-bottom: 32px; }
   h2 { font-size: 18px; font-weight: 700; color: #334155; margin: 32px 0 16px; padding-bottom: 8px; border-bottom: 2px solid #e2e8f0; }
-  .stats { display: flex; gap: 24px; margin-bottom: 24px; font-size: 13px; color: #64748b; }
+  .stats { display: flex; gap: 24px; margin-bottom: 24px; font-size: 13px; color: #64748b; flex-wrap: wrap; }
   .stats span { font-weight: 700; color: #0f172a; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th { text-align: left; padding: 8px 12px; background: #f8fafc; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; border-bottom: 2px solid #e2e8f0; }
@@ -88,21 +103,29 @@ function generateHtml(data: ExportData): string {
   .note-ref { font-weight: 700; color: #3b82f6; font-size: 14px; margin-bottom: 8px; }
   .note-verse { font-family: 'Merriweather', serif; font-style: italic; color: #475569; padding: 8px 12px; border-left: 3px solid #cbd5e1; margin-bottom: 12px; font-size: 13px; }
   .note-text { font-size: 14px; color: #1e293b; }
-  .note-date { font-size: 11px; color: #94a3b8; margin-top: 8px; }
+  .note-date { font-size: 11px; color: #94a3b8; margin-top: 8px; margin-bottom: 8px; }
   ul { padding-left: 20px; }
   li { padding: 4px 0; font-size: 14px; }
+  .refl-list { margin-top: 8px; padding-left: 16px; }
+  .refl-list li { color: #1e293b; font-size: 13px; padding: 3px 0; }
   .footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid #e2e8f0; font-size: 11px; color: #94a3b8; text-align: center; }
   @media print { body { padding: 20px; } .no-print { display: none; } }
 </style>
 </head>
 <body>
-  <h1>📖 ${title}</h1>
+  <h1>✨ ${title}</h1>
   <div class="subtitle">Exporté le ${now} depuis CharisHub</div>
   <div class="stats">
     <div><span>${data.highlights.length}</span> surlignages</div>
     <div><span>${data.notes.length}</span> notes</div>
     <div><span>${data.bookmarks.length}</span> favoris</div>
+    <div><span>${data.reflections.length}</span> réflexions</div>
   </div>
+
+  ${data.reflections.length > 0 ? `
+    <h2>🙏 Réflexions & Plans de lecture</h2>
+    ${reflectionCards}
+  ` : ''}
 
   ${data.highlights.length > 0 ? `
     <h2>🖍️ Surlignages</h2>
@@ -128,7 +151,7 @@ function generateHtml(data: ExportData): string {
  * Collect export data from localStorage.
  */
 export function collectExportData(): ExportData {
-  if (typeof window === 'undefined') return { highlights: [], notes: [], bookmarks: [] };
+  if (typeof window === 'undefined') return { highlights: [], notes: [], bookmarks: [], reflections: [] };
 
   const highlights: ExportHighlight[] = [];
   const notes: ExportNote[] = [];
@@ -192,7 +215,33 @@ export function collectExportData(): ExportData {
     }
   } catch { /* ignore */ }
 
-  return { highlights, notes, bookmarks };
+  const reflections: ExportReflection[] = [];
+  try {
+    const reflRaw = localStorage.getItem('formation_biblique_reading_plan_reflections_v2');
+    if (reflRaw) {
+      const store = JSON.parse(reflRaw) as Record<string, any>;
+      for (const [dayKey, dayState] of Object.entries(store)) {
+        if (!dayState || typeof dayState !== 'object') continue;
+        const chapterReflections = dayState.chapterReflections as Record<string, any> ?? {};
+        for (const entry of Object.values(chapterReflections)) {
+          const answers: string[] = Object.values(entry.answers ?? {})
+            .map((v: any) => String(v).trim())
+            .filter(Boolean);
+          if (answers.length === 0) continue;
+          const isPlan = !dayKey.startsWith('standalone');
+          const dayNum = isPlan ? (Number(dayKey.split(':')[1]) + 1) : null;
+          reflections.push({
+            reference: `${entry.bookName} ${entry.chapter}${dayNum ? ` · Jour ${dayNum}` : ''}`,
+            answers,
+            date: entry.updatedAt,
+          });
+        }
+      }
+      reflections.sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''));
+    }
+  } catch { /* ignore */ }
+
+  return { highlights, notes, bookmarks, reflections };
 }
 
 /**
@@ -201,8 +250,13 @@ export function collectExportData(): ExportData {
 export function exportToPdf(data?: ExportData): void {
   const exportData = data || collectExportData();
 
-  if (exportData.highlights.length === 0 && exportData.notes.length === 0 && exportData.bookmarks.length === 0) {
-    alert('Aucune donnée à exporter. Ajoutez des surlignages, notes ou favoris d\'abord.');
+  if (
+    exportData.highlights.length === 0 &&
+    exportData.notes.length === 0 &&
+    exportData.bookmarks.length === 0 &&
+    exportData.reflections.length === 0
+  ) {
+    alert('Aucune donnée à exporter. Ajoutez des surlignages, notes, favoris ou réflexions d\'abord.');
     return;
   }
 

@@ -1,4 +1,5 @@
 import logger from '@/lib/logger';
+import { pepitesStore } from '@/lib/pepitesStore';
 
 export interface GraceAnalysisResponse {
     content: string;
@@ -14,10 +15,15 @@ export const graceService = {
             if (!reference || !reference.trim()) {
                 return { content: '', error: 'Référence manquante' };
             }
+            const memoryContext = pepitesStore.load().slice(0, 5).map(p => ({
+                reference: p.reference,
+                text: p.text,
+                type: p.type,
+            }));
             const res = await fetch('/api/grace', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ verse, reference, context }),
+                body: JSON.stringify({ verse, reference, context, memoryContext }),
             });
             if (!res.ok) {
                 const body = await res.json().catch(() => null);

@@ -30,7 +30,7 @@ export async function POST(req: Request) {
             );
         }
 
-        const { verse, reference, context } = await req.json();
+        const { verse, reference, context, memoryContext } = await req.json();
 
         if (!verse || !reference) {
             return NextResponse.json({ error: 'Verse and reference are required' }, { status: 400 });
@@ -41,7 +41,13 @@ export async function POST(req: Request) {
         const provider = process.env.AI_PROVIDER || 'gemini';
         let text = "";
 
-        const prompt = `${SYSTEM_PROMPT}\n\nANALYSE CE VERSET : "${verse}" (${reference})\n\nContexte supplémentaire (facultatif) : ${context || 'N/A'}`;
+        // Mémoire contextuelle : pépites récentes du croyant
+        const memoryBlock = memoryContext && Array.isArray(memoryContext) && memoryContext.length > 0
+            ? `\n\nMÉMOIRE SPIRITUELLE DU CROYANT (pépites récemment marquées) :\n${(memoryContext as { reference: string; text: string; type: string }[]).slice(0, 5).map((p, i) => `${i + 1}. [${p.type}] ${p.reference} — « ${p.text.slice(0, 100)}${p.text.length > 100 ? '…' : ''} »`).join('\n')}\n\nSi pertinent, fais des liens entre ces trésors passés et le verset actuel pour montrer la continuité de la révélation dans son parcours.`
+            : '';
+
+        const systemContent = `${SYSTEM_PROMPT}${memoryBlock}`;
+        const userContent = `ANALYSE CE VERSET : "${verse}" (${reference})\n\nContexte supplémentaire (facultatif) : ${context || 'N/A'}`;
 
         logger.log(`[VisionCharis] Fournisseur: ${provider} | Région: ${vercelRegion}`);
 
@@ -56,8 +62,8 @@ export async function POST(req: Request) {
             const completion = await openai.chat.completions.create({
                 model: "gemini-1.5-flash",
                 messages: [
-                    { role: "system", content: SYSTEM_PROMPT },
-                    { role: "user", content: `ANALYSE CE VERSET : "${verse}" (${reference})\n\nContexte : ${context || 'N/A'}` }
+                    { role: "system", content: systemContent },
+                    { role: "user", content: userContent },
                 ],
             });
             return completion.choices[0]?.message?.content || "";
@@ -83,8 +89,8 @@ export async function POST(req: Request) {
                     const orCompletion = await orClient.chat.completions.create({
                         model: "openrouter/auto",
                         messages: [
-                            { role: "system", content: SYSTEM_PROMPT },
-                            { role: "user", content: `ANALYSE CE VERSET : "${verse}" (${reference})\n\nContexte : ${context || 'N/A'}` }
+                            { role: "system", content: systemContent },
+                            { role: "user", content: userContent },
                         ],
                     });
                     text = orCompletion.choices[0]?.message?.content || "";
@@ -153,8 +159,8 @@ export async function POST(req: Request) {
             const completion = await openai.chat.completions.create({
                 model: modelName,
                 messages: [
-                    { role: "system", content: SYSTEM_PROMPT },
-                    { role: "user", content: `ANALYSE CE VERSET : "${verse}" (${reference})\n\nContexte : ${context || 'N/A'}` }
+                    { role: "system", content: systemContent },
+                    { role: "user", content: userContent },
                 ],
                 temperature: 0.7,
             });
