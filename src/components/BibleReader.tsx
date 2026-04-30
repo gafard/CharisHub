@@ -62,6 +62,8 @@ import { pepitesStore } from '../lib/pepitesStore';
 import { AnimatedLetter } from './ui/PrismaAnimations';
 import { KeepAwake } from '@capacitor-community/keep-awake';
 import { safeParseLooseJson } from '../lib/utils';
+import { useCommunityIdentity } from '../lib/useCommunityIdentity';
+import { checkAndAwardBadge } from '../lib/badgeService';
 
 // Traductions de la Bible provenant du fichier centralisé
 const LOCAL_BIBLE_TRANSLATIONS = [
@@ -995,6 +997,7 @@ export default function BibleReader({
   const [selectedVerse, setSelectedVerse] = useState<VerseRow | null>(null);
   const [strongTokens, setStrongTokens] = useState<StrongToken[]>([]);
   const [strongOpenFor, setStrongOpenFor] = useState<{ bookId: string; chapter: number; verse: number } | null>(null);
+  const { identity } = useCommunityIdentity();
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [highlights, setHighlights] = useState<Record<string, HighlightMap>>({});
   const [fullScreen, setFullScreen] = useState(false);
@@ -1418,6 +1421,24 @@ export default function BibleReader({
         // Record reading for streak tracking
         const streak = recordReading();
         setStreakData({ current: streak.current, best: streak.best, totalChapters: streak.totalChapters });
+        
+        // Gamification: Check for badges
+        if (identity) {
+          checkAndAwardBadge('streak', streak.current, { 
+            userId: identity.userId, 
+            deviceId: identity.deviceId 
+          }).then(badge => {
+            if (badge) {
+              // TODO: Trigger a "WOW" notification/toast for the new badge
+              logger.info(`Badge earned: ${badge.name}`);
+            }
+          });
+          
+          checkAndAwardBadge('reading', streak.totalChapters, {
+            userId: identity.userId,
+            deviceId: identity.deviceId
+          });
+        }
         setSelectedVerse((prev) => {
           if (!rows.length) return null;
           if (prev) {

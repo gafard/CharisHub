@@ -19,6 +19,7 @@ import {
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { uploadCommunityMedia } from './communityApi';
 import { useCommunityIdentity } from '../lib/useCommunityIdentity';
+import { checkAndAwardBadge } from '../lib/badgeService';
 
 export type TestimonialCategory =
   | 'guerison'
@@ -434,6 +435,14 @@ function RecorderModal({
         mediaType,
         durationSec: mediaType ? elapsedSec : undefined,
       });
+
+      // Gamification: Badge check
+      if (authorDeviceId || identity?.userId) {
+        void checkAndAwardBadge('community', 1, {
+          userId: identity?.userId,
+          deviceId: authorDeviceId
+        });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur lors de l'envoi.");
     } finally {

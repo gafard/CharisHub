@@ -33,6 +33,9 @@ import { performInitialSync } from '@/lib/cloudSync';
 import { WordsPullUp, WordsPullUpMultiStyle } from './ui/PrismaAnimations';
 import PullToRefresh from 'react-simple-pull-to-refresh';
 import dynamic from 'next/dynamic';
+import { getEarnedBadges } from '@/lib/badgeService';
+import { BADGE_CATALOG, type Badge as BadgeInfo } from '@/lib/badges';
+import { useCommunityIdentity } from '@/lib/useCommunityIdentity';
 
 const YearHeatmap = dynamic(() => import('./YearHeatmap'), { ssr: false });
 const VerseMemorizationSession = dynamic(() => import('./bible/VerseMemorizationSession'), { ssr: false });
@@ -289,12 +292,48 @@ const WeekHeatmap = React.memo(function WeekHeatmap({ days }: { days: WeekDay[] 
   );
 });
 
+const BadgesSection = React.memo(function BadgesSection({ earnedIds }: { earnedIds: Set<string> }) {
+  return (
+    <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+      {BADGE_CATALOG.map((badge) => {
+        const isEarned = earnedIds.has(badge.id);
+        return (
+          <motion.div
+            key={badge.id}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className={`group relative flex flex-col items-center justify-center rounded-[24px] border p-4 transition-all ${
+              isEarned 
+                ? 'border-amber-400/30 bg-gradient-to-br from-amber-500/10 to-orange-500/5 shadow-sm' 
+                : 'border-border-soft/30 bg-surface/20 opacity-40 grayscale'
+            }`}
+          >
+            <div className={`mb-2 text-2xl ${isEarned ? 'animate-pulse-slow' : ''}`}>
+              {badge.icon}
+            </div>
+            <div className="text-[9px] font-black uppercase tracking-tighter text-center line-clamp-1">
+              {badge.name}
+            </div>
+            
+            {/* Tooltip simple au survol */}
+            <div className="absolute -top-12 left-1/2 -translate-x-1/2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity bg-black/80 text-white text-[10px] px-2 py-1 rounded-lg whitespace-nowrap z-50">
+              {badge.description}
+            </div>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+});
+
 // ============================================================
 // Main Component
 // ============================================================
 
 export default function SpiritualDashboard() {
   const { user } = useAuth();
+  const { identity } = useCommunityIdentity();
+  const [earnedBadgeIds, setEarnedBadgeIds] = useState<Set<string>>(new Set());
   const [streak, setStreak] = useState<StreakData>({ current: 0, best: 0, lastReadDate: '', totalChapters: 0 });
   const [sessions, setSessions] = useState<PrayerFlowSession[]>([]);
   const [pepites, setPepites] = useState<Pepite[]>([]);
@@ -307,13 +346,18 @@ export default function SpiritualDashboard() {
   const [showMemorizationSession, setShowMemorizationSession] = useState(false);
   const [favoriteTranslation, setFavoriteTranslation] = useState<string | null>(null);
 
-  const refreshLocalState = () => {
+  const refreshLocalState = async () => {
     setStreak(getStreak());
     setSessions(getAllSessions());
     setPepites(pepitesStore.load());
     setLocalData(collectLocalData());
     setDueCards(memorizationStore.getDueCount());
     setFavoriteTranslation(computeStats().favoriteTranslation);
+    
+    if (identity) {
+      const earned = await getEarnedBadges(identity.userId, identity.deviceId);
+      setEarnedBadgeIds(new Set(earned.map(b => b.badge_id)));
+    }
   };
 
   useEffect(() => {
@@ -478,6 +522,20 @@ export default function SpiritualDashboard() {
         <section className="space-y-4">
           <WeekHeatmap days={weekDays} />
           <YearHeatmap />
+        </section>
+
+        {/* Badges Section */}
+        <section>
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Award size={18} className="text-amber-500" />
+              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted">Succès Spirituels</h4>
+            </div>
+            <div className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[9px] font-black text-amber-600">
+               {earnedBadgeIds.size} / {BADGE_CATALOG.length}
+            </div>
+          </div>
+          <BadgesSection earnedIds={earnedBadgeIds} />
         </section>
 
         {/* Pepites Section */}

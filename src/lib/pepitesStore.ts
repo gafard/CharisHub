@@ -16,6 +16,7 @@ const STORE_KEY = 'mirror_pepites_v1';
 const LEGACY_STORE_KEY = 'huios_pepites_v1';
 
 import { syncLocalToCloud, exportAllLocalData } from './cloudSync';
+import { checkAndAwardBadge } from './badgeService';
 
 export const pepitesStore = {
     load(): Pepite[] {
@@ -77,6 +78,18 @@ export const pepitesStore = {
                 })),
                 prayerJournal: fullData.prayerJournal
             } as any);
+        } catch (e) {}
+
+        // Gamification: Badge check
+        try {
+          const identityRaw = localStorage.getItem('formation_biblique_identity_v1');
+          if (identityRaw) {
+            const identity = JSON.parse(identityRaw);
+            checkAndAwardBadge('pepites', all.length, {
+              userId: identity.userId,
+              deviceId: identity.deviceId
+            });
+          }
         } catch (e) {}
 
         return entry;
