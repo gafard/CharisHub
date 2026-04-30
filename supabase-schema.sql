@@ -611,6 +611,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+DROP TRIGGER IF EXISTS trg_increment_members ON charishub_group_members;
 CREATE TRIGGER trg_increment_members
 AFTER INSERT ON charishub_group_members
 FOR EACH ROW
@@ -629,6 +630,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+DROP TRIGGER IF EXISTS trg_decrement_members ON charishub_group_members;
 CREATE TRIGGER trg_decrement_members
 AFTER DELETE ON charishub_group_members
 FOR EACH ROW
@@ -647,6 +649,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+DROP TRIGGER IF EXISTS trg_increment_comments ON charishub_comments;
 CREATE TRIGGER trg_increment_comments
 AFTER INSERT ON charishub_comments
 FOR EACH ROW
