@@ -397,17 +397,17 @@ export default function LectioDivina({ reference, verseText, onClose }: Props) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-end justify-center sm:items-center"
+        className="fixed inset-0 z-50 flex items-center justify-center p-4"
         style={{ backgroundColor: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}
       >
         <motion.div
           key="lectio-panel"
-          initial={{ y: 60, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 60, opacity: 0 }}
+          initial={{ y: 40, opacity: 0, scale: 0.97 }}
+          animate={{ y: 0, opacity: 1, scale: 1 }}
+          exit={{ y: 40, opacity: 0, scale: 0.97 }}
           transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-          className={`relative w-full max-w-lg rounded-t-[32px] sm:rounded-[32px] bg-gradient-to-b ${bgGradient[step]} p-6 pb-8 shadow-2xl`}
-          style={{ maxHeight: '90dvh', display: 'flex', flexDirection: 'column' }}
+          className={`relative w-full max-w-lg rounded-[32px] bg-gradient-to-b ${bgGradient[step]} p-6 pb-8 shadow-2xl`}
+          style={{ maxHeight: '92dvh', display: 'flex', flexDirection: 'column' }}
         >
           {/* Header */}
           <div className="flex items-center justify-between mb-6">

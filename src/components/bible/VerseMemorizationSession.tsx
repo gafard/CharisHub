@@ -236,8 +236,8 @@ export default function VerseMemorizationSession({ onClose, dueOnly = true }: Pr
 
   if (initialCards.length === 0) {
     return (
-      <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center" style={{ backgroundColor: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}>
-        <div className="w-full max-w-lg rounded-t-[32px] sm:rounded-[32px] bg-slate-900 p-8 text-center">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}>
+        <div className="w-full max-w-lg rounded-[32px] bg-slate-900 p-8 text-center">
           <div className="text-4xl mb-4">🎉</div>
           <h3 className="text-lg font-black text-white">Aucune révision aujourd'hui</h3>
           <p className="text-sm text-white/50 mt-2 mb-6">Tous tes versets sont à jour. Reviens demain !</p>
@@ -248,14 +248,14 @@ export default function VerseMemorizationSession({ onClose, dueOnly = true }: Pr
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center" style={{ backgroundColor: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}>
       <motion.div
         initial={{ y: 60, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 60, opacity: 0 }}
         transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-        className="relative w-full max-w-lg rounded-t-[32px] sm:rounded-[32px] bg-gradient-to-b from-slate-800 to-slate-900 p-6 pb-8 shadow-2xl"
-        style={{ maxHeight: '90dvh', display: 'flex', flexDirection: 'column' }}
+        className="relative w-full max-w-lg rounded-[32px] bg-gradient-to-b from-slate-800 to-slate-900 p-6 pb-8 shadow-2xl"
+        style={{ maxHeight: '92dvh', display: 'flex', flexDirection: 'column' }}
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-5">

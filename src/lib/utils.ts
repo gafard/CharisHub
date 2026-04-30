@@ -95,9 +95,7 @@ export function safeParseLooseJson(raw: string): unknown {
       // Ajoute des guillemets autour des clés non quotées
       .replace(/(?<=[{,]\s*)([a-zA-Z_$][\w$]*)\s*:/g, '"$1":')
       // Supprime les trailing commas
-      .replace(/,\s*([}\]])/g, '$1')
-      // Remplace les single quotes autour des valeurs par des double quotes
-      .replace(/'([^'\\]*(?:\\.[^'\\]*)*)'/g, '"$1"');
+      .replace(/,\s*([}\]])/g, '$1');
     return JSON.parse(fixed);
   } catch {
     // Continue
@@ -108,8 +106,7 @@ export function safeParseLooseJson(raw: string): unknown {
     const flattened = cleaned.replace(/\r?\n+/g, ' ');
     const fixed = flattened
       .replace(/(?<=[{,]\s*)([a-zA-Z_$][\w$]*)\s*:/g, '"$1":')
-      .replace(/,\s*([}\]])/g, '$1')
-      .replace(/'([^'\\]*(?:\\.[^'\\]*)*)'/g, '"$1"');
+      .replace(/,\s*([}\]])/g, '$1');
     return JSON.parse(fixed);
   } catch (err) {
     throw new Error(`Format JSON invalide: ${err instanceof Error ? err.message : 'Erreur inconnue'}`);
