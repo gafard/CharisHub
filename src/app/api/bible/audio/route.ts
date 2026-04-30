@@ -133,6 +133,24 @@ async function proxyAudio(req: NextRequest, method: 'GET' | 'HEAD') {
     }
   }
 
+  // FALLBACK: ElevenLabs TTS + Global Cache
+  try {
+    const { getOrGenerateChapterAudio } = await import('../../../../lib/elevenlabs');
+    const result = await getOrGenerateChapterAudio(translation, bookId, chapter, req.url);
+    
+    if (result) {
+      return new NextResponse(result.buffer, {
+        status: 200,
+        headers: {
+          'Content-Type': result.contentType,
+          'Cache-Control': AUDIO_CACHE_CONTROL,
+          'x-bible-audio-source': 'elevenlabs-cache',
+        },
+      });
+    }
+  } catch (err) {
+    console.error('TTS Fallback Error:', err);
+  }
   return NextResponse.json(
     {
       error: 'Audio source unavailable for this chapter.',

@@ -39,7 +39,7 @@ function resolveAudioProfile(translationId: string): AudioProfile {
 }
 
 export function hasSelahAudio(translationId: string): boolean {
-  return resolveAudioProfile(translationId) !== 'none';
+  return true; // ElevenLabs Fallback covers all translations
 }
 
 export function getSelahAudioAlignedTranslationId(translationId: string): string | null {

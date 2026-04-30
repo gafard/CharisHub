@@ -1,0 +1,116 @@
+import { createClient } from '@supabase/supabase-js';
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY || '';
+const ELEVENLABS_VOICE_ID = process.env.ELEVENLABS_VOICE_ID || 'ojsdYNTmnPdf7yAl8rI5';
+
+const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+export async function getOrGenerateChapterAudio(
+  translation: string,
+  book: string,
+  chapter: number,
+  reqUrl: string
+): Promise<{ buffer: ArrayBuffer; contentType: string } | null> {
+  const safeTranslation = translation.toLowerCase().replace(/[^a-z0-9_-]+/g, '');
+  const safeBook = book.toLowerCase().replace(/[^a-z0-9_-]+/g, '');
+  const fileName = `audio-cache/${safeTranslation}/${safeBook}_${chapter}.mp3`;
+  const bucketName = 'community-media';
+
+  // 1. Check Cache in Supabase
+  const { data: fileData, error: downloadError } = await supabaseAdmin.storage
+    .from(bucketName)
+    .download(fileName);
+
+  if (fileData) {
+    const arrayBuffer = await fileData.arrayBuffer();
+    return { buffer: arrayBuffer, contentType: fileData.type || 'audio/mpeg' };
+  }
+
+  if (!ELEVENLABS_API_KEY) {
+    console.error('Missing ELEVENLABS_API_KEY');
+    return null;
+  }
+
+  // 2. Fetch Text from public/bibles/...
+  let chapterText = '';
+  try {
+    const bibleUrl = new URL(`/bibles/${safeTranslation.toUpperCase()}/bible.json`, reqUrl).toString();
+    const res = await fetch(bibleUrl);
+    if (!res.ok) {
+        // Fallback lowercase
+        const bibleUrlLow = new URL(`/bibles/${safeTranslation}/bible.json`, reqUrl).toString();
+        const resLow = await fetch(bibleUrlLow);
+        if (!resLow.ok) return null;
+        const bibleJson = await resLow.json();
+        chapterText = extractChapterText(bibleJson, book, chapter);
+    } else {
+        const bibleJson = await res.json();
+        chapterText = extractChapterText(bibleJson, book, chapter);
+    }
+  } catch (err) {
+    console.error('Failed to fetch bible JSON for TTS', err);
+    return null;
+  }
+
+  if (!chapterText) return null;
+
+  // 3. Call ElevenLabs
+  // Max characters per request is usually 5000 for standard tier. A bible chapter might be larger.
+  // We may need to truncate or split if it's huge, but let's assume it fits or ElevenLabs handles it (or we slice to 5000 chars for now).
+  const textToRead = chapterText.slice(0, 4900); 
+
+  const elRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${ELEVENLABS_VOICE_ID}`, {
+    method: 'POST',
+    headers: {
+      'Accept': 'audio/mpeg',
+      'xi-api-key': ELEVENLABS_API_KEY,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      text: textToRead,
+      model_id: 'eleven_multilingual_v2',
+      voice_settings: {
+        stability: 0.5,
+        similarity_boost: 0.75,
+      }
+    }),
+  });
+
+  if (!elRes.ok) {
+    console.error('ElevenLabs API error', await elRes.text());
+    return null;
+  }
+
+  const audioBuffer = await elRes.arrayBuffer();
+
+  // 4. Cache in Supabase
+  await supabaseAdmin.storage
+    .from(bucketName)
+    .upload(fileName, audioBuffer, {
+      contentType: 'audio/mpeg',
+      upsert: true,
+    });
+
+  return { buffer: audioBuffer, contentType: 'audio/mpeg' };
+}
+
+function extractChapterText(bibleJson: any, bookId: string, chapterNum: number): string {
+    const books = bibleJson.books || [];
+    const book = books.find((b: any) => 
+        b.abbreviation?.toLowerCase() === bookId.toLowerCase() || 
+        b.name?.toLowerCase() === bookId.toLowerCase() ||
+        b.id?.toLowerCase() === bookId.toLowerCase()
+    );
+    if (!book) return '';
+    
+    // Some bibles are 0-indexed, some are 1-indexed.
+    // We try to find the chapter matching chapterNum OR chapterNum - 1 if it's 0-indexed.
+    const chapter = book.chapters.find((c: any) => 
+        c.chapter === chapterNum || (c.chapter === 0 && chapterNum === 1)
+    );
+    
+    if (!chapter) return '';
+    return chapter.verses.map((v: any) => v.text).join(' ');
+}
