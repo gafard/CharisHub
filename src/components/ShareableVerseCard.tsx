@@ -102,6 +102,9 @@ async function svgToPng(svgString: string): Promise<Blob> {
     });
 }
 
+import { Share } from '@capacitor/share';
+import { Capacitor } from '@capacitor/core';
+
 export default function ShareableVerseCard({ reference, text, translation = 'LSG', onClose }: ShareableVerseCardProps) {
     const [themeIndex, setThemeIndex] = useState(0);
     const [generating, setGenerating] = useState(false);
@@ -132,17 +135,32 @@ export default function ShareableVerseCard({ reference, text, translation = 'LSG
         setGenerating(true);
         try {
             const blob = await svgToPng(svgString);
-            const file = new File([blob], `${reference.replace(/\s+/g, '_')}.png`, { type: 'image/png' });
-
-            if (navigator.share && navigator.canShare?.({ files: [file] })) {
-                await navigator.share({
+            
+            if (Capacitor.isNativePlatform()) {
+                const base64Url = await new Promise<string>((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result as string);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                });
+                
+                await Share.share({
                     title: reference,
-                    text: text.substring(0, 100),
-                    files: [file],
+                    text: `"${text}" - ${reference} (${translation})`,
+                    url: base64Url,
+                    dialogTitle: 'Partager la Parole'
                 });
             } else {
-                // Fallback: download
-                handleDownload();
+                const file = new File([blob], `${reference.replace(/\s+/g, '_')}.png`, { type: 'image/png' });
+                if (navigator.share && navigator.canShare?.({ files: [file] })) {
+                    await navigator.share({
+                        title: reference,
+                        text: text.substring(0, 100),
+                        files: [file],
+                    });
+                } else {
+                    handleDownload();
+                }
             }
         } catch (err: any) {
             if (err?.name !== 'AbortError') {
@@ -152,7 +170,7 @@ export default function ShareableVerseCard({ reference, text, translation = 'LSG
         } finally {
             setGenerating(false);
         }
-    }, [svgString, reference, text, handleDownload]);
+    }, [svgString, reference, text, translation, handleDownload]);
 
     return (
         <div className="fixed inset-0 z-[20000] flex items-center justify-center p-4">

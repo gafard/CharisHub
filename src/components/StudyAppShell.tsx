@@ -8,6 +8,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthModal from './AuthModal';
 import logger from '@/lib/logger';
+import { Capacitor } from '@capacitor/core';
+import { SplashScreen } from '@capacitor/splash-screen';
+import { StatusBar, Style } from '@capacitor/status-bar';
 
 const NAV_ITEMS = [
   {
@@ -40,6 +43,24 @@ export default function StudyAppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { user, profile, loading } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
+  // Initialisation Capacitor
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      const initCapacitor = async () => {
+        try {
+          await StatusBar.setStyle({ style: Style.Dark });
+          // Optionnel : adapter la couleur de fond selon le mode sombre
+          // await StatusBar.setBackgroundColor({ color: '#05060A' });
+          await SplashScreen.hide();
+        } catch (e) {
+          logger.error('[Capacitor Init Error]', e);
+        }
+      };
+      void initCapacitor();
+    }
+  }, []);
+
   // Nettoyage ponctuel du stockage local des groupes (migration vers Supabase ou suppression de tests)
   useEffect(() => {
     if (typeof window !== 'undefined') {

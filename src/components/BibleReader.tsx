@@ -57,6 +57,7 @@ import { getActivePlan, isReadingChapterCompleted } from '../lib/readingPlans';
 import { graceService } from '../lib/graceService';
 import { pepitesStore } from '../lib/pepitesStore';
 import { AnimatedLetter } from './ui/PrismaAnimations';
+import { KeepAwake } from '@capacitor-community/keep-awake';
 import { safeParseLooseJson } from '../lib/utils';
 
 // Traductions de la Bible provenant du fichier centralisé
@@ -2694,6 +2695,12 @@ export default function BibleReader({
 
   useEffect(() => {
     setImmersiveMode(playerPlaying && immersiveEnabled);
+    // Keep the screen awake during audio playback
+    if (playerPlaying) {
+      void KeepAwake.keepAwake().catch(() => {});
+    } else {
+      void KeepAwake.allowSleep().catch(() => {});
+    }
   }, [playerPlaying, immersiveEnabled]);
 
   useEffect(() => {
