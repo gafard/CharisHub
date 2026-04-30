@@ -2102,6 +2102,32 @@ export default function BibleReader({
     showToast(nextActionRemovesHighlight ? 'Surlignage retiré ✅' : 'Verset surligné ✅');
   }, [highlightMap, highlightColor, toggleHighlight, showToast]);
 
+  const prevChapter = () => {
+    if (chapter > 1) {
+      setChapter((prev) => prev - 1);
+      return;
+    }
+    const index = BIBLE_BOOKS.findIndex((b) => b.id === book.id);
+    if (index > 0) {
+      const prevBook = BIBLE_BOOKS[index - 1];
+      setBookId(prevBook.id);
+      setChapter(prevBook.chapters);
+    }
+  };
+
+  const nextChapter = () => {
+    if (chapter < book.chapters) {
+      setChapter((prev) => prev + 1);
+      return;
+    }
+    const index = BIBLE_BOOKS.findIndex((b) => b.id === book.id);
+    if (index < BIBLE_BOOKS.length - 1) {
+      const nextBook = BIBLE_BOOKS[index + 1];
+      setBookId(nextBook.id);
+      setChapter(1);
+    }
+  };
+
   const handleEmbeddedReaderPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!embedded || event.pointerType !== 'touch') return;
 
