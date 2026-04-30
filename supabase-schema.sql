@@ -42,10 +42,13 @@ CREATE INDEX IF NOT EXISTS idx_groups_created_by_device_id ON charishub_groups(c
 
 ALTER TABLE charishub_groups ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Groups are publicly readable" ON charishub_groups;
 CREATE POLICY "Groups are publicly readable" ON charishub_groups
   FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Authenticated users can insert groups" ON charishub_groups;
 CREATE POLICY "Authenticated users can insert groups" ON charishub_groups
   FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Creator can update their own group" ON charishub_groups;
 CREATE POLICY "Creator can update their own group" ON charishub_groups
   FOR UPDATE USING (auth.uid() = user_id);
 
@@ -73,16 +76,20 @@ CREATE INDEX IF NOT EXISTS idx_members_device_id ON charishub_group_members(devi
 
 ALTER TABLE charishub_group_members ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Members are publicly readable" ON charishub_group_members;
 CREATE POLICY "Members are publicly readable" ON charishub_group_members
   FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Authenticated users can join groups" ON charishub_group_members;
 CREATE POLICY "Authenticated users can join groups" ON charishub_group_members
   FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Creator/Admin can update member status" ON charishub_group_members;
 CREATE POLICY "Creator/Admin can update member status" ON charishub_group_members
   FOR UPDATE USING (EXISTS (
     SELECT 1 FROM charishub_groups g 
     WHERE g.id = charishub_group_members.group_id 
     AND (g.user_id = auth.uid() OR auth.uid()::text = ANY(g.admin_ids))
   ));
+DROP POLICY IF EXISTS "Users can delete their own membership" ON charishub_group_members;
 CREATE POLICY "Users can delete their own membership" ON charishub_group_members
   FOR DELETE USING (auth.uid() = user_id);
 
@@ -116,12 +123,16 @@ CREATE INDEX IF NOT EXISTS idx_posts_visibility ON charishub_posts(visibility);
 
 ALTER TABLE charishub_posts ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Public posts are readable by all" ON charishub_posts;
 CREATE POLICY "Public posts are readable by all" ON charishub_posts
   FOR SELECT USING (visibility = 'public');
+DROP POLICY IF EXISTS "Authenticated users can create posts" ON charishub_posts;
 CREATE POLICY "Authenticated users can create posts" ON charishub_posts
   FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Author can update their own post" ON charishub_posts;
 CREATE POLICY "Author can update their own post" ON charishub_posts
   FOR UPDATE USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Author can delete their own post" ON charishub_posts;
 CREATE POLICY "Author can delete their own post" ON charishub_posts
   FOR DELETE USING (auth.uid() = user_id);
 
@@ -144,10 +155,13 @@ CREATE INDEX IF NOT EXISTS idx_comments_created_at ON charishub_comments(created
 
 ALTER TABLE charishub_comments ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Comments are publicly readable" ON charishub_comments;
 CREATE POLICY "Comments are publicly readable" ON charishub_comments
   FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Authenticated users can create comments" ON charishub_comments;
 CREATE POLICY "Authenticated users can create comments" ON charishub_comments
   FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Author can delete their own comment" ON charishub_comments;
 CREATE POLICY "Author can delete their own comment" ON charishub_comments
   FOR DELETE USING (auth.uid() = user_id);
 
@@ -173,8 +187,10 @@ CREATE INDEX IF NOT EXISTS idx_stories_created_at ON community_stories(created_a
 
 ALTER TABLE community_stories ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Stories are publicly readable" ON community_stories;
 CREATE POLICY "Stories are publicly readable" ON community_stories
   FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Authenticated users can create stories" ON community_stories;
 CREATE POLICY "Authenticated users can create stories" ON community_stories
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
@@ -345,8 +361,10 @@ COMMENT ON COLUMN moderation_reports.reason IS 'spam, harassment, illegal, other
 
 ALTER TABLE moderation_reports ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Anyone can report" ON moderation_reports;
 CREATE POLICY "Anyone can report" ON moderation_reports
   FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Admins can view reports" ON moderation_reports;
 CREATE POLICY "Admins can view reports" ON moderation_reports
   FOR SELECT USING (true);
 
@@ -368,10 +386,13 @@ CREATE INDEX IF NOT EXISTS idx_subscriptions_device_id ON push_subscriptions(dev
 
 ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Anyone can subscribe" ON push_subscriptions;
 CREATE POLICY "Anyone can subscribe" ON push_subscriptions
   FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Authenticated users can update their signature" ON push_subscriptions;
 CREATE POLICY "Authenticated users can update their signature" ON push_subscriptions
   FOR UPDATE USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Anyone can unsubscribe" ON push_subscriptions;
 CREATE POLICY "Anyone can unsubscribe" ON push_subscriptions
   FOR DELETE USING (true);
 
@@ -396,10 +417,13 @@ CREATE INDEX IF NOT EXISTS idx_calls_status ON charishub_group_calls(status);
 
 ALTER TABLE charishub_group_calls ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Calls are publicly readable" ON charishub_group_calls;
 CREATE POLICY "Calls are publicly readable" ON charishub_group_calls
   FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Authenticated users can start calls" ON charishub_group_calls;
 CREATE POLICY "Authenticated users can start calls" ON charishub_group_calls
   FOR INSERT WITH CHECK (auth.uid() = created_by);
+DROP POLICY IF EXISTS "Creator can end calls" ON charishub_group_calls;
 CREATE POLICY "Creator can end calls" ON charishub_group_calls
   FOR UPDATE USING (auth.uid() = created_by);
 
@@ -425,10 +449,13 @@ CREATE INDEX IF NOT EXISTS idx_invites_device_id ON charishub_group_call_invites
 
 ALTER TABLE charishub_group_call_invites ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Invites are publicly readable" ON charishub_group_call_invites;
 CREATE POLICY "Invites are publicly readable" ON charishub_group_call_invites
   FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Anyone can respond to invites" ON charishub_group_call_invites;
 CREATE POLICY "Anyone can respond to invites" ON charishub_group_call_invites
   FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Anyone can update invites" ON charishub_group_call_invites;
 CREATE POLICY "Anyone can update invites" ON charishub_group_call_invites
   FOR UPDATE USING (true);
 
@@ -457,10 +484,13 @@ CREATE INDEX IF NOT EXISTS idx_presence_group_id ON community_group_call_presenc
 
 ALTER TABLE community_group_call_presence ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Presence is publicly readable" ON community_group_call_presence;
 CREATE POLICY "Presence is publicly readable" ON community_group_call_presence
   FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Authenticated users can update presence" ON community_group_call_presence;
 CREATE POLICY "Authenticated users can update presence" ON community_group_call_presence
   FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Authenticated users can delete their own presence" ON community_group_call_presence;
 CREATE POLICY "Authenticated users can delete their own presence" ON community_group_call_presence
   FOR DELETE USING (auth.uid() = user_id);
 
@@ -485,8 +515,10 @@ CREATE INDEX IF NOT EXISTS idx_events_created_at ON community_group_call_events(
 
 ALTER TABLE community_group_call_events ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Authenticated users can log events" ON community_group_call_events;
 CREATE POLICY "Authenticated users can log events" ON community_group_call_events
   FOR INSERT WITH CHECK (true); -- On laisse loggable s'il y a un user_id, ou on restreint si besoin
+DROP POLICY IF EXISTS "Events are publicly readable" ON community_group_call_events;
 CREATE POLICY "Events are publicly readable" ON community_group_call_events
   FOR SELECT USING (true);
 
@@ -503,8 +535,10 @@ CREATE INDEX IF NOT EXISTS idx_challenges_group_id ON charishub_group_challenges
 
 ALTER TABLE charishub_group_challenges ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Challenges are publicly readable" ON charishub_group_challenges;
 CREATE POLICY "Challenges are publicly readable" ON charishub_group_challenges
   FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Anyone can create challenges" ON charishub_group_challenges;
 CREATE POLICY "Anyone can create challenges" ON charishub_group_challenges
   FOR INSERT WITH CHECK (true);
 
@@ -522,8 +556,11 @@ CREATE TABLE IF NOT EXISTS charishub_post_likes (
 );
 
 ALTER TABLE charishub_post_likes ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Likes are publicly readable" ON charishub_post_likes;
 CREATE POLICY "Likes are publicly readable" ON charishub_post_likes FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Authenticated users can toggle their own likes" ON charishub_post_likes;
 CREATE POLICY "Authenticated users can toggle their own likes" ON charishub_post_likes FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Authenticated users can delete their own likes" ON charishub_post_likes;
 CREATE POLICY "Authenticated users can delete their own likes" ON charishub_post_likes FOR DELETE USING (auth.uid() = user_id);
 
 -- ============================================================
@@ -540,6 +577,7 @@ CREATE TABLE IF NOT EXISTS community_call_summaries (
 );
 
 ALTER TABLE community_call_summaries ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Summaries are readable by group members" ON community_call_summaries;
 CREATE POLICY "Summaries are readable by group members" ON community_call_summaries
   FOR SELECT USING (true); -- Simplifié pour l'instant
 
