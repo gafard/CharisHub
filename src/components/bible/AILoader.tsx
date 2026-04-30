@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, X } from 'lucide-react';
+import { Star, X } from 'lucide-react';
 
 /* ── Messages contextuels ─────────────────────────────────────────────── */
 
@@ -171,7 +171,7 @@ export default function AILoader({
             className="h-10 w-10 rounded-full border-2 border-amber-400/20 border-t-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.2)]"
           />
           <div className="absolute inset-0 flex items-center justify-center">
-            <Sparkles size={14} className="text-amber-300 animate-pulse" />
+            <Star size={14} className="text-amber-300 animate-pulse fill-amber-300/30" />
           </div>
         </div>
 
@@ -229,7 +229,7 @@ export default function AILoader({
           className="h-16 w-16 rounded-full border-2 border-amber-400/20 border-t-amber-400 shadow-[0_0_20px_rgba(251,191,36,0.3)]"
         />
         <div className="absolute inset-0 flex items-center justify-center">
-          <Sparkles size={20} className="text-amber-300 animate-pulse" />
+          <Star size={20} className="text-amber-300 animate-pulse fill-amber-300/30" />
         </div>
       </div>
 

@@ -1735,7 +1735,7 @@ export default function CommunityGroupCall({
                             setSharedBibleRef(r); 
                             setSharedBibleContent(c);
                             if (m) setSharedBibleMetadata(m);
-                            void sendBroadcast<UiSyncPayload>('ui-sync', {
+                            void sendBroadcast<UiSyncPayload>('ui_sync', {
                               type: 'bible.sync',
                               peerId: deviceId,
                               reference: r,
@@ -1775,7 +1775,7 @@ export default function CommunityGroupCall({
                      setSharedBibleRef(null);
                      setSharedBibleContent(null);
                      setSharedBibleMetadata(undefined);
-                     void sendBroadcast<UiSyncPayload>('ui-sync', {
+                     void sendBroadcast<UiSyncPayload>('ui_sync', {
                        type: 'bible.sync',
                        peerId: deviceId,
                        reference: null,

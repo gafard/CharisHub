@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic';
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  Volume2, ChevronLeft, ChevronRight, Link2, Search, Star, X, Settings, Maximize, Play, Pause, Bookmark, ListVideo, AlignLeft, BookmarkCheck, AlertCircle, Heart, Shield, Flame, Sparkles, User as UserIcon,
+  Volume2, ChevronLeft, ChevronRight, Link2, Search, Star, X, Settings, Maximize, Play, Pause, Bookmark, ListVideo, AlignLeft, BookmarkCheck, AlertCircle, Heart, Shield, Flame, User as UserIcon,
 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -2819,7 +2819,7 @@ export default function BibleReader({
                     </div>
                   )}
                   <div className="flex items-center gap-2 whitespace-nowrap text-[10px] font-black uppercase tracking-[0.15em] text-amber-500 bg-amber-500/5 px-4 py-2 rounded-2xl border border-amber-500/10 shadow-inner">
-                      <Sparkles size={12} className="text-amber-400" />
+                      <Flame size={12} className="text-amber-400" />
                       Pleine Puissance
                   </div>
                 </div>

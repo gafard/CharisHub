@@ -1,7 +1,7 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { BookOpen, Check, Loader2, Sparkles, X } from 'lucide-react';
+import { BookOpen, Check, Loader2, Star, X } from 'lucide-react';
 import { useState } from 'react';
 import type { ReadingPlan } from '@/lib/readingPlanCatalog';
 
@@ -82,7 +82,7 @@ export default function PersonalizedPlanModal({ onClose, onPlanReady }: Props) {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-2xl bg-violet-500/20 flex items-center justify-center">
-              <Sparkles size={18} className="text-violet-400" />
+              <Star size={18} className="text-violet-400 fill-violet-400/20" />
             </div>
             <div>
               <div className="text-sm font-black text-white">Plan Personnalisé</div>
@@ -236,7 +236,7 @@ export default function PersonalizedPlanModal({ onClose, onPlanReady }: Props) {
                 {loading ? (
                   <><Loader2 size={16} className="animate-spin" /> Génération en cours...</>
                 ) : (
-                  <><Sparkles size={16} /> Générer mon plan</>
+                  <><Star size={16} /> Générer mon plan</>
                 )}
               </button>
 

@@ -13,7 +13,6 @@ import {
   CheckCircle2,
   Lock,
   ScrollText,
-  Sparkles,
   Star,
   TimerReset,
 } from 'lucide-react';
@@ -287,7 +286,7 @@ export default function ReadingPlansIndexClient() {
               onClick={() => isLoggedIn ? setShowPersonalizedModal(true) : setShowAuthModal(true)}
               className="rounded-full px-5 py-2.5 text-[10px] font-bold uppercase tracking-[0.18em] transition-all bg-violet-500/15 text-violet-500 border border-violet-500/20 hover:bg-violet-500/25 flex items-center gap-1.5"
             >
-              <Sparkles size={11} />
+              <Star size={11} className="fill-amber-300/30" />
               Plan Vision
             </button>
 

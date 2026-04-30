@@ -8,6 +8,7 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'Connectés par la grâce — Vision Miroir',
     start_url: '/',
     scope: '/',
+    id: '/',
     display: 'standalone',
     orientation: 'portrait',
     background_color: '#0B1F3A',

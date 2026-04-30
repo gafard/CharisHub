@@ -5,6 +5,7 @@ import logger from '@/lib/logger';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
+  Heart,
   Link2,
   Loader2,
   PlusCircle,
@@ -16,6 +17,7 @@ import {
 import dynamic from 'next/dynamic';
 
 const GroupPepitesFeed = dynamic(() => import('./GroupPepitesFeed'), { ssr: false });
+const TestimonialFeed = dynamic(() => import('./TestimonialFeed'), { ssr: false });
 import {
   createGroup,
   fetchActiveGroupCall,
@@ -49,6 +51,7 @@ import { RefreshCw } from 'lucide-react';
 
 type CreateState = 'idle' | 'saving';
 type GroupListMode = 'all' | 'joined' | 'discover';
+type GroupDetailTab = 'salon' | 'programme' | 'pepites' | 'testimonials' | 'members' | 'about';
 type TranslateFn = (key: string, params?: Record<string, string | number>) => string;
 type GroupAccent = {
   border: string;
@@ -459,7 +462,7 @@ function GroupDetailTabs({
   setDetailCallLink: (val: string) => void;
   setFeedback: (val: string | null) => void;
 }) {
-  const [activeTab, setActiveTab] = useState<'salon' | 'programme' | 'pepites' | 'members' | 'about'>('salon');
+  const [activeTab, setActiveTab] = useState<GroupDetailTab>('salon');
 
   const isAdmin = isGroupAdmin(selectedGroup, actor.userId, actor.deviceId);
   const isCreator = (selectedGroup.user_id && selectedGroup.user_id === actor.userId) || (selectedGroup.created_by_device_id === actor.deviceId);
@@ -584,11 +587,12 @@ function GroupDetailTabs({
                 { key: 'salon', label: 'Salon' },
                 { key: 'programme', label: 'Programme' },
                 { key: 'pepites', label: 'Pépites', icon: <Star size={11} className="inline-block mr-1" /> },
+                { key: 'testimonials', label: 'Témoignages', icon: <Heart size={11} className="inline-block mr-1" /> },
               ].map((tab) => (
                 <button
                   key={tab.key}
                   type="button"
-                  onClick={() => setActiveTab(tab.key as 'salon' | 'programme' | 'pepites')}
+                  onClick={() => setActiveTab(tab.key as GroupDetailTab)}
                   className={`relative shrink-0 px-6 py-4 text-xs font-black uppercase tracking-[0.14em] transition ${
                     activeTab === tab.key
                       ? 'text-foreground'
@@ -711,6 +715,20 @@ function GroupDetailTabs({
                   )}
                 </div>
               )}
+
+              {activeTab === 'testimonials' && (
+                <div className="p-4 sm:p-6">
+                  {selectedGroup.joined && currentUserStatus !== 'pending' ? (
+                    <div className="rounded-[28px] border border-white/10 bg-slate-950 p-4 shadow-[0_18px_40px_rgba(2,6,23,0.18)] sm:p-5">
+                      <TestimonialFeed groupId={selectedGroup.id} />
+                    </div>
+                  ) : (
+                    <div className="py-10 text-center text-sm text-muted">
+                      Rejoins le groupe pour voir et partager les témoignages.
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -755,7 +773,7 @@ function GroupDetailTabs({
               ].map((tab) => (
                 <button
                   key={tab.key}
-                  onClick={() => setActiveTab(tab.key as any)}
+                  onClick={() => setActiveTab(tab.key as GroupDetailTab)}
                   className={`mr-4 pb-2 text-[10px] font-black uppercase tracking-[0.14em] transition ${
                     (activeTab === tab.key || (activeTab === 'salon' && tab.key === 'about') || (activeTab === 'programme' && tab.key === 'about'))
                     ? 'text-foreground border-b-2 border-accent' 
