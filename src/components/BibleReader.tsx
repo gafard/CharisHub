@@ -48,11 +48,13 @@ const MyHighlightsModal = dynamic(() => import('./bible/MyHighlightsModal'), { s
 const GraceMirrorModal = dynamic(() => import('./bible/GraceMirrorModal'), { ssr: false });
 const BibleReaderSkeleton = dynamic(() => import('./bible/BibleReaderSkeleton'), { ssr: false });
 const LectioDivina = dynamic(() => import('./bible/LectioDivina'), { ssr: false });
+const VerseMemorizationSession = dynamic(() => import('./bible/VerseMemorizationSession'), { ssr: false });
 
 // Import des services Strong
 import strongService, { type StrongEntry } from '../services/strong-service';
 import BibleVersesStrongMap from '../services/bible-verses-strong-map';
 import { recordReading, getStreak } from '../lib/bibleStreak';
+import { memorizationStore } from '../lib/memorizationStore';
 import { getActivePlan, isReadingChapterCompleted } from '../lib/readingPlans';
 
 import { graceService } from '../lib/graceService';
@@ -1034,6 +1036,7 @@ export default function BibleReader({
   const [mirrorAnalysis, setMirrorAnalysis] = useState<string>('');
   const [showLectioDivina, setShowLectioDivina] = useState(false);
   const [lectioVerse, setLectioVerse] = useState<{ ref: string; text: string } | null>(null);
+  const [showMemorization, setShowMemorization] = useState(false);
   const [mirrorLoading, setMirrorLoading] = useState(false);
   const [mirrorError, setMirrorError] = useState<string | null>(null);
   const [mirrorModalOpen, setMirrorModalOpen] = useState(false);
@@ -3175,6 +3178,14 @@ export default function BibleReader({
           setShowLectioDivina(true);
           setStudyBarOpen(false);
         }}
+        onMemorize={() => {
+          if (!selectedVerse) return;
+          const ref = `${book.name} ${chapter}:${selectedVerse.number}`;
+          memorizationStore.add(ref, selectedVerse.text);
+          showToast('Verset ajouté à la mémorisation 📚');
+          setStudyBarOpen(false);
+        }}
+        isMemorized={selectedVerse ? memorizationStore.has(`${book.name} ${chapter}:${selectedVerse.number}`) : false}
         onMirror={() => {
           if (!selectedVerse) return;
           const ref = `${book.name} ${chapter}:${selectedVerse.number}`;
@@ -3513,6 +3524,10 @@ export default function BibleReader({
           verseText={lectioVerse.text}
           onClose={() => { setShowLectioDivina(false); setLectioVerse(null); }}
         />
+      )}
+
+      {showMemorization && (
+        <VerseMemorizationSession onClose={() => setShowMemorization(false)} />
       )}
     </section>
   );

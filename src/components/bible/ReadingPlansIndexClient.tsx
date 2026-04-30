@@ -13,9 +13,13 @@ import {
   CheckCircle2,
   Lock,
   ScrollText,
+  Sparkles,
   Star,
   TimerReset,
 } from 'lucide-react';
+import dynamic from 'next/dynamic';
+
+const PersonalizedPlanModal = dynamic(() => import('./PersonalizedPlanModal'), { ssr: false });
 import { PlanDetailPane } from './PlanDetailPane';
 import { useRouter } from 'next/navigation';
 import {
@@ -51,6 +55,7 @@ export default function ReadingPlansIndexClient() {
   const [isCoarsePointer, setIsCoarsePointer] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [pendingPlanId, setPendingPlanId] = useState<string | null>(null);
+  const [showPersonalizedModal, setShowPersonalizedModal] = useState(false);
 
   const pickerSwiperRef = useRef<SwiperInstance | null>(null);
   const pickerEntriesRef = useRef<PlanEntry[]>([]);
@@ -277,6 +282,14 @@ export default function ReadingPlansIndexClient() {
             >
               Tous
             </button>
+            <button
+              type="button"
+              onClick={() => isLoggedIn ? setShowPersonalizedModal(true) : setShowAuthModal(true)}
+              className="rounded-full px-5 py-2.5 text-[10px] font-bold uppercase tracking-[0.18em] transition-all bg-violet-500/15 text-violet-500 border border-violet-500/20 hover:bg-violet-500/25 flex items-center gap-1.5"
+            >
+              <Sparkles size={11} />
+              Plan IA
+            </button>
 
             {PLAN_GROUPS.map((group) => {
               const isActive = selectedCategory === group.id;
@@ -389,6 +402,20 @@ export default function ReadingPlansIndexClient() {
         initialMode="register"
         onSuccess={handleAuthSuccess}
       />
+
+      {showPersonalizedModal && (
+        <PersonalizedPlanModal
+          onClose={() => setShowPersonalizedModal(false)}
+          onPlanReady={(plan) => {
+            // Inject into catalog and start the plan
+            const { READING_PLANS } = require('../../lib/readingPlanCatalog');
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (READING_PLANS as any[]).unshift({ ...plan, id: plan.id });
+            handleStartPlan(plan.id);
+            setShowPersonalizedModal(false);
+          }}
+        />
+      )}
     </>
   );
 }

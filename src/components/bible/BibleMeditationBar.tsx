@@ -78,6 +78,8 @@ export default function BibleMeditationBar({
   onCopy,
   onMirror,
   onLectio,
+  onMemorize,
+  isMemorized,
   strongTokens,
   strongLoading,
   onStrongToken,
@@ -97,6 +99,8 @@ export default function BibleMeditationBar({
   onCopy: () => void;
   onMirror: () => void;
   onLectio?: () => void;
+  onMemorize?: () => void;
+  isMemorized?: boolean;
   strongTokens: StudyStrongToken[];
   strongLoading?: boolean;
   onStrongToken?: (strong: string) => void;
@@ -313,6 +317,13 @@ export default function BibleMeditationBar({
                     onClick={onCopy}
                     icon={<Copy size={15} />}
                   />
+                  {onMemorize && (
+                    <ActionChip
+                      label={isMemorized ? 'Mémorisé ✓' : 'Mémoriser'}
+                      onClick={onMemorize}
+                      icon={<BookOpen size={15} />}
+                    />
+                  )}
                 </div>
               </div>
 

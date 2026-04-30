@@ -9,9 +9,13 @@ import {
   Loader2,
   PlusCircle,
   Search,
+  Star,
   Trash2,
   X,
 } from 'lucide-react';
+import dynamic from 'next/dynamic';
+
+const GroupPepitesFeed = dynamic(() => import('./GroupPepitesFeed'), { ssr: false });
 import {
   createGroup,
   fetchActiveGroupCall,
@@ -455,7 +459,7 @@ function GroupDetailTabs({
   setDetailCallLink: (val: string) => void;
   setFeedback: (val: string | null) => void;
 }) {
-  const [activeTab, setActiveTab] = useState<'salon' | 'programme' | 'members' | 'about'>('salon');
+  const [activeTab, setActiveTab] = useState<'salon' | 'programme' | 'pepites' | 'members' | 'about'>('salon');
 
   const isAdmin = isGroupAdmin(selectedGroup, actor.userId, actor.deviceId);
   const isCreator = (selectedGroup.user_id && selectedGroup.user_id === actor.userId) || (selectedGroup.created_by_device_id === actor.deviceId);
@@ -575,24 +579,25 @@ function GroupDetailTabs({
         {/* Colonne GAUCHE (Main Content) */}
         <div className="lg:col-span-2 space-y-6">
           <div className="overflow-hidden rounded-[32px] border border-border-soft bg-surface shadow-[0_12px_24px_rgba(16,24,40,0.03)]">
-            <div className="flex border-b border-border-soft bg-surface-strong/50">
+            <div className="flex border-b border-border-soft bg-surface-strong/50 overflow-x-auto">
               {[
                 { key: 'salon', label: 'Salon' },
                 { key: 'programme', label: 'Programme' },
+                { key: 'pepites', label: 'Pépites', icon: <Star size={11} className="inline-block mr-1" /> },
               ].map((tab) => (
                 <button
                   key={tab.key}
                   type="button"
-                  onClick={() => setActiveTab(tab.key as any)}
-                  className={`relative px-8 py-4 text-xs font-black uppercase tracking-[0.14em] transition ${
+                  onClick={() => setActiveTab(tab.key as 'salon' | 'programme' | 'pepites')}
+                  className={`relative shrink-0 px-6 py-4 text-xs font-black uppercase tracking-[0.14em] transition ${
                     activeTab === tab.key
                       ? 'text-foreground'
                       : 'text-muted/60 hover:text-muted'
                   }`}
                 >
-                  {tab.label}
+                  {tab.icon}{tab.label}
                   {activeTab === tab.key && (
-                    <div className="absolute bottom-0 left-8 right-8 h-1 rounded-t-full bg-accent" />
+                    <div className="absolute bottom-0 left-6 right-6 h-1 rounded-t-full bg-accent" />
                   )}
                 </button>
               ))}
@@ -690,6 +695,18 @@ function GroupDetailTabs({
                           Ajouter
                         </button>
                       </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'pepites' && (
+                <div className="p-4 sm:p-6">
+                  {selectedGroup.joined && currentUserStatus !== 'pending' ? (
+                    <GroupPepitesFeed groupId={selectedGroup.id} />
+                  ) : (
+                    <div className="py-10 text-center text-sm text-muted">
+                      Rejoins le groupe pour voir et partager les pépites.
                     </div>
                   )}
                 </div>

@@ -25,6 +25,7 @@ import {
 import { getStreak, type StreakData } from '@/lib/bibleStreak';
 import { getAllSessions, type PrayerFlowSession } from '@/lib/prayerFlowStore';
 import { pepitesStore, type Pepite } from '@/lib/pepitesStore';
+import { memorizationStore } from '@/lib/memorizationStore';
 import { useAuth } from '@/contexts/AuthContext';
 import { performInitialSync } from '@/lib/cloudSync';
 import { WordsPullUp, WordsPullUpMultiStyle } from './ui/PrismaAnimations';
@@ -32,6 +33,7 @@ import PullToRefresh from 'react-simple-pull-to-refresh';
 import dynamic from 'next/dynamic';
 
 const YearHeatmap = dynamic(() => import('./YearHeatmap'), { ssr: false });
+const VerseMemorizationSession = dynamic(() => import('./bible/VerseMemorizationSession'), { ssr: false });
 
 // ============================================================
 // Types & Data
@@ -299,12 +301,15 @@ export default function SpiritualDashboard() {
   const [dailyVerse, setDailyVerse] = useState<DailyVerse>(DAILY_VERSES[0]);
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncDate, setLastSyncDate] = useState<string | null>(null);
+  const [dueCards, setDueCards] = useState(0);
+  const [showMemorizationSession, setShowMemorizationSession] = useState(false);
 
   const refreshLocalState = () => {
     setStreak(getStreak());
     setSessions(getAllSessions());
     setPepites(pepitesStore.load());
     setLocalData(collectLocalData());
+    setDueCards(memorizationStore.getDueCount());
   };
 
   useEffect(() => {
@@ -432,6 +437,38 @@ export default function SpiritualDashboard() {
             <StatCard icon={<Star size={20} />} label="Favoris" value={pepites.length} subtext="Lumières d'identité" color="#D4AF37" delay={0.2} />
             <StatCard icon={<Star size={20} />} label="Réflexions" value={localData.highlights} subtext={`${localData.notes} notes`} color="#8b5cf6" delay={0.25} />
           </div>
+
+          {/* Memorization CTA */}
+          {memorizationStore.getAll().length > 0 && (
+            <motion.button
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              onClick={() => setShowMemorizationSession(true)}
+              className="w-full rounded-[28px] border border-amber-400/25 bg-gradient-to-r from-amber-500/10 to-orange-500/10 p-5 text-left hover:from-amber-500/15 transition-all active:scale-[0.99]"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="h-11 w-11 rounded-2xl bg-amber-400/15 flex items-center justify-center">
+                    <BookOpen size={20} className="text-amber-500" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-black text-foreground">Révision du jour</div>
+                    {dueCards > 0 ? (
+                      <div className="text-xs font-bold text-amber-500">{dueCards} verset{dueCards > 1 ? 's' : ''} à réviser</div>
+                    ) : (
+                      <div className="text-xs font-bold text-muted">Tout est à jour 🎉</div>
+                    )}
+                  </div>
+                </div>
+                {dueCards > 0 && (
+                  <div className="h-7 w-7 rounded-full bg-amber-500 flex items-center justify-center text-xs font-black text-white">
+                    {dueCards}
+                  </div>
+                )}
+              </div>
+            </motion.button>
+          )}
         </section>
 
         {/* Heatmap Section */}
@@ -494,6 +531,12 @@ export default function SpiritualDashboard() {
           )}
         </div>
       </PullToRefresh>
+
+      {showMemorizationSession && (
+        <VerseMemorizationSession
+          onClose={() => { setShowMemorizationSession(false); setDueCards(memorizationStore.getDueCount()); }}
+        />
+      )}
     </div>
   );
 }
