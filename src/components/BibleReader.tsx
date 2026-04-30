@@ -1473,7 +1473,7 @@ export default function BibleReader({
     try {
       const resolvedAudioUrl = normalizeAudioSourceUrl(audioUrl);
       if (!audio.src || (audio.src !== resolvedAudioUrl && audio.currentSrc !== resolvedAudioUrl)) {
-        audio.src = audioUrl;
+        audio.src = resolvedAudioUrl;
         audio.load();
       }
       audio.defaultPlaybackRate = 1;
