@@ -47,10 +47,10 @@ CREATE POLICY "Groups are publicly readable" ON charishub_groups
   FOR SELECT USING (true);
 DROP POLICY IF EXISTS "Authenticated users can insert groups" ON charishub_groups;
 CREATE POLICY "Authenticated users can insert groups" ON charishub_groups
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+  FOR INSERT WITH CHECK (auth.uid()::text = user_id::text);
 DROP POLICY IF EXISTS "Creator can update their own group" ON charishub_groups;
 CREATE POLICY "Creator can update their own group" ON charishub_groups
-  FOR UPDATE USING (auth.uid() = user_id);
+  FOR UPDATE USING (auth.uid()::text = user_id::text);
 
 -- ============================================================
 -- 2. charishub_group_members
@@ -81,17 +81,17 @@ CREATE POLICY "Members are publicly readable" ON charishub_group_members
   FOR SELECT USING (true);
 DROP POLICY IF EXISTS "Authenticated users can join groups" ON charishub_group_members;
 CREATE POLICY "Authenticated users can join groups" ON charishub_group_members
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+  FOR INSERT WITH CHECK (auth.uid()::text = user_id::text);
 DROP POLICY IF EXISTS "Creator/Admin can update member status" ON charishub_group_members;
 CREATE POLICY "Creator/Admin can update member status" ON charishub_group_members
   FOR UPDATE USING (EXISTS (
     SELECT 1 FROM charishub_groups g 
     WHERE g.id = charishub_group_members.group_id 
-    AND (g.user_id = auth.uid() OR auth.uid()::text = ANY(g.admin_ids))
+    AND (g.user_id::text = auth.uid()::text OR auth.uid()::text = ANY(g.admin_ids))
   ));
 DROP POLICY IF EXISTS "Users can delete their own membership" ON charishub_group_members;
 CREATE POLICY "Users can delete their own membership" ON charishub_group_members
-  FOR DELETE USING (auth.uid() = user_id);
+  FOR DELETE USING (auth.uid()::text = user_id::text);
 
 -- ============================================================
 -- 3. charishub_posts
@@ -128,13 +128,13 @@ CREATE POLICY "Public posts are readable by all" ON charishub_posts
   FOR SELECT USING (visibility = 'public');
 DROP POLICY IF EXISTS "Authenticated users can create posts" ON charishub_posts;
 CREATE POLICY "Authenticated users can create posts" ON charishub_posts
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+  FOR INSERT WITH CHECK (auth.uid()::text = user_id::text);
 DROP POLICY IF EXISTS "Author can update their own post" ON charishub_posts;
 CREATE POLICY "Author can update their own post" ON charishub_posts
-  FOR UPDATE USING (auth.uid() = user_id);
-DROP POLICY IF EXISTS "Author can delete their own post" ON charishub_posts;
-CREATE POLICY "Author can delete their own post" ON charishub_posts
-  FOR DELETE USING (auth.uid() = user_id);
+  FOR UPDATE USING (auth.uid()::text = user_id::text);
+DROP POLICY IF EXISTS "Users can delete their own posts" ON charishub_posts;
+CREATE POLICY "Users can delete their own posts" ON charishub_posts
+  FOR DELETE USING (auth.uid()::text = user_id::text);
 
 -- ============================================================
 -- 4. charishub_comments
@@ -160,10 +160,10 @@ CREATE POLICY "Comments are publicly readable" ON charishub_comments
   FOR SELECT USING (true);
 DROP POLICY IF EXISTS "Authenticated users can create comments" ON charishub_comments;
 CREATE POLICY "Authenticated users can create comments" ON charishub_comments
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-DROP POLICY IF EXISTS "Author can delete their own comment" ON charishub_comments;
-CREATE POLICY "Author can delete their own comment" ON charishub_comments
-  FOR DELETE USING (auth.uid() = user_id);
+  FOR INSERT WITH CHECK (auth.uid()::text = user_id::text);
+DROP POLICY IF EXISTS "Users can delete their own comments" ON charishub_comments;
+CREATE POLICY "Users can delete their own comments" ON charishub_comments
+  FOR DELETE USING (auth.uid()::text = user_id::text);
 
 -- ============================================================
 -- 5. community_stories
@@ -192,7 +192,7 @@ CREATE POLICY "Stories are publicly readable" ON community_stories
   FOR SELECT USING (true);
 DROP POLICY IF EXISTS "Authenticated users can create stories" ON community_stories;
 CREATE POLICY "Authenticated users can create stories" ON community_stories
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+  FOR INSERT WITH CHECK (auth.uid()::text = user_id::text);
 
 -- ============================================================
 -- 5b. charishub_testimonials
@@ -277,7 +277,7 @@ CREATE POLICY "Anyone can create testimonials" ON charishub_testimonials
 
 DROP POLICY IF EXISTS "Authors can update their own testimonials" ON charishub_testimonials;
 CREATE POLICY "Authors can update their own testimonials" ON charishub_testimonials
-  FOR UPDATE USING (auth.uid() = user_id);
+  FOR UPDATE USING (auth.uid()::text = user_id::text);
 
 -- ============================================================
 -- 5c. charishub_testimonial_reactions
@@ -391,7 +391,7 @@ CREATE POLICY "Anyone can subscribe" ON push_subscriptions
   FOR INSERT WITH CHECK (true);
 DROP POLICY IF EXISTS "Authenticated users can update their signature" ON push_subscriptions;
 CREATE POLICY "Authenticated users can update their signature" ON push_subscriptions
-  FOR UPDATE USING (auth.uid() = user_id);
+  FOR UPDATE USING (auth.uid()::text = user_id::text);
 DROP POLICY IF EXISTS "Anyone can unsubscribe" ON push_subscriptions;
 CREATE POLICY "Anyone can unsubscribe" ON push_subscriptions
   FOR DELETE USING (true);
@@ -422,10 +422,10 @@ CREATE POLICY "Calls are publicly readable" ON charishub_group_calls
   FOR SELECT USING (true);
 DROP POLICY IF EXISTS "Authenticated users can start calls" ON charishub_group_calls;
 CREATE POLICY "Authenticated users can start calls" ON charishub_group_calls
-  FOR INSERT WITH CHECK (auth.uid() = created_by);
+  FOR INSERT WITH CHECK (auth.uid()::text = created_by::text);
 DROP POLICY IF EXISTS "Creator can end calls" ON charishub_group_calls;
 CREATE POLICY "Creator can end calls" ON charishub_group_calls
-  FOR UPDATE USING (auth.uid() = created_by);
+  FOR UPDATE USING (auth.uid()::text = created_by::text);
 
 -- ============================================================
 -- 9. charishub_group_call_invites
@@ -787,7 +787,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_user_badges_unique_device ON user_badges (
 
 ALTER TABLE user_badges ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can view their own badges" ON user_badges;
-CREATE POLICY "Users can view their own badges" ON user_badges FOR SELECT USING (auth.uid() = user_id OR device_id IS NOT NULL);
+CREATE POLICY "Users can view their own badges" ON user_badges FOR SELECT USING (auth.uid()::text = user_id::text OR device_id IS NOT NULL);
 
 -- ============================================================
 -- FIN DU SCHÉMA
