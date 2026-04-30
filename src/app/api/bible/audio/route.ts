@@ -132,7 +132,7 @@ async function proxyAudio(req: NextRequest, method: 'GET' | 'HEAD') {
   // FALLBACK: ElevenLabs TTS + Global Cache
   try {
     const { getOrGenerateChapterAudio } = await import('../../../../lib/elevenlabs');
-    const result = await getOrGenerateChapterAudio(translation, bookId, chapter, req.url);
+    const result = await getOrGenerateChapterAudio(translation, bookId, chapter);
     
     if (result) {
       return new NextResponse(result.buffer, {
