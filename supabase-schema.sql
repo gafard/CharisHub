@@ -770,5 +770,25 @@ ON storage.objects FOR DELETE
 USING (bucket_id = 'stories' AND auth.uid()::text = owner::text);
 
 -- ============================================================
+-- 15. user_badges
+-- ============================================================
+CREATE TABLE IF NOT EXISTS user_badges (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    device_id TEXT,
+    badge_id TEXT NOT NULL,
+    awarded_at TIMESTAMPTZ DEFAULT NOW(),
+    metadata JSONB DEFAULT '{}'
+);
+
+-- Index pour éviter les doublons
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_badges_unique_user ON user_badges (badge_id, user_id) WHERE user_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_badges_unique_device ON user_badges (badge_id, device_id) WHERE user_id IS NULL;
+
+ALTER TABLE user_badges ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view their own badges" ON user_badges;
+CREATE POLICY "Users can view their own badges" ON user_badges FOR SELECT USING (auth.uid() = user_id OR device_id IS NOT NULL);
+
+-- ============================================================
 -- FIN DU SCHÉMA
 -- ============================================================
