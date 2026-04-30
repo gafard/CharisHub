@@ -40,6 +40,8 @@ import { useCommunityIdentity } from '../lib/useCommunityIdentity';
 import { useI18n } from '../contexts/I18nContext';
 import { useAuth } from '../contexts/AuthContext';
 import AuthModal from './AuthModal';
+import PullToRefresh from 'react-simple-pull-to-refresh';
+import { RefreshCw } from 'lucide-react';
 
 type CreateState = 'idle' | 'saving';
 type GroupListMode = 'all' | 'joined' | 'discover';
@@ -1721,8 +1723,23 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
           />
         </div>
       ) : (
-        <>
-          <section className="relative overflow-hidden bg-background px-6 py-12 sm:px-12 sm:py-20 lg:py-24">
+        <PullToRefresh
+          onRefresh={async () => { await loadGroups(); }}
+          pullingContent={
+            <div className="flex h-20 items-center justify-center text-[10px] font-black uppercase tracking-widest text-muted">
+              <RefreshCw size={14} className="mr-2 animate-spin text-accent" />
+              Tirer pour rafraîchir...
+            </div>
+          }
+          refreshingContent={
+            <div className="flex h-20 items-center justify-center text-[10px] font-black uppercase tracking-widest text-accent">
+              <RefreshCw size={14} className="mr-2 animate-spin" />
+              Actualisation...
+            </div>
+          }
+        >
+          <div className="min-h-screen">
+            <section className="relative overflow-hidden bg-background px-6 py-12 sm:px-12 sm:py-20 lg:py-24">
             {/* Dégradé d'ambiance */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(var(--accent-rgb),0.12),transparent_45%)]" />
 
@@ -2077,7 +2094,8 @@ export default function CommunityGroups({ initialGroupId }: { initialGroupId?: s
               ))}
             </div>
           </section>
-        </>
+          </div>
+        </PullToRefresh>
       )}
 
       {/* Feedback Toast */}

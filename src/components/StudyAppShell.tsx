@@ -44,13 +44,25 @@ export default function StudyAppShell({ children }: { children: ReactNode }) {
   const { user, profile, loading } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
-  // Initialisation Capacitor
+  // Initialisation Capacitor & IndexedDB Offline Backup
   useEffect(() => {
+    // 1. Restaurer les données IndexedDB si localStorage a été vidé par l'OS (iOS)
+    import('@/lib/offlineStorage').then(({ restoreFromIndexedDB, backupToIndexedDB }) => {
+      void restoreFromIndexedDB();
+      
+      // 2. Sauvegarder périodiquement les données dans IndexedDB (toutes les minutes)
+      const interval = setInterval(() => {
+        void backupToIndexedDB();
+      }, 60000);
+      
+      return () => clearInterval(interval);
+    });
+
+    // 3. Initialisation Capacitor
     if (Capacitor.isNativePlatform()) {
       const initCapacitor = async () => {
         try {
           await StatusBar.setStyle({ style: Style.Dark });
-          // Optionnel : adapter la couleur de fond selon le mode sombre
           // await StatusBar.setBackgroundColor({ color: '#05060A' });
           await SplashScreen.hide();
         } catch (e) {

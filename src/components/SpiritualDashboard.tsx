@@ -28,6 +28,7 @@ import { pepitesStore, type Pepite } from '@/lib/pepitesStore';
 import { useAuth } from '@/contexts/AuthContext';
 import { performInitialSync } from '@/lib/cloudSync';
 import { WordsPullUp, WordsPullUpMultiStyle } from './ui/PrismaAnimations';
+import PullToRefresh from 'react-simple-pull-to-refresh';
 
 // ============================================================
 // Types & Data
@@ -381,8 +382,23 @@ export default function SpiritualDashboard() {
         </div>
       )}
 
-      <div className="relative z-10 space-y-8">
-        {/* Header Section */}
+      <PullToRefresh
+        onRefresh={handleSync}
+        pullingContent={
+          <div className="flex h-20 items-center justify-center text-[10px] font-black uppercase tracking-widest text-muted">
+            <RefreshCw size={14} className="mr-2 animate-spin text-accent" />
+            Tirer pour rafraîchir...
+          </div>
+        }
+        refreshingContent={
+          <div className="flex h-20 items-center justify-center text-[10px] font-black uppercase tracking-widest text-accent">
+            <RefreshCw size={14} className="mr-2 animate-spin" />
+            Synchronisation...
+          </div>
+        }
+      >
+        <div className="relative z-10 space-y-8">
+          {/* Header Section */}
         <section className="flex flex-col lg:flex-row gap-6">
           <div className="flex-1">
              <DailyVerseCard verse={dailyVerse} />
@@ -471,8 +487,9 @@ export default function SpiritualDashboard() {
                </div>
             </div>
           </motion.section>
-        )}
-      </div>
+          )}
+        </div>
+      </PullToRefresh>
     </div>
   );
 }
