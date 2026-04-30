@@ -744,27 +744,33 @@ VALUES ('stories', 'stories', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- Policy pour community-media
+DROP POLICY IF EXISTS "Authenticated users can upload to community-media" ON storage.objects;
 CREATE POLICY "Authenticated users can upload to community-media"
 ON storage.objects FOR INSERT
 WITH CHECK (bucket_id = 'community-media' AND auth.role() = 'authenticated');
 
+DROP POLICY IF EXISTS "Anyone can view community-media" ON storage.objects;
 CREATE POLICY "Anyone can view community-media"
 ON storage.objects FOR SELECT
 USING (bucket_id = 'community-media');
 
+DROP POLICY IF EXISTS "Authenticated users can delete from community-media" ON storage.objects;
 CREATE POLICY "Authenticated users can delete from community-media"
 ON storage.objects FOR DELETE
 USING (bucket_id = 'community-media' AND auth.uid()::text = owner::text);
 
 -- Policy pour stories
+DROP POLICY IF EXISTS "Authenticated users can upload stories" ON storage.objects;
 CREATE POLICY "Authenticated users can upload stories"
 ON storage.objects FOR INSERT
 WITH CHECK (bucket_id = 'stories' AND auth.role() = 'authenticated');
 
+DROP POLICY IF EXISTS "Anyone can view stories" ON storage.objects;
 CREATE POLICY "Anyone can view stories"
 ON storage.objects FOR SELECT
 USING (bucket_id = 'stories');
 
+DROP POLICY IF EXISTS "Authenticated users can delete stories" ON storage.objects;
 CREATE POLICY "Authenticated users can delete stories"
 ON storage.objects FOR DELETE
 USING (bucket_id = 'stories' AND auth.uid()::text = owner::text);
