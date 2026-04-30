@@ -718,7 +718,7 @@ const VerseItem = memo(({
         {verse.number}
       </span>
       <span
-        className={`text-[1em] leading-[1.65] transition-colors duration-500 ${isAudioActive ? 'font-semibold text-accent' : ''} ${highlightColor ? `bg-${highlightColor}-500/10 rounded-md px-1` : ''}`}
+        className={`text-[1em] leading-[1.65] transition-colors duration-500 ${isAudioActive ? 'font-semibold text-accent' : ''} ${highlightColor ? `highlight-${highlightColor} rounded-md px-1` : ''}`}
         style={{ color: isAudioActive ? undefined : 'var(--bible-paper-text, rgba(0,0,0,0.85))' }}
       >
         {isPrismaMeditation ? (
