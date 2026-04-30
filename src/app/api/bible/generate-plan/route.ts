@@ -210,7 +210,7 @@ export async function POST(request: Request) {
       try { return NextResponse.json(await callGemini(prompt, geminiKey)); } catch { /* fallthrough */ }
     }
 
-    return NextResponse.json({ error: 'Service IA indisponible pour le moment.' }, { status: 503 });
+    return NextResponse.json({ error: 'Vision Charis est momentanément indisponible.' }, { status: 503 });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     logger.error('[generate-plan] error:', message);

@@ -59,7 +59,7 @@ export default function PersonalizedPlanModal({ onClose, onPlanReady }: Props) {
       }
       setGenerated(data as ReadingPlan);
     } catch {
-      setError('Impossible de contacter le service IA. Réessaie.');
+      setError('Vision Charis est momentanément indisponible. Réessaie.');
     } finally {
       setLoading(false);
     }
@@ -86,7 +86,7 @@ export default function PersonalizedPlanModal({ onClose, onPlanReady }: Props) {
             </div>
             <div>
               <div className="text-sm font-black text-white">Plan Personnalisé</div>
-              <div className="text-[9px] font-bold text-violet-400 uppercase tracking-widest">Généré par l'IA</div>
+              <div className="text-[9px] font-bold text-violet-400 uppercase tracking-widest">Vision Charis</div>
             </div>
           </div>
           <button onClick={onClose} className="h-8 w-8 flex items-center justify-center rounded-full bg-white/10 text-white/60 hover:text-white">
@@ -110,7 +110,7 @@ export default function PersonalizedPlanModal({ onClose, onPlanReady }: Props) {
                     {chaptersPerDay} ch/jour
                   </span>
                   <span className="rounded-xl bg-violet-500/20 border border-violet-400/20 px-3 py-1 text-[10px] font-bold text-violet-300">
-                    IA générée
+                    Vision Charis
                   </span>
                 </div>
               </div>

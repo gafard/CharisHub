@@ -288,7 +288,7 @@ export default function ReadingPlansIndexClient() {
               className="rounded-full px-5 py-2.5 text-[10px] font-bold uppercase tracking-[0.18em] transition-all bg-violet-500/15 text-violet-500 border border-violet-500/20 hover:bg-violet-500/25 flex items-center gap-1.5"
             >
               <Sparkles size={11} />
-              Plan IA
+              Plan Vision
             </button>
 
             {PLAN_GROUPS.map((group) => {
