@@ -366,8 +366,7 @@ export default function SpiritualDashboard() {
   }
 
   return (
-    <div className="relative space-y-8 pb-10 bg-noise min-h-screen">
-      <div className="noise-overlay fixed inset-0 z-0 opacity-[0.05] pointer-events-none" />
+    <div className="relative space-y-8 pb-10 min-h-screen">
       
       {/* Background Orbs */}
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
