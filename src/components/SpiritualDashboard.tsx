@@ -29,6 +29,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { performInitialSync } from '@/lib/cloudSync';
 import { WordsPullUp, WordsPullUpMultiStyle } from './ui/PrismaAnimations';
 import PullToRefresh from 'react-simple-pull-to-refresh';
+import dynamic from 'next/dynamic';
+
+const YearHeatmap = dynamic(() => import('./YearHeatmap'), { ssr: false });
 
 // ============================================================
 // Types & Data
@@ -432,8 +435,9 @@ export default function SpiritualDashboard() {
         </section>
 
         {/* Heatmap Section */}
-        <section>
+        <section className="space-y-4">
           <WeekHeatmap days={weekDays} />
+          <YearHeatmap />
         </section>
 
         {/* Pepites Section */}

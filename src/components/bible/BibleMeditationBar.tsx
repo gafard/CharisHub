@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   BookText,
+  BookOpen,
   Copy,
   Highlighter,
   Link2,
@@ -76,6 +77,7 @@ export default function BibleMeditationBar({
   onCompare,
   onCopy,
   onMirror,
+  onLectio,
   strongTokens,
   strongLoading,
   onStrongToken,
@@ -94,6 +96,7 @@ export default function BibleMeditationBar({
   onCompare: () => void;
   onCopy: () => void;
   onMirror: () => void;
+  onLectio?: () => void;
   strongTokens: StudyStrongToken[];
   strongLoading?: boolean;
   onStrongToken?: (strong: string) => void;
@@ -227,6 +230,47 @@ export default function BibleMeditationBar({
                   </div>
                 </button>
               </div>
+
+              {/* Lectio Divina */}
+              {onLectio && (
+                <div
+                  className="
+                    mb-4 overflow-hidden rounded-[24px]
+                    border border-emerald-300/12
+                    bg-[linear-gradient(135deg,rgba(16,185,129,0.12),rgba(255,255,255,0.03)_48%,rgba(255,255,255,0.02))]
+                  "
+                >
+                  <button
+                    type="button"
+                    onClick={onLectio}
+                    className="flex w-full items-center justify-between gap-4 px-4 py-4 text-left transition hover:bg-white/[0.03] sm:px-5"
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div
+                        className="
+                          grid h-12 w-12 shrink-0 place-items-center rounded-2xl
+                          bg-[linear-gradient(135deg,#10b981,#059669)]
+                          text-white
+                          shadow-[0_10px_30px_rgba(16,185,129,0.28)]
+                        "
+                      >
+                        <BookOpen size={18} />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-sm font-black tracking-tight text-white sm:text-base">
+                          Lectio Divina
+                        </div>
+                        <div className="mt-0.5 text-xs leading-5 text-emerald-100/68 sm:text-sm">
+                          Lectio · Meditatio · Oratio · Contemplatio
+                        </div>
+                      </div>
+                    </div>
+                    <div className="hidden shrink-0 rounded-full border border-emerald-300/18 bg-white/8 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-emerald-100/90 sm:block">
+                      entrer
+                    </div>
+                  </button>
+                </div>
+              )}
 
               {/* actions */}
               <div>

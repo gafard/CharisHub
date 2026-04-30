@@ -47,6 +47,7 @@ const BibleStudyRadar = dynamic(() => import('./bible/BibleStudyRadar'), { ssr: 
 const MyHighlightsModal = dynamic(() => import('./bible/MyHighlightsModal'), { ssr: false });
 const GraceMirrorModal = dynamic(() => import('./bible/GraceMirrorModal'), { ssr: false });
 const BibleReaderSkeleton = dynamic(() => import('./bible/BibleReaderSkeleton'), { ssr: false });
+const LectioDivina = dynamic(() => import('./bible/LectioDivina'), { ssr: false });
 
 // Import des services Strong
 import strongService, { type StrongEntry } from '../services/strong-service';
@@ -1031,6 +1032,8 @@ export default function BibleReader({
   const [activeVerseReference, setActiveVerseReference] = useState<string | null>(null);
   const [activeVerseText, setActiveVerseText] = useState<string | null>(null);
   const [mirrorAnalysis, setMirrorAnalysis] = useState<string>('');
+  const [showLectioDivina, setShowLectioDivina] = useState(false);
+  const [lectioVerse, setLectioVerse] = useState<{ ref: string; text: string } | null>(null);
   const [mirrorLoading, setMirrorLoading] = useState(false);
   const [mirrorError, setMirrorError] = useState<string | null>(null);
   const [mirrorModalOpen, setMirrorModalOpen] = useState(false);
@@ -3166,6 +3169,12 @@ export default function BibleReader({
           setShowStrongViewer(true);
           setStudyBarOpen(false);
         }}
+        onLectio={() => {
+          if (!selectedVerse) return;
+          setLectioVerse({ ref: `${book.name} ${chapter}:${selectedVerse.number}`, text: selectedVerse.text });
+          setShowLectioDivina(true);
+          setStudyBarOpen(false);
+        }}
         onMirror={() => {
           if (!selectedVerse) return;
           const ref = `${book.name} ${chapter}:${selectedVerse.number}`;
@@ -3497,6 +3506,14 @@ export default function BibleReader({
         error={mirrorError}
         reference={activeVerseReference || ''}
       />
+
+      {showLectioDivina && lectioVerse && (
+        <LectioDivina
+          reference={lectioVerse.ref}
+          verseText={lectioVerse.text}
+          onClose={() => { setShowLectioDivina(false); setLectioVerse(null); }}
+        />
+      )}
     </section>
   );
 }
