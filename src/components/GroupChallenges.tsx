@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Trophy, 
@@ -48,11 +48,7 @@ export default function GroupChallenges({ groupId, isAdmin, actor }: GroupChalle
   const [endDate, setEndDate] = useState('');
   const [creating, setCreating] = useState(false);
 
-  useEffect(() => {
-    loadChallenges();
-  }, [groupId]);
-
-  async function loadChallenges() {
+  const loadChallenges = useCallback(async () => {
     setLoading(true);
     try {
       const data = await fetchChallenges(groupId, actor);
@@ -62,7 +58,11 @@ export default function GroupChallenges({ groupId, isAdmin, actor }: GroupChalle
     } finally {
       setLoading(false);
     }
-  }
+  }, [groupId, actor]);
+
+  useEffect(() => {
+    void loadChallenges();
+  }, [loadChallenges]);
 
   async function handleCreate() {
     if (!title.trim()) return;
@@ -79,7 +79,7 @@ export default function GroupChallenges({ groupId, isAdmin, actor }: GroupChalle
       setShowCreateModal(false);
       setTitle('');
       setDescription('');
-      loadChallenges();
+      void loadChallenges();
     } catch (err) {
       logger.error('Failed to create challenge', err);
     } finally {
@@ -90,7 +90,7 @@ export default function GroupChallenges({ groupId, isAdmin, actor }: GroupChalle
   async function handleJoin(challengeId: string) {
     try {
       await joinChallenge(challengeId, actor);
-      loadChallenges();
+      void loadChallenges();
     } catch (err) {
       logger.error('Failed to join challenge', err);
     }

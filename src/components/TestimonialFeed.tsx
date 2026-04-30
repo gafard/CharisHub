@@ -743,7 +743,11 @@ export default function TestimonialFeed({ groupId }: Props) {
     if (!res.ok) throw new Error(data.error || "Impossible d'envoyer le témoignage.");
 
     setShowRecorder(false);
-    await loadTestimonials();
+    if (data.testimonial) {
+      setTestimonials(prev => [data.testimonial as Testimonial, ...prev]);
+    } else {
+      await loadTestimonials();
+    }
   };
 
   const handleReact = async (id: string, reaction: ReactionType) => {

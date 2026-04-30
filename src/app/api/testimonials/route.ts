@@ -39,7 +39,7 @@ export async function GET(req: Request) {
       .limit(limit);
 
     if (error) {
-      if (isMissingTable(error)) return NextResponse.json({ testimonials: [], tableReady: false });
+      if (isMissingTableError(error, TABLE)) return NextResponse.json({ testimonials: [], tableReady: false });
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
@@ -108,7 +108,7 @@ export async function POST(req: Request) {
       .limit(1);
     const { data: memberships, error: memberError } = await memberQuery;
 
-    if (memberError && !isMissingTable(memberError)) {
+    if (memberError && !isMissingTableError(memberError, 'charishub_group_members')) {
       return NextResponse.json({ error: memberError.message }, { status: 500 });
     }
     const isMember = (memberships ?? []).some((member) => member.status !== 'pending' && member.status !== 'rejected');
@@ -135,7 +135,7 @@ export async function POST(req: Request) {
       .single();
 
     if (error) {
-      if (isMissingTable(error)) {
+      if (isMissingTableError(error, TABLE)) {
         return NextResponse.json({ error: 'Table non initialisée. Contacte un administrateur.' }, { status: 503 });
       }
       return NextResponse.json({ error: error.message }, { status: 500 });

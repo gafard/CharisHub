@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { BIBLE_BOOKS } from './bibleCatalog';
+import logger from './logger';
 import fs from 'fs';
 import path from 'path';
 
@@ -71,54 +72,41 @@ export async function getOrGenerateChapterAudio(
     }
   } catch (err) {
     // Cache miss is normal, but other errors should be logged
-    console.error('Supabase storage check error:', err);
+    logger.error('[ElevenLabs] Vérification cache Supabase:', err);
   }
 
   if (!ELEVENLABS_API_KEY) {
-    console.error('Missing ELEVENLABS_API_KEY');
+    logger.error('[ElevenLabs] ELEVENLABS_API_KEY manquante');
     return null;
   }
 
-  // 2. Load Text from local filesystem (much faster and more secure than fetch)
   let chapterText = '';
   try {
     const biblePath = path.join(process.cwd(), 'public', 'bibles', safeTranslation.toUpperCase(), 'bible.json');
     let bibleContent = '';
-    
-    if (fs.existsSync(biblePath)) {
+    try {
       bibleContent = fs.readFileSync(biblePath, 'utf8');
-    } else {
-      // Fallback lowercase path
+    } catch {
       const biblePathLow = path.join(process.cwd(), 'public', 'bibles', safeTranslation, 'bible.json');
-      if (fs.existsSync(biblePathLow)) {
-        bibleContent = fs.readFileSync(biblePathLow, 'utf8');
-      }
+      bibleContent = fs.readFileSync(biblePathLow, 'utf8');
     }
-
-    if (!bibleContent) {
-      console.error(`Bible file not found: ${safeTranslation}`);
-      return null;
-    }
-
     const bibleJson = JSON.parse(bibleContent);
     chapterText = extractChapterText(bibleJson, book, chapter);
   } catch (err) {
-    console.error('Failed to read bible JSON from disk', err);
+    logger.error('[ElevenLabs] Lecture bible échouée:', err);
     return null;
   }
 
   if (!chapterText) return null;
 
-  // 3. Call ElevenLabs with Smart Chunking
   try {
     const CHUNK_SIZE = 4800;
     const textSegments = splitAtNaturalPauses(chapterText, CHUNK_SIZE);
+    logger.log(`[ElevenLabs] Génération audio ${translation} ${book} ${chapter} — ${textSegments.length} segments séquentiels`);
 
-    console.log(`Generating audio for ${translation} ${book} ${chapter} in ${textSegments.length} segments (Parallel)...`);
-    
-    const segmentPromises = textSegments.map(async (segment, i) => {
-      console.log(`Calling ElevenLabs for segment ${i + 1}/${textSegments.length}...`);
-      
+    // Séquentiel pour respecter les limites de concurrence ElevenLabs
+    const audioBuffers: Buffer[] = [];
+    for (let i = 0; i < textSegments.length; i++) {
       const elRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${ELEVENLABS_VOICE_ID}`, {
         method: 'POST',
         headers: {
@@ -127,53 +115,36 @@ export async function getOrGenerateChapterAudio(
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          text: segment,
+          text: textSegments[i],
           model_id: 'eleven_multilingual_v2',
-          voice_settings: {
-            stability: 0.5,
-            similarity_boost: 0.75,
-          }
+          voice_settings: { stability: 0.5, similarity_boost: 0.75 },
         }),
       });
 
       if (!elRes.ok) {
         const errText = await elRes.text();
-        console.error(`ElevenLabs API error (Segment ${i + 1}):`, errText);
-        throw new Error(`ElevenLabs API error: ${errText}`);
+        throw new Error(`ElevenLabs segment ${i + 1}: ${errText}`);
       }
 
-      const segmentBuffer = await elRes.arrayBuffer();
-      console.log(`Segment ${i + 1} generated successfully.`);
-      return Buffer.from(segmentBuffer);
-    });
-
-    const audioBuffers = await Promise.all(segmentPromises);
-
-
-    // Concaténer les segments
-    const finalBuffer = Buffer.concat(audioBuffers);
-    console.log(`Concatenated ${audioBuffers.length} segments. Total size: ${finalBuffer.length} bytes.`);
-
-    // 4. Cache in Supabase
-    const { error: uploadError } = await supabaseAdmin.storage
-      .from(bucketName)
-      .upload(fileName, finalBuffer, {
-        contentType: 'audio/mpeg',
-        upsert: true,
-      });
-
-    if (uploadError) {
-      console.error('Failed to cache audio in Supabase:', uploadError);
-    } else {
-      console.log('Audio cached successfully in Supabase:', fileName);
+      audioBuffers.push(Buffer.from(await elRes.arrayBuffer()));
     }
 
-    return { 
-      buffer: finalBuffer.buffer.slice(finalBuffer.byteOffset, finalBuffer.byteOffset + finalBuffer.byteLength), 
-      contentType: 'audio/mpeg' 
+    const finalBuffer = Buffer.concat(audioBuffers);
+
+    const { error: uploadError } = await supabaseAdmin.storage
+      .from(bucketName)
+      .upload(fileName, finalBuffer, { contentType: 'audio/mpeg', upsert: true });
+
+    if (uploadError) {
+      logger.error('[ElevenLabs] Cache Supabase échoué:', uploadError);
+    }
+
+    return {
+      buffer: finalBuffer.buffer.slice(finalBuffer.byteOffset, finalBuffer.byteOffset + finalBuffer.byteLength),
+      contentType: 'audio/mpeg',
     };
   } catch (err) {
-    console.error('Audio generation failed:', err);
+    logger.error('[ElevenLabs] Génération audio échouée:', err);
     return null;
   }
 }

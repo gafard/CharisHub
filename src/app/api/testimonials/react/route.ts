@@ -7,6 +7,7 @@ import { supabaseServer } from '@/lib/supabaseServer';
 import { verifyAuth } from '@/lib/apiAuth';
 import { checkRateLimit } from '@/lib/rateLimit';
 import logger from '@/lib/logger';
+import { isMissingTableError } from '@/lib/community/utils';
 
 export const runtime = 'nodejs';
 
@@ -26,23 +27,13 @@ interface PostBody {
   deviceId?: string;
 }
 
-function isMissingTable(err: { code?: string | null; message?: string | null } | null): boolean {
-  const code = String(err?.code || '').toUpperCase();
-  const msg = String(err?.message || '').toLowerCase();
-  return code === '42P01' || code === 'PGRST205' || msg.includes('does not exist');
-}
-
 function isDuplicate(err: { code?: string | null; message?: string | null } | null): boolean {
   const code = String(err?.code || '').toUpperCase();
-  const msg = String(err?.message || '').toLowerCase();
-  return code === '23505' || msg.includes('duplicate key');
+  return code === '23505' || String(err?.message ?? '').toLowerCase().includes('duplicate key');
 }
 
 function cleanDeviceId(value: unknown) {
-  return String(value ?? '')
-    .trim()
-    .replace(/[^a-zA-Z0-9_-]/g, '')
-    .slice(0, 96);
+  return String(value ?? '').trim().replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 96);
 }
 
 // ─── POST /api/testimonials/react ─────────────────────────────────────────────
@@ -79,7 +70,7 @@ export async function POST(req: Request) {
       });
 
     if (insertErr && !isDuplicate(insertErr)) {
-      if (isMissingTable(insertErr)) {
+      if (isMissingTableError(insertErr, REACTIONS_TABLE)) {
         return NextResponse.json({ error: 'Table de réactions non initialisée.' }, { status: 503 });
       }
       return NextResponse.json({ error: insertErr.message }, { status: 500 });

@@ -1,5 +1,6 @@
 import { openDB, IDBPDatabase } from 'idb';
 import { VerseRow } from './parsers/types';
+import logger from '../logger';
 
 const DB_NAME = 'charishub-bible-cache';
 const STORE_NAME = 'chapters';
@@ -36,7 +37,7 @@ export async function getCachedChapter(
       return cached.verses;
     }
   } catch (err) {
-    console.warn('[Cache] Error reading from IndexedDB:', err);
+    logger.warn('[Cache] Error reading from IndexedDB:', err);
   }
   return null;
 }
@@ -58,6 +59,6 @@ export async function cacheChapter(
       timestamp: Date.now(),
     });
   } catch (err) {
-    console.warn('[Cache] Error writing to IndexedDB:', err);
+    logger.warn('[Cache] Error writing to IndexedDB:', err);
   }
 }
