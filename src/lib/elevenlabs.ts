@@ -110,8 +110,9 @@ export async function getOrGenerateChapterAudio(
   if (!chapterText) return null;
 
   // 3. Call ElevenLabs with Smart Chunking
-  const CHUNK_SIZE = 4800;
-  const textSegments = splitAtNaturalPauses(chapterText, CHUNK_SIZE);
+  try {
+    const CHUNK_SIZE = 4800;
+    const textSegments = splitAtNaturalPauses(chapterText, CHUNK_SIZE);
 
     console.log(`Generating audio for ${translation} ${book} ${chapter} in ${textSegments.length} segments (Parallel)...`);
     
