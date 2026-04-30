@@ -21,6 +21,7 @@ import {
   type PlanReading,
 } from '../../lib/readingPlans';
 import ReflectionQuestions from './ReflectionQuestions';
+import AILoader from './AILoader';
 import GuidedPrayerFlow from './GuidedPrayerFlow';
 import {
   buildPrayerSteps,
@@ -571,31 +572,28 @@ export default function ReflectionSheet({
                         {finalChapter ? 'Plus tard' : 'Fermer'}
                       </button>
 
-                      <button
-                        type="button"
-                        disabled={loadingPrayer}
-                        onClick={
-                          finalChapter
-                            ? handleStartPrayer
-                            : () => {
-                                onComplete();
-                                onClose();
-                              }
-                        }
-                        className="inline-flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-full bg-[#fff7ef] px-4 text-[12px] font-semibold uppercase tracking-[0.18em] text-[#160d0a] shadow-[0_16px_40px_rgba(0,0,0,0.22)] transition-all hover:scale-[1.01] active:scale-[0.985] disabled:pointer-events-none disabled:opacity-60"
-                      >
-                        {loadingPrayer ? (
-                          <>
-                            <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#160d0a]/30 border-t-[#160d0a]" />
-                            Éclairage en cours...
-                          </>
-                        ) : (
-                          <>
-                            {finalChapter ? 'Ouvrir la prière' : 'Continuer la lecture'}
-                            <ArrowRight size={16} strokeWidth={2.4} />
-                          </>
-                        )}
-                      </button>
+                      {loadingPrayer ? (
+                        <div className="flex-1 flex items-center justify-center">
+                          <AILoader />
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={loadingPrayer}
+                          onClick={
+                            finalChapter
+                              ? handleStartPrayer
+                              : () => {
+                                  onComplete();
+                                  onClose();
+                                }
+                          }
+                          className="inline-flex min-h-[56px] flex-1 items-center justify-center gap-3 rounded-full bg-[#fff7ef] px-6 text-[13px] font-bold uppercase tracking-[0.2em] text-[#160d0a] shadow-[0_20px_50px_rgba(0,0,0,0.3)] transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                        >
+                          {finalChapter ? 'Ouvrir la prière' : 'Continuer la lecture'}
+                          <ArrowRight size={18} strokeWidth={2.5} />
+                        </button>
+                      )}
                     </div>
 
                     {finalChapter && alreadyCompleted ? (

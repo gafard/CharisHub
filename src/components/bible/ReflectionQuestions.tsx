@@ -414,7 +414,12 @@ export default function ReflectionQuestions({
               <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-[rgba(255,255,255,0.05)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.22em] text-[rgba(255,240,222,0.72)]">
                 <ScrollText size={13} className="text-amber-400" />
                 {finalChapter ? 'Réflexion finale du jour' : 'Réflexion du chapitre'}
-                {aiLoading ? <Loader2 size={12} className="ml-1 animate-spin" /> : null}
+                {aiLoading ? (
+                  <span className="ml-2 flex items-center gap-1 text-amber-400">
+                    <Loader2 size={12} className="animate-spin" />
+                    <span className="text-[9px] animate-pulse">Éclairage par l'Esprit...</span>
+                  </span>
+                ) : null}
               </div>
 
               <h3 className="mt-3 font-display text-[24px] font-bold leading-[0.98] text-[#fff7ec] sm:text-[30px]">

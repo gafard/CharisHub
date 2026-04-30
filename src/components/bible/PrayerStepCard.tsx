@@ -5,6 +5,7 @@ import { Check, Pause, Play, SkipForward, Volume2, VolumeX } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react';
 import type { PrayerFlowStep } from '../../lib/prayerFlowStore';
 import PrayerAmbientPicker from './PrayerAmbientPicker';
+import TypewriterText from './TypewriterText';
 
 type AmbientSound = {
   id: string;
@@ -80,9 +81,10 @@ export default function PrayerStepCard({
         <div className="relative z-10 space-y-6">
           <div className="space-y-4">
             <div className="h-0.5 w-12 rounded-full opacity-30" style={{ backgroundColor: theme.accent }} />
-            <p className="whitespace-pre-line text-2xl font-black leading-relaxed tracking-tight text-white sm:text-3xl">
-              {step.prompt}
-            </p>
+            <TypewriterText
+              text={step.prompt}
+              className="whitespace-pre-line text-2xl font-black leading-relaxed tracking-tight text-white sm:text-3xl"
+            />
           </div>
         </div>
       </div>
