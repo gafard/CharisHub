@@ -22,10 +22,18 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
-	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen</string>
+		<key>LSRequiresIPhoneOS</key>
+		<true/>
+		<key>NSCameraUsageDescription</key>
+		<string>CharisHub utilise la caméra pour enregistrer des témoignages vidéo et participer aux appels.</string>
+		<key>NSMicrophoneUsageDescription</key>
+		<string>CharisHub utilise le micro pour enregistrer des témoignages audio, vidéo et participer aux appels.</string>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>CharisHub peut accéder à votre bibliothèque si vous choisissez de partager un média.</string>
+		<key>NSPhotoLibraryAddUsageDescription</key>
+		<string>CharisHub peut enregistrer des cartes ou médias si vous le demandez.</string>
+		<key>UILaunchStoryboardName</key>
+		<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
 	<key>UIRequiredDeviceCapabilities</key>

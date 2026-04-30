@@ -179,6 +179,154 @@ CREATE POLICY "Authenticated users can create stories" ON community_stories
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- ============================================================
+-- 5b. charishub_testimonials
+-- ============================================================
+CREATE TABLE IF NOT EXISTS charishub_testimonials (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ,
+  group_id UUID NOT NULL REFERENCES charishub_groups(id) ON DELETE CASCADE,
+  author_name TEXT NOT NULL DEFAULT 'Utilisateur',
+  author_device_id TEXT NOT NULL DEFAULT '',
+  user_id UUID REFERENCES auth.users(id),
+  category TEXT NOT NULL DEFAULT 'grace',
+  content TEXT,
+  media_url TEXT,
+  media_type TEXT,
+  thumbnail_url TEXT,
+  duration_sec INT,
+  visibility TEXT NOT NULL DEFAULT 'group',
+  status TEXT NOT NULL DEFAULT 'published',
+  amens_count INT NOT NULL DEFAULT 0,
+  gloires_count INT NOT NULL DEFAULT 0,
+  prayers_count INT NOT NULL DEFAULT 0,
+  CONSTRAINT testimonial_category_check CHECK (
+    category IN ('guerison', 'provision', 'delivrance', 'transformation', 'grace', 'famille', 'priere')
+  ),
+  CONSTRAINT testimonial_media_type_check CHECK (
+    media_type IS NULL OR media_type IN ('audio', 'video')
+  ),
+  CONSTRAINT testimonial_visibility_check CHECK (
+    visibility IN ('group', 'public', 'private')
+  ),
+  CONSTRAINT testimonial_status_check CHECK (
+    status IN ('published', 'reported', 'hidden')
+  ),
+  CONSTRAINT testimonial_content_or_media_check CHECK (
+    NULLIF(BTRIM(COALESCE(content, '')), '') IS NOT NULL OR media_url IS NOT NULL
+  )
+);
+
+ALTER TABLE charishub_testimonials ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ;
+ALTER TABLE charishub_testimonials ADD COLUMN IF NOT EXISTS thumbnail_url TEXT;
+ALTER TABLE charishub_testimonials ADD COLUMN IF NOT EXISTS visibility TEXT NOT NULL DEFAULT 'group';
+ALTER TABLE charishub_testimonials ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'published';
+
+ALTER TABLE charishub_testimonials DROP CONSTRAINT IF EXISTS charishub_testimonials_category_check;
+ALTER TABLE charishub_testimonials DROP CONSTRAINT IF EXISTS testimonial_category_check;
+ALTER TABLE charishub_testimonials ADD CONSTRAINT testimonial_category_check CHECK (
+  category IN ('guerison', 'provision', 'delivrance', 'transformation', 'grace', 'famille', 'priere')
+);
+
+ALTER TABLE charishub_testimonials DROP CONSTRAINT IF EXISTS charishub_testimonials_media_type_check;
+ALTER TABLE charishub_testimonials DROP CONSTRAINT IF EXISTS testimonial_media_type_check;
+ALTER TABLE charishub_testimonials ADD CONSTRAINT testimonial_media_type_check CHECK (
+  media_type IS NULL OR media_type IN ('audio', 'video')
+);
+
+ALTER TABLE charishub_testimonials DROP CONSTRAINT IF EXISTS testimonial_visibility_check;
+ALTER TABLE charishub_testimonials ADD CONSTRAINT testimonial_visibility_check CHECK (
+  visibility IN ('group', 'public', 'private')
+);
+
+ALTER TABLE charishub_testimonials DROP CONSTRAINT IF EXISTS testimonial_status_check;
+ALTER TABLE charishub_testimonials ADD CONSTRAINT testimonial_status_check CHECK (
+  status IN ('published', 'reported', 'hidden')
+);
+
+CREATE INDEX IF NOT EXISTS idx_testimonials_group_id ON charishub_testimonials(group_id);
+CREATE INDEX IF NOT EXISTS idx_testimonials_created_at ON charishub_testimonials(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_testimonials_status ON charishub_testimonials(status);
+CREATE INDEX IF NOT EXISTS idx_testimonials_visibility ON charishub_testimonials(visibility);
+
+ALTER TABLE charishub_testimonials ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Testimonials are readable" ON charishub_testimonials;
+CREATE POLICY "Testimonials are readable" ON charishub_testimonials
+  FOR SELECT USING (status = 'published');
+
+DROP POLICY IF EXISTS "Anyone can create testimonials" ON charishub_testimonials;
+CREATE POLICY "Anyone can create testimonials" ON charishub_testimonials
+  FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Authors can update their own testimonials" ON charishub_testimonials;
+CREATE POLICY "Authors can update their own testimonials" ON charishub_testimonials
+  FOR UPDATE USING (auth.uid() = user_id);
+
+-- ============================================================
+-- 5c. charishub_testimonial_reactions
+-- ============================================================
+CREATE TABLE IF NOT EXISTS charishub_testimonial_reactions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  testimonial_id UUID NOT NULL REFERENCES charishub_testimonials(id) ON DELETE CASCADE,
+  reaction TEXT NOT NULL CHECK (reaction IN ('amens', 'gloires', 'prayers')),
+  user_id UUID REFERENCES auth.users(id),
+  device_id TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT testimonial_reaction_actor_check CHECK (
+    user_id IS NOT NULL OR NULLIF(BTRIM(COALESCE(device_id, '')), '') IS NOT NULL
+  )
+);
+
+CREATE INDEX IF NOT EXISTS idx_testimonial_reactions_testimonial_id
+  ON charishub_testimonial_reactions(testimonial_id);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_testimonial_reactions_unique_user
+  ON charishub_testimonial_reactions(testimonial_id, reaction, user_id)
+  WHERE user_id IS NOT NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_testimonial_reactions_unique_device
+  ON charishub_testimonial_reactions(testimonial_id, reaction, device_id)
+  WHERE user_id IS NULL AND device_id IS NOT NULL;
+
+ALTER TABLE charishub_testimonial_reactions ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Testimonial reactions are readable" ON charishub_testimonial_reactions;
+CREATE POLICY "Testimonial reactions are readable" ON charishub_testimonial_reactions
+  FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Anyone can react to testimonials" ON charishub_testimonial_reactions;
+CREATE POLICY "Anyone can react to testimonials" ON charishub_testimonial_reactions
+  FOR INSERT WITH CHECK (true);
+
+CREATE OR REPLACE FUNCTION increment_testimonial_reaction_count()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.reaction = 'amens' THEN
+    UPDATE charishub_testimonials
+    SET amens_count = amens_count + 1
+    WHERE id = NEW.testimonial_id;
+  ELSIF NEW.reaction = 'gloires' THEN
+    UPDATE charishub_testimonials
+    SET gloires_count = gloires_count + 1
+    WHERE id = NEW.testimonial_id;
+  ELSIF NEW.reaction = 'prayers' THEN
+    UPDATE charishub_testimonials
+    SET prayers_count = prayers_count + 1
+    WHERE id = NEW.testimonial_id;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trg_increment_testimonial_reaction ON charishub_testimonial_reactions;
+CREATE TRIGGER trg_increment_testimonial_reaction
+AFTER INSERT ON charishub_testimonial_reactions
+FOR EACH ROW
+EXECUTE FUNCTION increment_testimonial_reaction_count();
+
+-- ============================================================
 -- 6. moderation_reports
 -- ============================================================
 CREATE TABLE IF NOT EXISTS moderation_reports (
@@ -521,6 +669,7 @@ BEGIN
   UPDATE charishub_posts SET user_id = v_user_id WHERE author_device_id = p_device_id AND user_id IS NULL;
   UPDATE charishub_comments SET user_id = v_user_id WHERE author_device_id = p_device_id AND user_id IS NULL;
   UPDATE community_stories SET user_id = v_user_id WHERE author_device_id = p_device_id AND user_id IS NULL;
+  UPDATE charishub_testimonials SET user_id = v_user_id WHERE author_device_id = p_device_id AND user_id IS NULL;
   UPDATE push_subscriptions SET user_id = v_user_id WHERE device_id = p_device_id AND user_id IS NULL;
 
   UPDATE user_sync_metadata SET user_id = v_user_id WHERE device_id = p_device_id AND user_id IS NULL;
