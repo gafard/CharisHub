@@ -3,6 +3,7 @@ import { supabaseServer } from '@/lib/supabaseServer';
 import { verifyAuth } from '@/lib/apiAuth';
 import { checkRateLimit } from '@/lib/rateLimit';
 import logger from '@/lib/logger';
+import { isMissingTableError } from '@/lib/community/utils';
 
 export const runtime = 'nodejs';
 
@@ -12,12 +13,6 @@ const VALID_MEDIA_TYPES = new Set(['audio', 'video']);
 const MAX_CONTENT_LENGTH = 1200;
 const MAX_AUDIO_SECONDS = 180;
 const MAX_VIDEO_SECONDS = 90;
-
-function isMissingTable(err: { code?: string | null; message?: string | null } | null): boolean {
-  const code = String(err?.code || '').toUpperCase();
-  const msg = String(err?.message || '').toLowerCase();
-  return code === '42P01' || code === 'PGRST205' || msg.includes('does not exist');
-}
 
 function cleanString(value: unknown, maxLength: number) {
   return String(value ?? '').trim().slice(0, maxLength);
