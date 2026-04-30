@@ -701,7 +701,7 @@ const VerseItem = memo(({
   const interaction = useLongPress<HTMLButtonElement>(
     () => onLongPress(verse),
     () => onTap(verse),
-    { delay: 520, moveThreshold: 10 }
+    { delay: 650, moveThreshold: 15 }
   );
 
   return (

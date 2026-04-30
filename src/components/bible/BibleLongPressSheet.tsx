@@ -111,7 +111,25 @@ export default function BibleLongPressSheet({
   onAction,
   onHighlight,
 }: BibleLongPressSheetProps) {
+  const [isReady, setIsReady] = React.useState(false);
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => setIsReady(true), 400);
+    return () => clearTimeout(timer);
+  }, []);
+
   if (!target) return null;
+
+  const handleAction = (action: LongPressAction) => {
+    if (!isReady) return;
+    onAction(action);
+  };
+
+  const handleHighlight = (color: 'yellow' | 'green' | 'pink' | 'blue' | 'orange' | 'purple') => {
+    if (!isReady) return;
+    onHighlight(color);
+    onClose();
+  };
 
   return (
     <div className="fixed inset-0 z-[14000] flex items-end justify-center bg-black/45 px-4 py-4 backdrop-blur-sm md:items-center md:py-8">
@@ -147,7 +165,7 @@ export default function BibleLongPressSheet({
           <div className="rounded-[24px] border border-accent/20 bg-gradient-to-r from-accent/10 via-accent/5 to-accent/10 p-4 shadow-sm">
             <button
               type="button"
-              onClick={() => onAction('mirror')}
+              onClick={() => handleAction('mirror')}
               className="flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-accent via-accent to-accent/80 px-6 py-4 text-sm font-black uppercase tracking-[0.08em] text-white shadow-[0_12px_30px_rgba(200,159,45,0.28)] transition hover:scale-[1.01] active:scale-[0.98]"
             >
               <Star size={18} />
@@ -169,10 +187,7 @@ export default function BibleLongPressSheet({
                 <button
                   key={item.color}
                   type="button"
-                  onClick={() => {
-                    onHighlight(item.color);
-                    onClose();
-                  }}
+                  onClick={() => handleHighlight(item.color)}
                   className={`group flex items-center gap-2 rounded-full border border-transparent px-3 py-2 transition ${item.className}`}
                   aria-label={`Surligner en ${item.label.toLowerCase()}`}
                   title={item.label}
@@ -194,7 +209,7 @@ export default function BibleLongPressSheet({
                 <button
                   key={item.label}
                   type="button"
-                  onClick={() => onAction(item.action)}
+                  onClick={() => handleAction(item.action)}
                   className="flex items-center gap-3 rounded-2xl border border-border-soft bg-surface px-4 py-3.5 text-left text-sm font-bold text-foreground shadow-sm transition hover:-translate-y-[1px] hover:border-border-strong hover:bg-surface-strong"
                 >
                   <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent/10">
