@@ -41,33 +41,35 @@ function extractJson(raw: string): unknown | null {
 }
 
 function buildMeditatioPrompt(reference: string, verseText: string): string {
-  return `Tu es un compagnon spirituel sur CharisHub. Tu aides un croyant à méditer profondément le texte biblique suivant dans le cadre de la Lectio Divina.
+  return `Tu es un accompagnateur spirituel expert en Lectio Divina. Ta mission est d'aider un croyant à plonger profondément dans la Parole de Dieu.
 
 Passage : **${reference}**
 Texte : « ${verseText} »
 
-Génère exactement 3 questions de méditation personnelle (Meditatio) qui:
-- Invitent à une rencontre personnelle avec Dieu (pas des questions intellectuelles)
-- Aident le croyant à entendre ce que Dieu lui dit PERSONNELLEMENT
-- Sont formulées à la 2ème personne du singulier, avec chaleur pastorale
-- Font référence concrètement au texte
+Génère EXACTEMENT 3 questions de méditation (Meditatio) puissantes et ancrées dans la foi chrétienne. 
+Règles strictes pour les questions :
+1. Elles DOIVENT être directement liées aux mots, aux actions ou au thème central du texte biblique cité.
+2. Elles DOIVENT pousser le croyant à réfléchir à sa relation avec Jésus-Christ, sa foi, ou sa transformation spirituelle (ex: guérison, repentance, grâce).
+3. Elles DOIVENT interpeller le cœur ("Qu'est-ce que le Saint-Esprit te murmure...") plutôt que l'intellect.
+4. Elles doivent être formulées avec bienveillance, à la 2ème personne du singulier ("tu").
+5. Évite absolument les questions génériques (ex: "Comment ce texte résonne en toi ?"). Sois ultra-spécifique au passage !
 
-Réponds UNIQUEMENT avec un JSON :
+Réponds UNIQUEMENT avec un objet JSON valide (pas de Markdown autour si possible) :
 {"questions": ["question 1", "question 2", "question 3"]}`;
 }
 
 function buildOratioPrompt(reference: string, verseText: string): string {
-  return `Tu es un accompagnateur spirituel sur CharisHub. Tu aides un croyant à transformer sa méditation en prière dans le cadre de la Lectio Divina.
+  return `Tu es un accompagnateur spirituel expert en Lectio Divina. Ta mission est d'aider un croyant à répondre à Dieu (Oratio) en prière, en s'appuyant sur la Parole qu'il vient de lire.
 
 Passage : **${reference}**
 Texte : « ${verseText} »
 
-Génère une invitation à la prière (Oratio) comprenant:
-- "invitation": Une phrase d'introduction douce pour entrer en prière (1-2 phrases)
-- "starter": Un début de prière concrète que le croyant peut continuer (2-3 phrases commençant par "Seigneur..." ou "Père...")
+Génère une invitation à la prière (Oratio) comprenant :
+- "invitation": Une courte phrase inspirée du texte pour inviter l'utilisateur à s'adresser à Dieu avec confiance (ex: "Dieu t'a parlé à travers ce passage, réponds-lui maintenant...").
+- "starter": Le début d'une prière personnelle profonde et authentique, viscéralement liée au verset. (1 à 2 phrases commençant par "Père...", "Seigneur Jésus..." ou "Saint-Esprit...").
 
-Style : intime, non-religieux performatif, basé sur la grâce et l'identité en Christ.
-Réponds UNIQUEMENT avec un JSON :
+Règles : Sois profondément spirituel, intime, et focalisé sur la grâce et l'amour de Dieu.
+Réponds UNIQUEMENT avec un objet JSON valide :
 {"invitation": "...", "starter": "..."}`;
 }
 
