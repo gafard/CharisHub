@@ -2088,31 +2088,7 @@ export default function BibleReader({
     });
   }, [book.name, chapter]);
 
-  const handleLongPressAction = (action: string) => {
-    if (!longPressTarget) return;
-    const { verse } = longPressTarget;
 
-    switch (action) {
-      case 'copy':
-        navigator.clipboard.writeText(`${book.name} ${chapter}:${verse.number}\n${verse.text}`);
-        showToast('Copié dans le presse-papier');
-        break;
-      case 'share':
-        setShareVerseTarget({ ref: `${book.name} ${chapter}:${verse.number}`, text: verse.text });
-        break;
-      case 'compare':
-        setShowCompareViewer(true);
-        break;
-      case 'note':
-        setNoteOpenFor(verseKey(translation?.id ?? 'fr', book.id, chapter, verse.number));
-        break;
-      case 'lectio':
-        setLectioVerse({ ref: `${book.name} ${chapter}:${verse.number}`, text: verse.text });
-        setShowLectioDivina(true);
-        break;
-    }
-    setLongPressTarget(null);
-  };
 
   const handleVerseDoubleTap = useCallback((verse: VerseRow) => {
     setRadarOpen(false);
