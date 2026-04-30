@@ -107,7 +107,6 @@ export type CommunityGroup = {
   is_paid?: boolean;
   price?: number;
   pass_code?: string;
-  pass_code?: string;
   session_tasks?: string[];
   challenges_count?: number;
 };
