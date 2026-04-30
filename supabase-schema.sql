@@ -559,9 +559,9 @@ ALTER TABLE charishub_post_likes ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Likes are publicly readable" ON charishub_post_likes;
 CREATE POLICY "Likes are publicly readable" ON charishub_post_likes FOR SELECT USING (true);
 DROP POLICY IF EXISTS "Authenticated users can toggle their own likes" ON charishub_post_likes;
-CREATE POLICY "Authenticated users can toggle their own likes" ON charishub_post_likes FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Authenticated users can toggle their own likes" ON charishub_post_likes FOR INSERT WITH CHECK (auth.uid()::text = user_id::text);
 DROP POLICY IF EXISTS "Authenticated users can delete their own likes" ON charishub_post_likes;
-CREATE POLICY "Authenticated users can delete their own likes" ON charishub_post_likes FOR DELETE USING (auth.uid() = user_id);
+CREATE POLICY "Authenticated users can delete their own likes" ON charishub_post_likes FOR DELETE USING (auth.uid()::text = user_id::text);
 
 -- ============================================================
 -- 14. community_call_summaries
@@ -668,14 +668,14 @@ BEGIN
     v_user_id := auth.uid();
 
     IF v_user_id IS NOT NULL THEN
-        SELECT EXISTS (SELECT 1 FROM charishub_post_likes WHERE post_id = p_post_id AND user_id = v_user_id) INTO v_liked;
+        SELECT EXISTS (SELECT 1 FROM charishub_post_likes WHERE post_id = p_post_id AND user_id::text = v_user_id::text) INTO v_liked;
     ELSE
         SELECT EXISTS (SELECT 1 FROM charishub_post_likes WHERE post_id = p_post_id AND device_id = p_device_id AND user_id IS NULL) INTO v_liked;
     END IF;
 
     IF v_liked THEN
         IF v_user_id IS NOT NULL THEN
-            DELETE FROM charishub_post_likes WHERE post_id = p_post_id AND user_id = v_user_id;
+            DELETE FROM charishub_post_likes WHERE post_id = p_post_id AND user_id::text = v_user_id::text;
         ELSE
             DELETE FROM charishub_post_likes WHERE post_id = p_post_id AND device_id = p_device_id AND user_id IS NULL;
         END IF;
