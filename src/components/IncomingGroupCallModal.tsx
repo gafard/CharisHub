@@ -42,23 +42,21 @@ export default function IncomingGroupCallModal({
   const [busy, setBusy] = useState<'join' | 'dismiss' | null>(null);
   const [elapsed, setElapsed] = useState('');
 
+  const safeCall = useMemo(() => call, [call]);
+
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const timeoutRef = useRef<number | null>(null);
   const vibratedRef = useRef(false);
 
-  const safeCall = useMemo(() => call ?? null, [call]);
-
-  useEffect(() => {
-    if (!open || !safeCall?.startedAt) {
-      setElapsed('');
-      return;
+  const cleanupAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = '';
+      audioRef.current.load();
+      audioRef.current.remove();
+      audioRef.current = null;
     }
-
-    const tick = () => setElapsed(formatElapsed(safeCall.startedAt));
-    tick();
-    const id = window.setInterval(tick, 1000);
-    return () => window.clearInterval(id);
-  }, [open, safeCall?.startedAt]);
+  };
 
   useEffect(() => {
     if (!open || !safeCall) return;
@@ -76,7 +74,7 @@ export default function IncomingGroupCallModal({
           navigator.vibrate([220, 140, 220, 140, 320]);
         }
       } catch {
-        //
+        // Ignored
       }
       vibratedRef.current = true;
     }
@@ -85,34 +83,41 @@ export default function IncomingGroupCallModal({
       const a = new Audio(ringtoneUrl);
       a.loop = true;
       audioRef.current = a;
-      a.play().catch(() => {});
+      
+      const playWithRetry = async () => {
+        try {
+          await a.play();
+        } catch (err) {
+          if (err instanceof Error && err.name === 'NotAllowedError') {
+            const resumeOnClick = () => {
+              a.play().catch(() => {});
+              document.removeEventListener('click', resumeOnClick);
+            };
+            document.addEventListener('click', resumeOnClick, { once: true });
+          }
+        }
+      };
+      void playWithRetry();
     }
 
     return () => {
       if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
-
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-        audioRef.current = null;
-      }
-
+      cleanupAudio();
       vibratedRef.current = false;
     };
   }, [open, safeCall, timeoutMs, ringtoneUrl, enableVibrate]);
 
   async function handleJoin() {
     if (!safeCall || busy) return;
+    if (timeoutRef.current) {
+      window.clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
     setBusy('join');
 
     try {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-        audioRef.current = null;
-      }
-
+      cleanupAudio();
       await onJoin(safeCall);
     } finally {
       setBusy(null);
@@ -121,15 +126,14 @@ export default function IncomingGroupCallModal({
 
   async function handleDismiss() {
     if (!safeCall || busy) return;
+    if (timeoutRef.current) {
+      window.clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
     setBusy('dismiss');
 
     try {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-        audioRef.current = null;
-      }
-
+      cleanupAudio();
       await onDismiss(safeCall);
     } finally {
       setBusy(null);

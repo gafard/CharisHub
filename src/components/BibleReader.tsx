@@ -3,7 +3,7 @@
 import logger from '@/lib/logger';
 import dynamic from 'next/dynamic';
 
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState, memo } from 'react';
 import {
   updateGroup,
   deleteGroup,
@@ -41,6 +41,9 @@ import ReadingPlanWidget from './ReadingPlanWidget';
 import BibleMeditationBar from './bible/BibleMeditationBar';
 import { useActiveVerse } from './bible/useActiveVerse';
 import { useVerseSync } from '../hooks/useVerseSync';
+import { useAudioPlayer } from '../hooks/useAudioPlayer';
+import { getCachedChapter, cacheChapter } from '../lib/bible/cache';
+import { useLongPress } from '../hooks/useLongPress';
 
 // Lazy loading des composants lourds (modales et panneaux secondaires)
 const BibleStrongViewer = dynamic(() => import('./BibleStrongViewer'), { ssr: false });
@@ -663,311 +666,79 @@ function normalizeVerseNumber(raw: unknown, index: number) {
   return numeric === 0 ? 1 : numeric;
 }
 
-function readFromJson(data: any, book: BibleBook, chapter: number) {
-  // Gestion des données provenant des fichiers JSON locaux
-  // Format: { version: "...", language: "...", books: [{ name: "...", abbreviation: "...", chapters: [{ chapter: 1, verses: [...] }] }] }
-  if (data && data.books && Array.isArray(data.books)) {
-    // Trouver le livre par nom ou abréviation
-    const normBookName = normalize(book.name);
-    const normApiName = normalize(book.apiName);
-    const normSlug = normalize(book.slug);
-    const normId = normalize(book.id);
+import { parseBibleJson } from '../lib/bible/parsers';
 
-    let bookData = data.books.find((b: any) => {
-      const name = normalize(b.name ?? b.title ?? '');
-      const abbrev = normalize(b.abbreviation ?? b.abbrev ?? '');
-      return (
-        name === normBookName ||
-        name === normApiName ||
-        name === normSlug ||
-        abbrev === normBookName ||
-        abbrev === normApiName ||
-        abbrev === normSlug ||
-        abbrev === normId
-      );
-    });
+// readFromJson has been refactored into modular parsers in @/lib/bible/parsers
+const readBibleData = parseBibleJson;
 
-    // Partial match: "Actes des Apôtres" startsWith "actes", "Lamentations de Jérémie" startsWith "lamentations"
-    if (!bookData) {
-      bookData = data.books.find((b: any) => {
-        const name = normalize(b.name ?? b.title ?? '');
-        return (
-          name.startsWith(normBookName) ||
-          normBookName.startsWith(name) ||
-          name.startsWith(normApiName)
-        );
-      });
-    }
-
-    // Final fallback: use index from BIBLE_BOOKS catalog
-    if (!bookData) {
-      const bookIndex = BIBLE_BOOKS.findIndex((b) => b.id === book.id);
-      if (bookIndex >= 0 && bookIndex < data.books.length) {
-        bookData = data.books[bookIndex];
-      }
-    }
-
-    if (!bookData) {
-      logger.warn(`Livre ${book.name} non trouvé dans les données JSON`);
-      return [];
-    }
-
-    // Trouver le chapitre spécifique
-    const chapters = bookData.chapters || [];
-    if (!Array.isArray(chapters) || chapters.length === 0) {
-      logger.warn(`Aucun chapitre trouvé pour ${book.name}`);
-      return [];
-    }
-
-    const chapterData = resolveChapterEntry(chapters, chapter);
-
-    if (!chapterData) {
-      logger.warn(`Chapitre ${chapter} non trouvé pour ${book.name}`);
-      return [];
-    }
-
-    // Extraire les versets
-    const verses = chapterData.verses || [];
-
-    if (Array.isArray(verses)) {
-      // Format du fichier JSON: tableau d'objets avec verse et text
-      return verses
-        .map((verse: any, idx: number) => {
-          const number = normalizeVerseNumber(verse.verse, idx);
-          const text = verse.text || verse.content || '';
-
-          if (!text || number === undefined || number === null) return null;
-
-          return { number: Number(number), text: text.trim() };
-        })
-        .filter((verse: any) => verse !== null);
-    }
-  }
-
-  // Alternative: le fichier JSON contient directement les données du livre demandé
-  // Si le format est directement { name: "...", abbreviation: "...", chapters: [...] }
-  if (data && data.chapters && Array.isArray(data.chapters)) {
-    // Trouver le chapitre spécifique dans les données directes
-    const chapters = data.chapters;
-
-    const chapterData = resolveChapterEntry(chapters, chapter);
-
-    if (!chapterData) {
-      logger.warn(`Chapitre ${chapter} non trouvé dans les données JSON`);
-      return [];
-    }
-
-    // Extraire les versets
-    const verses = chapterData.verses || [];
-
-    if (Array.isArray(verses)) {
-      // Format du fichier JSON: tableau d'objets avec verse et text
-      return verses
-        .map((verse: any, idx: number) => {
-          const number = normalizeVerseNumber(verse.verse, idx);
-          const text = verse.text || verse.content || '';
-
-          if (!text || number === undefined || number === null) return null;
-
-          return { number: Number(number), text: text.trim() };
-        })
-        .filter((verse: any) => verse !== null);
-    }
-  }
-
-  // Anciens formats pour compatibilité descendante
-  // Handle the special format used by the downloaded JSON files (from GitHub repo or similar)
-  if (data.Testaments && Array.isArray(data.Testaments)) {
-    // Format: { Testaments: [{ Books: [{ Chapters: [{ Verses: [...] }] }] }] }
-    const books = data.Testaments.flatMap((testament: any) => testament.Books || []);
-
-    // Find the book by name
-    const normCatalogName = normalize(book.name);
-    const normApiName = normalize(book.apiName);
-    const normSlug = normalize(book.slug);
-    let bookData = null;
-
-    // Exact match (with normalize)
-    for (const name of [book.name, book.apiName, book.slug]) {
-      bookData = books.find((b: any) => {
-        const n = normalize(b.Text || b.BookName || b.Name || b.Title || b.Abbreviation || b.Book || b.bookName || b.book || '');
-        return n === normalize(name);
-      });
-      if (bookData) break;
-    }
-
-    // Partial match: handles "Évangile selon Matthieu" containing "matthieu",
-    // "Premier livre de Samuel" containing "samuel", etc.
-    if (!bookData) {
-      bookData = books.find((b: any) => {
-        const n = normalize(b.Text || b.BookName || b.Name || b.Title || '');
-        return (
-          n.includes(normCatalogName) ||
-          normCatalogName.includes(n) ||
-          n.includes(normApiName) ||
-          n.startsWith(normCatalogName) ||
-          n.endsWith(normCatalogName)
-        );
-      });
-    }
-
-    if (!bookData) {
-      // If not found by name, try by index
-      const bookIndex = BIBLE_BOOKS.findIndex((b) => b.id === book.id);
-      bookData = books[bookIndex];
-    }
-
-    if (!bookData) return [];
-
-    const chapters = bookData.Chapters || bookData.Chapter || bookData.chapters || [];
-    const chapterData = chapters[chapter - 1]; // chapters are 0-indexed
-
-    if (!chapterData) return [];
-
-    const verses = chapterData.Verses || chapterData.verses || chapterData.Verse || chapterData.vs || [];
-    return verses.map((verse: any, idx: number) => {
-      const number = verse.ID || verse.Id || verse.id || verse.Number || verse.number || verse.verse || (idx + 1);
-      const text = verse.Text || verse.text || verse.Content || verse.content || verse.Words || verse.words || verse.scripture || verse.versetext || '';
-      return { number, text: text.trim() };
-    }).filter((verse: any) => verse.text);
-  }
-
-  // Handle alternative structure: { books: [{ chapters: [{ verses: [...] }] }] }
-  if (data.books && Array.isArray(data.books)) {
-    const books = data.books;
-
-    // Find the book by name
-    const bookNames = [book.name, book.apiName, book.slug];
-    let bookData = null;
-    for (const name of bookNames) {
-      bookData = books.find((b: any) =>
-        normalize(b.name || b.book || b.title || b.BookName || b.Book || '') === normalize(name)
-      );
-      if (bookData) break;
-    }
-
-    if (!bookData) {
-      // If not found by name, try by index
-      const bookIndex = BIBLE_BOOKS.findIndex((b) => b.id === book.id);
-      bookData = books[bookIndex];
-    }
-
-    if (!bookData) return [];
-
-    const chapters = bookData.chapters || bookData.Chapters || bookData.chapter || [];
-    const chapterData = chapters[chapter - 1] || chapters[String(chapter)];
-
-    if (!chapterData) return [];
-
-    const verses = chapterData.verses || chapterData.Verses || chapterData.verse || chapterData.vs || [];
-    return verses.map((verse: any, idx: number) => {
-      const number = verse.verse || verse.number || verse.id || verse.ID || verse.v || (idx + 1);
-      const text = verse.text || verse.Text || verse.content || verse.Content || verse.versetext || verse.scripture || '';
-      return { number, text: text.trim() };
-    }).filter((verse: any) => verse.text);
-  }
-
-  // Handle structure from GitHub compatible bibles: { books: [{ chapters: [...] }]}
-  if (data.books && Array.isArray(data.books)) {
-    const books = data.books;
-
-    // Find the book by name
-    const bookNames = [book.name, book.apiName, book.slug];
-    let bookData = null;
-    for (const name of bookNames) {
-      bookData = books.find((b: any) =>
-        normalize(b.name || b.book || b.title || b.BookName || b.Book || '') === normalize(name)
-      );
-      if (bookData) break;
-    }
-
-    if (!bookData) {
-      // If not found by name, try by index
-      const bookIndex = BIBLE_BOOKS.findIndex((b) => b.id === book.id);
-      bookData = books[bookIndex];
-    }
-
-    if (!bookData) return [];
-
-    // Look for the chapter in the chapters array
-    const chapters = bookData.chapters || bookData.Chapters || [];
-    const chapterData = chapters.find((ch: any) => ch.chapter === chapter || ch.number === chapter || parseInt(ch.chapter) === chapter);
-
-    if (!chapterData) return [];
-
-    const verses = chapterData.verses || chapterData.verses || chapterData.vs || [];
-    return verses.map((verse: any) => {
-      const number = verse.verse || verse.number || verse.id || verse.v || verse.ID || verse.Numero || verse.numero || verse.Numéro;
-      const text = verse.text || verse.Text || verse.content || verse.Content || verse.versetext || verse.scripture || verse.versetext || '';
-      return { number, text: text.trim() };
-    }).filter((verse: any) => verse.number && verse.text);
-  }
-
-  // Format indexé: { "1": { "1": { "1": "..." } } } (ex: KJF)
-  if (data && typeof data === 'object' && !Array.isArray(data)) {
-    const numericBookKeys = Object.keys(data).filter((key) => /^\d+$/.test(key));
-    if (numericBookKeys.length >= 60) {
-      const bookIndex = BIBLE_BOOKS.findIndex((b) => b.id === book.id) + 1;
-      const bookData = data[String(bookIndex)];
-      if (!bookData || typeof bookData !== 'object') return [];
-      const chapterData = (bookData as Record<string, unknown>)[String(chapter)];
-      if (!chapterData || typeof chapterData !== 'object') return [];
-      return Object.entries(chapterData as Record<string, unknown>)
-        .filter(([key]) => /^\d+$/.test(key))
-        .map(([key, value]) => ({
-          number: Number(key),
-          text: String(value ?? '').trim(),
-        }))
-        .filter((row) => row.number > 0 && row.text)
-        .sort((a, b) => a.number - b.number);
-    }
-  }
-
-  // Original format handling
-  const dataBooks = Array.isArray(data) ? data : data?.books ?? data?.bible ?? [];
-  if (!Array.isArray(dataBooks) || dataBooks.length === 0) return [];
-  const bookIndex = findBookIndex(dataBooks, book);
-  const bookData = dataBooks[bookIndex] ?? dataBooks[0];
-  const chapters = bookData?.chapters ?? [];
-  const chapterData = Array.isArray(chapters)
-    ? chapters[chapter - 1]
-    : chapters?.[String(chapter)] || [];
-  if (!chapterData) return [];
-  if (Array.isArray(chapterData)) return extractVerses(chapterData);
-  if (typeof chapterData === 'object') {
-    const keys = Object.keys(chapterData).filter((key) => /^\d+$/.test(key));
-    if (!keys.length) return [];
-    return keys
-      .sort((a, b) => Number(a) - Number(b))
-      .map((key) => ({
-        number: Number(key),
-        text: String(chapterData[key]).trim(),
-      }))
-      .filter((row) => row.text);
-  }
-  return [];
+interface VerseItemProps {
+  verse: VerseRow;
+  isSelected: boolean;
+  isAudioActive: boolean;
+  highlightColor: string | undefined;
+  isPrismaMeditation: boolean;
+  searchVerse: string;
+  onTap: (verse: VerseRow) => void;
+  onDoubleTap: (verse: VerseRow) => void;
+  onLongPress: (verse: VerseRow) => void;
+  bookId: string;
+  renderTextWithSearchMatch: (text: string, search: string) => React.ReactNode;
 }
 
-function readFromOsis(doc: Document, book: BibleBook, chapter: number) {
-  const osis = OSIS_MAP[book.id] || book.apiName;
-  const bookNode = doc.querySelector(`div[osisID="${osis}"]`);
-  if (!bookNode) return [];
-  const chapterNode =
-    bookNode.querySelector(`chapter[osisID="${osis}.${chapter}"]`) ||
-    bookNode.querySelector(`chapter[osisID="${osis} ${chapter}"]`);
-  if (!chapterNode) return [];
-  const verseNodes = Array.from(chapterNode.querySelectorAll('verse'));
-  return verseNodes
-    .map((node, idx) => {
-      const osisId = node.getAttribute('osisID') || '';
-      const numberMatch = osisId.split('.').pop() || '';
-      const number = Number(numberMatch) || idx + 1;
-      const text = (node.textContent || '').replace(/\s+/g, ' ').trim();
-      if (!text) return null;
-      return { number, text };
-    })
-    .filter(Boolean) as VerseRow[];
-}
+const VerseItem = memo(({
+  verse,
+  isSelected,
+  isAudioActive,
+  highlightColor,
+  isPrismaMeditation,
+  searchVerse,
+  onTap,
+  onDoubleTap,
+  onLongPress,
+  bookId,
+  renderTextWithSearchMatch
+}: VerseItemProps) => {
+  const interaction = useLongPress<HTMLButtonElement>(
+    () => onLongPress(verse),
+    () => onTap(verse),
+    { delay: 520, moveThreshold: 10 }
+  );
+
+  return (
+    <button
+      key={verse.number}
+      {...interaction}
+      onDoubleClick={() => onDoubleTap(verse)}
+      className={`group relative w-full rounded-lg px-4 py-2.5 text-left transition-all duration-300 ${isSelected ? 'bg-accent/8' : 'hover:bg-foreground/[0.03]'}`}
+    >
+      <span
+        className={`mr-2 inline-block font-sans text-[11px] font-extrabold align-super ${isAudioActive ? 'text-accent' : ''}`}
+        style={{ color: isAudioActive ? undefined : 'var(--bible-paper-verse-num)' }}
+      >
+        {verse.number}
+      </span>
+      <span
+        className={`text-[1em] leading-[1.65] transition-colors duration-500 ${isAudioActive ? 'font-semibold text-accent' : ''} ${highlightColor ? `bg-${highlightColor}-500/10 rounded-md px-1` : ''}`}
+        style={{ color: isAudioActive ? undefined : 'var(--bible-paper-text, rgba(0,0,0,0.85))' }}
+      >
+        {isPrismaMeditation ? (
+          <AnimatedLetter text={verse.text} />
+        ) : (
+          searchVerse ? renderTextWithSearchMatch(verse.text, searchVerse) : verse.text
+        )}
+      </span>
+      {isAudioActive && (
+        <motion.div
+          layoutId="audio-indicator"
+          className="absolute bottom-1.5 left-12 right-5 h-[1.5px] rounded-full"
+          style={{ background: `${BOOK_AURA_COLORS[bookId] ?? BOOK_AURA_COLORS.default}40` }}
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+        />
+      )}
+    </button>
+  );
+});
 
 export default function BibleReader({ 
   embedded = false, 
@@ -984,6 +755,27 @@ export default function BibleReader({
 }) {
   const { t } = useI18n();
   const { profile } = useAuth();
+  
+  // Refs need to be declared before they are used in hooks like useAudioPlayer
+  const isStartingPlaybackRef = useRef(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioFocusRequestIdRef = useRef<number | null>(null);
+  const rootSectionRef = useRef<HTMLElement | null>(null);
+  const verseScrollRef = useRef<HTMLDivElement | null>(null);
+  const verseNodeRefs = useRef<Record<number, HTMLButtonElement | null>>({});
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const chapterScenePosRef = useRef<number | null>(null);
+  const scrollIdleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const embeddedTapRef = useRef<{ timestamp: number; x: number; y: number } | null>(null);
+  const treasuryRequestRef = useRef(0);
+  const referencePreviewRequestRef = useRef(0);
+  const lastAudioCueVerseRef = useRef<number | null>(null);
+  const effectiveAudioCuesRef = useRef<VttCue[]>([]);
+  const approximateAudioSyncRef = useRef<{ verse: number | null; progress: number }>({
+    verse: null,
+    progress: 0,
+  });
   const [isClient, setIsClient] = useState(false);
   const [translationId, setTranslationId] = useState(LOCAL_BIBLE_TRANSLATIONS[0]?.id ?? 'LSG');
   const [bookId, setBookId] = useState('jhn');
@@ -1017,21 +809,20 @@ export default function BibleReader({
   const [highlightColor, setHighlightColor] = useState<HighlightColor>('yellow');
   const [toast, setToast] = useState<string | null>(null);
   const [verseNotes, setVerseNotes] = useState<Record<string, string>>({});
-  const [playerPosition, setPlayerPosition] = useState(0);
-  const [playerDuration, setPlayerDuration] = useState(0);
-  const [playerPlaying, setPlayerPlaying] = useState(false);
+  const {
+    playing: playerPlaying,
+    position: playerPosition,
+    duration: playerDuration,
+    play: playAudio,
+    pause: pauseAudio,
+    seek: seekAudio,
+    setHandlers: setAudioHandlers
+  } = useAudioPlayer(audioRef);
   const [longPressTarget, setLongPressTarget] = useState<{
     verse: VerseRow;
     ref: string;
   } | null>(null);
   const [shareVerseTarget, setShareVerseTarget] = useState<{ ref: string; text: string } | null>(null);
-  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const holdMetaRef = useRef<HoldMeta | null>(null);
-  const longPressTriggeredRef = useRef(false);
-  const suppressNextVerseClickRef = useRef(false);
-  const suppressNextVerseClickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const verseTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastVerseTapRef = useRef<VerseTapMeta | null>(null);
   const searchParams = useSearchParams();
   const strongTokenCacheRef = useRef<Map<string, StrongToken[]>>(new Map());
   const strongSearchCacheRef = useRef<Map<string, StrongSearchResult[]>>(new Map());
@@ -1093,25 +884,6 @@ export default function BibleReader({
   const [radarRefsSheetOpen, setRadarRefsSheetOpen] = useState(false);
   const [radarPreferredBubble, setRadarPreferredBubble] = useState<'strong' | 'refs' | 'note' | null>(null);
   const [studyBarOpen, setStudyBarOpen] = useState(false);
-
-  const searchInputRef = useRef<HTMLInputElement | null>(null);
-  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const audioFocusRequestIdRef = useRef<number | null>(null);
-  const rootSectionRef = useRef<HTMLElement | null>(null);
-  const verseScrollRef = useRef<HTMLDivElement | null>(null);
-  const verseNodeRefs = useRef<Record<number, HTMLButtonElement | null>>({});
-  const chapterScenePosRef = useRef<number | null>(null);
-  const scrollIdleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const embeddedTapRef = useRef<{ timestamp: number; x: number; y: number } | null>(null);
-  const treasuryRequestRef = useRef(0);
-  const referencePreviewRequestRef = useRef(0);
-  const lastAudioCueVerseRef = useRef<number | null>(null);
-  const effectiveAudioCuesRef = useRef<VttCue[]>([]);
-  const approximateAudioSyncRef = useRef<{ verse: number | null; progress: number }>({
-    verse: null,
-    progress: 0,
-  });
 
   const hasInitializedRef = useRef(false);
 
@@ -1418,64 +1190,80 @@ export default function BibleReader({
     setLoading(true);
     setError(null);
 
-    loadChapterData(translation.id, book.id, chapter)
-      .then((data) => {
-        if (!active) return;
-        // Pour l'API externe, on suppose un format standard
-        const rows: VerseRow[] = readFromJson(data, book, chapter);
-        setVerses(rows);
-        // Record reading for streak tracking
-        const streak = recordReading();
-        setStreakData({ current: streak.current, best: streak.best, totalChapters: streak.totalChapters });
-        
-        // Gamification: Check for badges
-        if (identity) {
-          checkAndAwardBadge('streak', streak.current, { 
-            userId: identity.userId, 
-            deviceId: identity.deviceId 
-          }).then(badge => {
-            if (badge) {
-              // TODO: Trigger a "WOW" notification/toast for the new badge
-              logger.info(`Badge earned: ${badge.name}`);
-            }
-          });
-          
-          checkAndAwardBadge('reading', streak.totalChapters, {
-            userId: identity.userId,
-            deviceId: identity.deviceId
-          });
-
-          // Community: Update active challenges
-          void updateBibleReadingChallenges({
-            userId: identity.userId,
-            deviceId: identity.deviceId
-          }, book.id, chapter);
+    const load = async () => {
+      try {
+        // 1. Try cache first
+        const cached = await getCachedChapter(translation.id, book.id, chapter);
+        if (cached && active) {
+          setVerses(cached);
+          updateReadingStreakAndBadges();
+          setInitialSelectedVerse(cached);
+          setLoading(false);
+          return;
         }
-        setSelectedVerse((prev) => {
-          if (!rows.length) return null;
-          if (prev) {
-            const same = rows.find((row) => row.number === prev.number);
-            if (same) return same;
-          }
-          return rows[0];
-        });
-      })
-      .catch((err: unknown) => {
+
+        // 2. Load from network
+        const data = await loadChapterData(translation.id, book.id, chapter);
+        if (!active) return;
+
+        const rows: VerseRow[] = readBibleData(data, book, chapter);
+        setVerses(rows);
+
+        // 3. Cache for next time
+        if (rows.length > 0) {
+          void cacheChapter(translation.id, book.id, chapter, rows);
+        }
+
+        updateReadingStreakAndBadges();
+        setInitialSelectedVerse(rows);
+      } catch (err: unknown) {
         if (!active) return;
         const msg = err instanceof Error ? err.message : 'Détail indisponible';
-        setError(
-          `Erreur de chargement: ${msg}. Vérifiez votre connexion internet ou réessayez plus tard.`
-        );
+        setError(`Erreur de chargement: ${msg}. Vérifiez votre connexion internet ou réessayez plus tard.`);
         setVerses([]);
         setSelectedVerse(null);
-      })
-      .finally(() => {
+      } finally {
         if (active) setLoading(false);
+      }
+    };
+
+    function updateReadingStreakAndBadges() {
+      const streak = recordReading();
+      setStreakData({ current: streak.current, best: streak.best, totalChapters: streak.totalChapters });
+
+      if (identity) {
+        void checkAndAwardBadge('streak', streak.current, {
+          userId: identity.userId,
+          deviceId: identity.deviceId
+        });
+        void checkAndAwardBadge('reading', streak.totalChapters, {
+          userId: identity.userId,
+          deviceId: identity.deviceId
+        });
+        void updateBibleReadingChallenges({
+          userId: identity.userId,
+          deviceId: identity.deviceId
+        }, book.id, chapter);
+      }
+    }
+
+    function setInitialSelectedVerse(rows: VerseRow[]) {
+      setSelectedVerse((prev) => {
+        if (!rows.length) return null;
+        if (prev) {
+          const same = rows.find((row) => row.number === prev.number);
+          if (same) return same;
+        }
+        return rows[0];
       });
+    }
+
+    void load();
+
     return () => {
       active = false;
     };
-  }, [translation, book, chapter]);
+  }, [translation, book, chapter, identity]);
 
   const loadTreasuryRefs = useCallback(
     async (targetBookId: string, targetChapter: number, targetVerse: number) => {
@@ -1672,6 +1460,8 @@ export default function BibleReader({
   );
 
   const startBibleAudioPlayback = useCallback(async () => {
+    if (isStartingPlaybackRef.current) return false;
+    
     if (!audioAvailable || !audioUrl) {
       showToast(`Audio non disponible pour ${translation?.label ?? 'cette traduction'}`);
       return false;
@@ -1683,6 +1473,7 @@ export default function BibleReader({
       return false;
     }
 
+    isStartingPlaybackRef.current = true;
     const requestId = requestAudioFocus(audioFocusEntry);
     audioFocusRequestIdRef.current = requestId;
 
@@ -1710,6 +1501,7 @@ export default function BibleReader({
       showToast("Impossible de lancer l'audio");
       return false;
     } finally {
+      isStartingPlaybackRef.current = false;
       if (audioFocusRequestIdRef.current === requestId) {
         audioFocusRequestIdRef.current = null;
       }
@@ -1772,7 +1564,7 @@ export default function BibleReader({
         }
 
         const raw = await loadChapterData(translation?.id ?? 'LSG', ref.bookId, ref.chapter);
-        const chapterRows = readFromJson(raw, targetBook, ref.chapter) as VerseRow[];
+        const chapterRows = readBibleData(raw, targetBook, ref.chapter) as VerseRow[];
 
         if (!chapterRows.length) {
           throw new Error('Passage indisponible');
@@ -1830,9 +1622,6 @@ export default function BibleReader({
       audio.pause();
       audio.removeAttribute('src');
       audio.load();
-      setPlayerPosition(0);
-      setPlayerDuration(0);
-      setPlayerPlaying(false);
       setApproxVerseTimings([]);
       setActiveCueVerse(null);
       setActiveVerseProgress(0);
@@ -1857,9 +1646,6 @@ export default function BibleReader({
     } catch {
       // ignore browsers that block currentTime before metadata.
     }
-    setPlayerPosition(0);
-    setPlayerDuration(0);
-    setPlayerPlaying(false);
     setApproxVerseTimings([]);
     setActiveCueVerse(null);
     setActiveVerseProgress(0);
@@ -1960,106 +1746,73 @@ export default function BibleReader({
   }, [audioFocusEntry]);
 
   useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    const handleTimeUpdate = () => {
-      const currentTime = audio.currentTime || 0;
-      setPlayerPosition(currentTime);
-      const cues = effectiveAudioCuesRef.current;
+    setAudioHandlers({
+      onTimeUpdate: () => {
+        const audio = audioRef.current;
+        if (!audio) return;
+        const currentTime = audio.currentTime || 0;
+        const cues = effectiveAudioCuesRef.current;
 
-      if (cues.length === 0) {
-        const fallbackVerse = approximateAudioSyncRef.current.verse;
-        const fallbackProgress = fallbackVerse ? approximateAudioSyncRef.current.progress : 0;
+        if (cues.length === 0) {
+          const fallbackVerse = approximateAudioSyncRef.current.verse;
+          const fallbackProgress = fallbackVerse ? approximateAudioSyncRef.current.progress : 0;
 
-        setActiveCueVerse((prev) => (prev === fallbackVerse ? prev : fallbackVerse));
-        setActiveVerseProgress((prev) =>
-          Math.abs(prev - fallbackProgress) < 0.01 ? prev : fallbackProgress
-        );
+          setActiveCueVerse((prev) => (prev === fallbackVerse ? prev : fallbackVerse));
+          setActiveVerseProgress((prev) =>
+            Math.abs(prev - fallbackProgress) < 0.01 ? prev : fallbackProgress
+          );
 
-        if (!fallbackVerse || audio.paused) {
-          if (!fallbackVerse) lastAudioCueVerseRef.current = null;
+          if (!fallbackVerse || audio.paused) {
+            if (!fallbackVerse) lastAudioCueVerseRef.current = null;
+            return;
+          }
+          if (lastAudioCueVerseRef.current === fallbackVerse) return;
+          lastAudioCueVerseRef.current = fallbackVerse;
+          scrollVerseIntoView(fallbackVerse, 'smooth');
           return;
         }
-        if (lastAudioCueVerseRef.current === fallbackVerse) return;
-        lastAudioCueVerseRef.current = fallbackVerse;
-        scrollVerseIntoView(fallbackVerse, 'smooth');
-        return;
-      }
 
-      const cue = cues.find((item) => currentTime >= item.start && currentTime < item.end) ?? null;
-      const verse = cue?.verse ?? null;
+        const cue = cues.find((item) => currentTime >= item.start && currentTime < item.end) ?? null;
+        const verse = cue?.verse ?? null;
 
-      setActiveCueVerse((prev) => (prev === verse ? prev : verse));
-      if (cue && verse) {
-        const cueSpan = Math.max(0.001, cue.end - cue.start);
-        const progress = Math.min(1, Math.max(0, (currentTime - cue.start) / cueSpan));
-        // Avoid noisy sub-1% updates while keeping animation smooth.
-        setActiveVerseProgress((prev) => (Math.abs(prev - progress) < 0.01 ? prev : progress));
-      } else {
-        setActiveVerseProgress((prev) => (prev === 0 ? prev : 0));
-      }
+        setActiveCueVerse((prev) => (prev === verse ? prev : verse));
+        if (cue && verse) {
+          const cueSpan = Math.max(0.001, cue.end - cue.start);
+          const progress = Math.min(1, Math.max(0, (currentTime - cue.start) / cueSpan));
+          setActiveVerseProgress((prev) => (Math.abs(prev - progress) < 0.01 ? prev : progress));
+        } else {
+          setActiveVerseProgress((prev) => (prev === 0 ? prev : 0));
+        }
 
-      if (!verse || audio.paused) {
-        if (!verse) lastAudioCueVerseRef.current = null;
-        return;
+        if (!verse || audio.paused) {
+          if (!verse) lastAudioCueVerseRef.current = null;
+          return;
+        }
+        if (lastAudioCueVerseRef.current === verse) return;
+        lastAudioCueVerseRef.current = verse;
+        scrollVerseIntoView(verse, 'smooth');
+      },
+      onPlay: () => {
+        if (!isAudioFocusOwnedBy(audioFocusEntry, getAudioFocusState())) {
+          audioRef.current?.pause();
+          return;
+        }
+      },
+      onPause: () => {
+        if (isAudioFocusOwnedBy(audioFocusEntry, getAudioFocusState())) {
+          releaseAudioFocus({ id: audioFocusEntry.id, kind: audioFocusEntry.kind });
+        }
+      },
+      onEnded: () => {
+        setActiveCueVerse(null);
+        setActiveVerseProgress(0);
+        lastAudioCueVerseRef.current = null;
+        if (isAudioFocusOwnedBy(audioFocusEntry, getAudioFocusState())) {
+          releaseAudioFocus({ id: audioFocusEntry.id, kind: audioFocusEntry.kind });
+        }
       }
-      if (lastAudioCueVerseRef.current === verse) return;
-      lastAudioCueVerseRef.current = verse;
-      scrollVerseIntoView(verse, 'smooth');
-    };
-    const handleLoaded = () => {
-      const duration = Number.isFinite(audio.duration) ? audio.duration : 0;
-      setPlayerDuration(duration);
-    };
-    const handlePlay = () => {
-      if (!isAudioFocusOwnedBy(audioFocusEntry, getAudioFocusState())) {
-        audio.pause();
-        return;
-      }
-      setPlayerPlaying(true);
-    };
-    const handlePause = () => {
-      setPlayerPlaying(false);
-      if (isAudioFocusOwnedBy(audioFocusEntry, getAudioFocusState())) {
-        releaseAudioFocus({ id: audioFocusEntry.id, kind: audioFocusEntry.kind });
-      }
-    };
-    const handleEnded = () => {
-      setPlayerPlaying(false);
-      setActiveCueVerse(null);
-      setActiveVerseProgress(0);
-      lastAudioCueVerseRef.current = null;
-      if (isAudioFocusOwnedBy(audioFocusEntry, getAudioFocusState())) {
-        releaseAudioFocus({ id: audioFocusEntry.id, kind: audioFocusEntry.kind });
-      }
-    };
-    const handleError = () => {
-      setPlayerPlaying(false);
-      const requestId = audioFocusRequestIdRef.current;
-      if (requestId !== null) {
-        failAudioFocus(requestId, 'Audio indisponible pour ce chapitre');
-        audioFocusRequestIdRef.current = null;
-      } else if (isAudioFocusOwnedBy(audioFocusEntry, getAudioFocusState())) {
-        releaseAudioFocus({ id: audioFocusEntry.id, kind: audioFocusEntry.kind });
-      }
-      showToast('Audio indisponible pour ce chapitre');
-    };
-
-    audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('loadedmetadata', handleLoaded);
-    audio.addEventListener('play', handlePlay);
-    audio.addEventListener('pause', handlePause);
-    audio.addEventListener('ended', handleEnded);
-    audio.addEventListener('error', handleError);
-    return () => {
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('loadedmetadata', handleLoaded);
-      audio.removeEventListener('play', handlePlay);
-      audio.removeEventListener('pause', handlePause);
-      audio.removeEventListener('ended', handleEnded);
-      audio.removeEventListener('error', handleError);
-    };
-  }, [audioFocusEntry, scrollVerseIntoView, showToast]);
+    });
+  }, [audioFocusEntry, scrollVerseIntoView, setAudioHandlers]);
 
   const togglePlayer = async () => {
     if (!audioAvailable || !audioUrl) {
@@ -2105,7 +1858,7 @@ export default function BibleReader({
         } catch {
           return;
         }
-        setPlayerPosition(targetTime);
+        seekAudio(targetTime);
         setActiveCueVerse(verseNumber);
         lastAudioCueVerseRef.current = verseNumber;
       };
@@ -2357,7 +2110,40 @@ export default function BibleReader({
     setStudyBarOpen(true);
   };
 
-  const handleVerseDoubleTap = (verse: VerseRow) => {
+  const handleLongPress = useCallback((verse: VerseRow) => {
+    setLongPressTarget({
+      verse,
+      ref: `${book.name} ${chapter}:${verse.number}`,
+    });
+  }, [book.name, chapter]);
+
+  const handleLongPressAction = (action: string) => {
+    if (!longPressTarget) return;
+    const { verse } = longPressTarget;
+
+    switch (action) {
+      case 'copy':
+        navigator.clipboard.writeText(`${book.name} ${chapter}:${verse.number}\n${verse.text}`);
+        showToast('Copié dans le presse-papier');
+        break;
+      case 'share':
+        setShareVerseTarget({ ref: `${book.name} ${chapter}:${verse.number}`, text: verse.text });
+        break;
+      case 'compare':
+        setShowCompareViewer(true);
+        break;
+      case 'note':
+        setNoteOpenFor(verseKey(translation?.id ?? 'fr', book.id, chapter, verse.number));
+        break;
+      case 'lectio':
+        setLectioVerse({ ref: `${book.name} ${chapter}:${verse.number}`, text: verse.text });
+        setShowLectioDivina(true);
+        break;
+    }
+    setLongPressTarget(null);
+  };
+
+  const handleVerseDoubleTap = useCallback((verse: VerseRow) => {
     setRadarOpen(false);
     setRadarRefsSheetOpen(false);
     setRadarPreferredBubble(null);
@@ -2367,180 +2153,7 @@ export default function BibleReader({
     const nextActionRemovesHighlight = highlightMap[verse.number] === highlightColor;
     toggleHighlight(verse, highlightColor);
     showToast(nextActionRemovesHighlight ? 'Surlignage retiré ✅' : 'Verset surligné ✅');
-  };
-
-  const handleVerseTap = (verse: VerseRow, event?: React.MouseEvent<HTMLButtonElement>) => {
-    if (tool !== 'read') {
-      clearVerseTapTimer();
-      lastVerseTapRef.current = null;
-      commitVersePrimaryAction(verse);
-      return;
-    }
-
-    if (event && event.detail > 1) {
-      clearVerseTapTimer();
-      lastVerseTapRef.current = null;
-      return;
-    }
-
-    const now = Date.now();
-    const tapKey = `${book.id}:${chapter}:${verse.number}`;
-    const previousTap = lastVerseTapRef.current;
-
-    if (previousTap && previousTap.key === tapKey && now - previousTap.at <= VERSE_DOUBLE_TAP_DELAY_MS) {
-      clearVerseTapTimer();
-      lastVerseTapRef.current = null;
-      handleVerseDoubleTap(verse);
-      return;
-    }
-
-    clearVerseTapTimer();
-    lastVerseTapRef.current = { key: tapKey, at: now };
-    verseTapTimerRef.current = setTimeout(() => {
-      const currentTap = lastVerseTapRef.current;
-      if (currentTap?.key === tapKey && currentTap.at === now) {
-        commitVersePrimaryAction(verse);
-        lastVerseTapRef.current = null;
-      }
-      verseTapTimerRef.current = null;
-    }, VERSE_DOUBLE_TAP_DELAY_MS);
-  };
-
-  const openRadarAt = (
-    x: number,
-    y: number,
-    verse: VerseRow,
-    word: string,
-    preferredBubble: 'strong' | 'refs' | 'note' | null = null
-  ) => {
-    setSelectedVerse(verse);
-    setStudyBarOpen(false);
-    setRadarVerse(verse);
-    setRadarWord(word);
-    
-    // Sécuriser la position à l'écran (Clamping)
-    const safeX = typeof window !== 'undefined' ? Math.max(170, Math.min(window.innerWidth - 170, x)) : x;
-    const safeY = typeof window !== 'undefined' ? Math.max(180, Math.min(window.innerHeight - 160, y)) : y;
-    
-    setRadarPos({ x: safeX, y: safeY });
-    setRadarPreferredBubble(preferredBubble);
-    setRadarOpen(true);
-  };
-
-  const prevChapter = () => {
-    if (chapter > 1) {
-      setChapter((prev) => prev - 1);
-      return;
-    }
-    const index = BIBLE_BOOKS.findIndex((b) => b.id === book.id);
-    if (index > 0) {
-      const prevBook = BIBLE_BOOKS[index - 1];
-      setBookId(prevBook.id);
-      setChapter(prevBook.chapters);
-    }
-  };
-
-  const nextChapter = () => {
-    if (chapter < book.chapters) {
-      setChapter((prev) => prev + 1);
-      return;
-    }
-    const index = BIBLE_BOOKS.findIndex((b) => b.id === book.id);
-    if (index < BIBLE_BOOKS.length - 1) {
-      const nextBook = BIBLE_BOOKS[index + 1];
-      setBookId(nextBook.id);
-      setChapter(1);
-    }
-  };
-
-  const clearHoldTimer = () => {
-    if (holdTimerRef.current) {
-      clearTimeout(holdTimerRef.current);
-      holdTimerRef.current = null;
-    }
-    holdMetaRef.current = null;
-  };
-
-  const beginHold = (verse: VerseRow, pointerId: number | 'touch', clientX: number, clientY: number) => {
-    longPressTriggeredRef.current = false;
-    clearVerseTapTimer();
-    clearHoldTimer();
-    holdMetaRef.current = {
-      pointerId,
-      startX: clientX,
-      startY: clientY,
-      verse,
-    };
-    holdTimerRef.current = setTimeout(() => {
-      longPressTriggeredRef.current = true;
-      setLongPressTarget({
-        verse,
-        ref: `${book.name} ${chapter}:${verse.number}`,
-      });
-      holdMetaRef.current = null;
-      holdTimerRef.current = null;
-    }, LONG_PRESS_DELAY_MS);
-  };
-
-  const startHold = (verse: VerseRow, event: React.PointerEvent<HTMLButtonElement>) => {
-    beginHold(verse, event.pointerId, event.clientX, event.clientY);
-  };
-
-  const startTouchHold = (verse: VerseRow, event: React.TouchEvent<HTMLButtonElement>) => {
-    const touch = event.touches[0];
-    if (!touch) return;
-    beginHold(verse, 'touch', touch.clientX, touch.clientY);
-  };
-
-  const cancelHoldIfMoved = (event: React.PointerEvent<HTMLButtonElement>) => {
-    const meta = holdMetaRef.current;
-    if (!meta || meta.pointerId !== event.pointerId) return;
-    const movedX = Math.abs(event.clientX - meta.startX);
-    const movedY = Math.abs(event.clientY - meta.startY);
-    if (movedX > LONG_PRESS_MOVE_PX || movedY > LONG_PRESS_MOVE_PX) {
-      clearHoldTimer();
-    }
-  };
-
-  const cancelTouchHoldIfMoved = (event: React.TouchEvent<HTMLButtonElement>) => {
-    const meta = holdMetaRef.current;
-    if (!meta || meta.pointerId !== 'touch') return;
-    const touch = event.touches[0];
-    if (!touch) return;
-    const movedX = Math.abs(touch.clientX - meta.startX);
-    const movedY = Math.abs(touch.clientY - meta.startY);
-    if (movedX > LONG_PRESS_MOVE_PX || movedY > LONG_PRESS_MOVE_PX) {
-      clearHoldTimer();
-    }
-  };
-
-  const endHold = (event: React.PointerEvent<HTMLButtonElement>) => {
-    const meta = holdMetaRef.current;
-    if (meta && meta.pointerId !== event.pointerId) return;
-    clearHoldTimer();
-  };
-
-  const endTouchHold = (verse: VerseRow) => {
-    const meta = holdMetaRef.current;
-    if (!meta || meta.pointerId !== 'touch') return;
-    const shouldOpenLongPressSheet = longPressTriggeredRef.current;
-    clearHoldTimer();
-
-    suppressNextVerseClick();
-
-    if (shouldOpenLongPressSheet) {
-      longPressTriggeredRef.current = false;
-      return;
-    }
-
-    handleVerseTap(verse);
-  };
-
-  const cancelTouchHold = () => {
-    const meta = holdMetaRef.current;
-    if (!meta || meta.pointerId !== 'touch') return;
-    clearHoldTimer();
-  };
+  }, [highlightMap, highlightColor, toggleHighlight, showToast]);
 
   const handleEmbeddedReaderPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!embedded || event.pointerType !== 'touch') return;
@@ -2609,7 +2222,7 @@ export default function BibleReader({
         LOCAL_BIBLE_TRANSLATIONS.map(async (translationItem) => {
           try {
             const data = await loadChapterData(translationItem.id, book.id, chapter);
-            const chapterRows: VerseRow[] = readFromJson(data, book, chapter);
+            const chapterRows: VerseRow[] = readBibleData(data, book, chapter);
             const row = chapterRows.find((item: VerseRow) => item.number === verse.number);
             return {
               id: translationItem.id,
@@ -3034,29 +2647,22 @@ export default function BibleReader({
                         </div>
                       )}
 
-                      {visibleVerses.map((verse) => {
-                        const isSelected = selectedVerse?.number === verse.number;
-                        const isAudioActive = activeCueVerse === verse.number;
-                        const verseHighlightColor = highlightMap[verse.number];
-                        return (
-                          <button
-                            key={verse.number}
-                            onClick={(e) => handleVerseTap(verse, e)}
-                            onDoubleClick={() => handleVerseDoubleTap(verse)}
-                            className={`group relative w-full rounded-lg px-4 py-2.5 text-left transition-all duration-300 ${isSelected ? 'bg-accent/8' : 'hover:bg-foreground/[0.03]'}`}
-                          >
-                            <span className={`mr-2 inline-block font-sans text-[11px] font-extrabold align-super ${isAudioActive ? 'text-accent' : ''}`} style={{ color: isAudioActive ? undefined : 'var(--bible-paper-verse-num)' }}>{verse.number}</span>
-                            <span className={`text-[1em] leading-[1.65] transition-colors duration-500 ${isAudioActive ? 'font-semibold text-accent' : ''} ${verseHighlightColor ? `bg-${verseHighlightColor}-500/10 rounded-md px-1` : ''}`} style={{ color: isAudioActive ? undefined : 'var(--bible-paper-text, rgba(0,0,0,0.85))' }}>
-                              {isPrismaMeditation ? (
-                                <AnimatedLetter text={verse.text} />
-                              ) : (
-                                searchVerse ? renderTextWithSearchMatch(verse.text, searchVerse) : verse.text
-                              )}
-                            </span>
-                            {isAudioActive && <motion.div layoutId="audio-indicator" className="absolute bottom-1.5 left-12 right-5 h-[1.5px] rounded-full" style={{ background: `${BOOK_AURA_COLORS[book.id] ?? BOOK_AURA_COLORS.default}40` }} initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} />}
-                          </button>
-                        );
-                      })}
+                      {visibleVerses.map((verse) => (
+                        <VerseItem
+                          key={verse.number}
+                          verse={verse}
+                          isSelected={selectedVerse?.number === verse.number}
+                          isAudioActive={activeCueVerse === verse.number}
+                          highlightColor={highlightMap[verse.number]}
+                          isPrismaMeditation={isPrismaMeditation}
+                          searchVerse={searchVerse}
+                          onTap={commitVersePrimaryAction}
+                          onDoubleTap={handleVerseDoubleTap}
+                          onLongPress={handleLongPress}
+                          bookId={book.id}
+                          renderTextWithSearchMatch={renderTextWithSearchMatch}
+                        />
+                      ))}
 
                       {currentMatchingReading && (
                         <div className="mt-16 mb-32 flex flex-col items-center px-4">

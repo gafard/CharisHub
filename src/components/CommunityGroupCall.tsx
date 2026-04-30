@@ -4,6 +4,9 @@ import logger from '@/lib/logger';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useCallTimer } from '../hooks/useCallTimer';
+import { usePolls } from '../hooks/usePolls';
+import { useNetworkQuality, NetworkQuality } from '../hooks/useNetworkQuality';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Camera,
@@ -28,6 +31,7 @@ import { supabase } from '../lib/supabase';
 import BibleReader from './BibleReader';
 import InterlinearViewer from './InterlinearViewer';
 import BibleStrongViewer from './BibleStrongViewer';
+import GuidedPrayerFlow from './bible/GuidedPrayerFlow';
 import { getWebRtcIceServers } from '../lib/webrtc';
 import { useI18n } from '../contexts/I18nContext';
 import VerseOverlay from './bible/VerseOverlay';
@@ -58,7 +62,7 @@ type JoinMode = 'video' | 'audio';
 type ChatTab = 'chat' | 'participants' | 'bible';
 type ViewMode = 'grid' | 'speaker' | 'bible';
 type ShareViewMode = 'fit' | 'fill';
-type NetworkQuality = 'excellent' | 'good' | 'fair' | 'weak' | 'offline';
+
 
 type CallParticipant = {
   peerId: string;
@@ -77,6 +81,13 @@ type ChatMessage = {
   text: string;
   createdAt: string;
   mine: boolean;
+};
+
+type CallTask = {
+  id: string;
+  text: string;
+  done: boolean;
+  active: boolean;
 };
 
 type PresenceStatePayload = {
@@ -106,6 +117,7 @@ type UiSyncPayload =
   | { type: 'hand'; peerId: string; active: boolean }
   | { type: 'screen-share'; peerId: string; active: boolean }
   | { type: 'bible.sync'; peerId: string; reference: string | null; content: string | null; metadata?: { bookId: string; chapter: number; verse: number } }
+  | { type: 'prayer.sync'; peerId: string; active: boolean; stepIndex?: number }
   | { type: 'speaker.authorizations'; peerIds: string[] }
   | { type: 'call.ended'; peerId: string; callId?: string | null };
 
@@ -435,27 +447,18 @@ export default function CommunityGroupCall({
   const [showInterlinear, setShowInterlinear] = useState(false);
   const [showStrongViewer, setShowStrongViewer] = useState(false);
   const [currentStrongNumber, setCurrentStrongNumber] = useState<string | null>(null);
-
-  // === NOUVELLES FONCTIONNALITÉS ===
-  // 1. Chronomètre d'appel
-  const [callDurationSec, setCallDurationSec] = useState(0);
-
-  // 3. Indicateur qualité réseau
-  const [networkQuality, setNetworkQuality] = useState<NetworkQuality>('good');
-  const [peerNetworkQuality, setPeerNetworkQuality] = useState<Map<string, NetworkQuality>>(new Map());
-
-  // 5. Sondages
-  const [activePoll, setActivePoll] = useState<{ id: string; question: string; options: string[]; votes: Map<number, string[]>; closed: boolean } | null>(null);
-  const [showPollCreator, setShowPollCreator] = useState(false);
-  const [pollDraftQuestion, setPollDraftQuestion] = useState('');
-  const [pollDraftOptions, setPollDraftOptions] = useState(['', '']);
+  
+  // 7. Live Prayer Flow
+  const [isPrayerFlowOpen, setIsPrayerFlowOpen] = useState(false);
+  const [prayerFlowStepIndex, setPrayerFlowStepIndex] = useState(0);
+  const [prayerFlowSteps, setPrayerFlowSteps] = useState<any[]>([]);
 
   // 6. Enregistrement
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
 
-  const [sessionTasks, setSessionTasks] = useState(() => {
+  const [sessionTasks, setSessionTasks] = useState<CallTask[]>(() => {
     if (initialTasks && initialTasks.length > 0) {
       return initialTasks.map((t, i) => ({
         id: `task-${i}`,
@@ -487,17 +490,11 @@ export default function CommunityGroupCall({
   const suppressBibleSyncBroadcastRef = useRef(false);
   const leaveCallRef = useRef<((options?: { close?: boolean; endSession?: boolean; notifyEnded?: boolean }) => Promise<void>) | null>(null);
   const autoJoinAttemptedRef = useRef(false);
-  
+
   // === REFS POUR RECONNEXION (Fonctionnalité 2) ===
   const reconnectAttemptsRef = useRef<Map<string, number>>(new Map());
   const reconnectTimersRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
-  
-  // === REFS POUR QUALITÉ RÉSEAU (Fonctionnalité 3) ===
-  const networkStatsIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  
-  // === REFS POUR CHRONOMÈTRE (Fonctionnalité 1) ===
-  const callDurationIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   const resolvedCallId = callId || queryCallId || null;
   const isCallOwner = !!resolvedCallId && !!deviceId && callOwnerId === deviceId;
 
@@ -518,16 +515,7 @@ export default function CommunityGroupCall({
   const activeParticipant = participants.find(p => p.peerId === activePeerId) || participants[0] || null;
   const stageParticipant = screenSharePeerId ? participants.find(p => p.peerId === screenSharePeerId) || activeParticipant : activeParticipant;
   const isStageSharing = !!screenSharePeerId && stageParticipant?.peerId === screenSharePeerId;
-  const speakingRequests = useMemo(
-    () =>
-      participants.filter(
-        (participant) =>
-          participant.peerId !== 'local' &&
-          (!!participant.handRaised || authorizedSpeakers.has(participant.peerId))
-      ),
-    [authorizedSpeakers, participants]
-  );
-
+  
   const appendChatMessage = useCallback((message: ChatMessage) => {
     setChatMessages((prev) => {
       if (prev.some((entry) => entry.id === message.id)) return prev;
@@ -592,23 +580,77 @@ export default function CommunityGroupCall({
         displayName: displayName || t('identity.guest'),
         audioEnabled: overrides?.audioEnabled ?? localAudioEnabled,
         videoEnabled: overrides?.videoEnabled ?? (localScreenSharing ? true : localVideoEnabled),
-        joinedAt: joinedAtRef.current || new Date().toISOString(),
-        sharedBibleRef,
-        sharedBibleContent,
       });
     },
-    [
-      deviceId,
-      displayName,
-      groupId,
-      localAudioEnabled,
-      localScreenSharing,
-      localVideoEnabled,
-      sharedBibleContent,
-      sharedBibleRef,
-      t,
-    ]
+    [deviceId, displayName, groupId, localAudioEnabled, localScreenSharing, localVideoEnabled, t]
   );
+
+  const speakingRequests = useMemo(
+    () =>
+      participants.filter(
+        (participant) =>
+          participant.peerId !== 'local' &&
+          (!!participant.handRaised || authorizedSpeakers.has(participant.peerId))
+      ),
+    [authorizedSpeakers, participants]
+  );
+
+  // === NOUVELLES FONCTIONNALITÉS (Hooks dependants des callbacks) ===
+  // 1. Chronomètre d'appel
+  const callDurationSec = useCallTimer(joined);
+
+  // 3. Qualité réseau
+  const [networkQuality, setNetworkQuality] = useState<NetworkQuality>('good');
+  const peerNetworkQuality = useNetworkQuality(peerConnectionsRef.current);
+
+  // 5. Sondages
+  const {
+    activePoll,
+    setActivePoll,
+    showPollCreator,
+    setShowPollCreator,
+    pollDraftQuestion,
+    setPollDraftQuestion,
+    pollDraftOptions,
+    setPollDraftOptions,
+    createPoll: onCreatePoll,
+    votePoll: onVotePoll,
+    closePoll: onClosePoll
+  } = usePolls(deviceId, sendBroadcast);
+
+  // === RÉSUMÉ POST-APPEL (STALE CLOSURE PROTECTION) ===
+  const metricsRef = useRef({
+    participants: [] as RemotePeer[],
+    messages: [] as ChatMessage[],
+    tasks: [] as CallTask[],
+    joinedAt: '',
+    sharedBibleRef: null as string | null,
+    durationSec: 0,
+  });
+
+  useEffect(() => {
+    metricsRef.current.durationSec = callDurationSec;
+  }, [callDurationSec]);
+
+  useEffect(() => {
+    metricsRef.current.participants = remotePeers;
+  }, [remotePeers]);
+
+  useEffect(() => {
+    metricsRef.current.messages = chatMessages;
+  }, [chatMessages]);
+
+  useEffect(() => {
+    metricsRef.current.tasks = sessionTasks;
+  }, [sessionTasks]);
+
+  useEffect(() => {
+    metricsRef.current.sharedBibleRef = sharedBibleRef;
+  }, [sharedBibleRef]);
+
+
+
+
 
   const replaceOutgoingVideoTrack = useCallback(
     async (nextTrack: MediaStreamTrack | null) => {
@@ -853,19 +895,20 @@ export default function CommunityGroupCall({
       // === FONCTIONNALITÉ 7: RÉSUMÉ POST-APPEL ===
       if (shouldEndSession && groupId) {
         try {
+          const metrics = metricsRef.current;
           const summary = {
             groupId,
             callId: resolvedCallId,
-            startedAt: joinedAtRef.current || new Date().toISOString(),
+            startedAt: metrics.joinedAt || new Date().toISOString(),
             endedAt: new Date().toISOString(),
-            durationSec: callDurationSec,
-            participants: participants.map(p => p.displayName),
-            participantCount: participants.length,
-            tasksCompleted: sessionTasks.filter(t => t.done).length,
-            tasksTotal: sessionTasks.length,
-            sharedVerses: sharedBibleRef ? [sharedBibleRef] : [],
-            theme: sessionTasks[0]?.text || null,
-            chatMessageCount: chatMessages.length,
+            durationSec: metrics.durationSec,
+            participants: metrics.participants.map(p => p.displayName),
+            participantCount: metrics.participants.length + 1, // +1 for the local user
+            tasksCompleted: metrics.tasks.filter(t => t.done).length,
+            tasksTotal: metrics.tasks.length,
+            sharedVerses: metrics.sharedBibleRef ? [metrics.sharedBibleRef] : [],
+            theme: metrics.tasks[0]?.text || null,
+            chatMessageCount: metrics.messages.length,
           };
 
           // Stocker dans Supabase
@@ -900,6 +943,7 @@ export default function CommunityGroupCall({
 
       channelRef.current = null;
       joinedAtRef.current = '';
+      metricsRef.current.joinedAt = '';
       setJoined(false);
 
       if (channel) {
@@ -1190,56 +1234,7 @@ export default function CommunityGroupCall({
     }
   }, [appendChatMessage, chatDraft, deviceId, displayName, joined, sendBroadcast, t]);
 
-  // === FONCTIONNALITÉ 5: SONDAGES ===
-  const onCreatePoll = useCallback(() => {
-    const question = pollDraftQuestion.trim();
-    const options = pollDraftOptions.filter(o => o.trim());
-    
-    if (!question || options.length < 2) return;
-
-    const poll = {
-      id: makeId('poll'),
-      question,
-      options,
-      votes: new Map<number, string[]>(),
-      closed: false,
-    };
-
-    setActivePoll(poll);
-    setShowPollCreator(false);
-    setPollDraftQuestion('');
-    setPollDraftOptions(['', '']);
-
-    // Broadcast le sondage
-    void sendBroadcast('poll.created', { poll });
-  }, [pollDraftQuestion, pollDraftOptions, sendBroadcast]);
-
-  const onVotePoll = useCallback((optionIndex: number) => {
-    if (!activePoll || activePoll.closed) return;
-
-    setActivePoll((prev) => {
-      if (!prev) return null;
-      const newVotes = new Map(prev.votes);
-      const existingVoters = newVotes.get(optionIndex) || [];
-      
-      // Retirer l'ancien vote si existe
-      newVotes.forEach((voters, idx) => {
-        const filtered = voters.filter(v => v !== deviceId);
-        if (filtered.length > 0) newVotes.set(idx, filtered);
-      });
-      
-      newVotes.set(optionIndex, [...existingVoters, deviceId]);
-      return { ...prev, votes: newVotes };
-    });
-
-    void sendBroadcast('poll.voted', { pollId: activePoll.id, optionIndex, voterId: deviceId });
-  }, [activePoll, deviceId, sendBroadcast]);
-
-  const onClosePoll = useCallback(() => {
-    if (!activePoll) return;
-    setActivePoll((prev) => prev ? { ...prev, closed: true } : null);
-    void sendBroadcast('poll.closed', { pollId: activePoll.id });
-  }, [activePoll, sendBroadcast]);
+  // Poll functions (onCreatePoll, onVotePoll, onClosePoll) are now managed by usePolls hook
 
   // === FONCTIONNALITÉ 6: ENREGISTREMENT ===
   const onStartRecording = useCallback(async () => {
@@ -1297,6 +1292,46 @@ export default function CommunityGroupCall({
     }
   }, [deviceId, isRecording, sendBroadcast]);
 
+  const onStartPrayerFlow = useCallback(async () => {
+    const { buildPrayerSteps } = await import('../lib/prayerFlowStore');
+    const steps = buildPrayerSteps([], {});
+    setPrayerFlowSteps(steps);
+    setPrayerFlowStepIndex(0);
+    setIsPrayerFlowOpen(true);
+
+    if (joined) {
+      await sendBroadcast<UiSyncPayload>('ui_sync', {
+        type: 'prayer.sync',
+        peerId: deviceId,
+        active: true,
+        stepIndex: 0,
+      });
+    }
+  }, [deviceId, joined, sendBroadcast]);
+
+  const onPrayerStepChange = useCallback(async (index: number) => {
+    setPrayerFlowStepIndex(index);
+    if (joined) {
+      await sendBroadcast<UiSyncPayload>('ui_sync', {
+        type: 'prayer.sync',
+        peerId: deviceId,
+        active: true,
+        stepIndex: index,
+      });
+    }
+  }, [deviceId, joined, sendBroadcast]);
+
+  const onStopPrayerFlow = useCallback(async () => {
+    setIsPrayerFlowOpen(false);
+    if (joined) {
+      await sendBroadcast<UiSyncPayload>('ui_sync', {
+        type: 'prayer.sync',
+        peerId: deviceId,
+        active: false,
+      });
+    }
+  }, [deviceId, joined, sendBroadcast]);
+
   const joinCall = useCallback(async () => {
     if (busy || joined || !supabase) return;
 
@@ -1318,7 +1353,9 @@ export default function CommunityGroupCall({
       localStreamRef.current = stream;
       refreshLocalPreviewStreams();
       setJoined(true);
-      joinedAtRef.current = new Date().toISOString();
+      const now = new Date().toISOString();
+      joinedAtRef.current = now;
+      metricsRef.current.joinedAt = now;
 
       const channel = supabase.channel(`call_room:${groupId || 'default'}`, {
         config: { presence: { key: deviceId || 'local' } },
@@ -1366,7 +1403,22 @@ export default function CommunityGroupCall({
             setSharedBibleRef(payload.reference);
             setSharedBibleContent(payload.content);
             if (payload.metadata) {
-              setSharedBibleMetadata(payload.metadata);
+                setSharedBibleMetadata(payload.metadata);
+            }
+            return;
+          }
+          
+          if (payload.type === 'prayer.sync') {
+            setIsPrayerFlowOpen(payload.active);
+            if (payload.stepIndex !== undefined) {
+              setPrayerFlowStepIndex(payload.stepIndex);
+            }
+            if (payload.active && prayerFlowSteps.length === 0) {
+              // Si on rejoint et que le flow est actif, on initialise des steps par défaut
+              import('../lib/prayerFlowStore').then(({ buildPrayerSteps }) => {
+                const defaultSteps = buildPrayerSteps([], {});
+                setPrayerFlowSteps(defaultSteps);
+              });
             }
             return;
           }
@@ -1498,79 +1550,7 @@ export default function CommunityGroupCall({
     return () => window.clearInterval(timer);
   }, [joined, syncDatabasePresence, trackRoomPresence]);
 
-  // === FONCTIONNALITÉ 1: CHRONOMÈTRE D'APPEL ===
-  useEffect(() => {
-    if (!joined) return;
-    
-    callDurationIntervalRef.current = window.setInterval(() => {
-      setCallDurationSec((prev) => prev + 1);
-    }, 1000) as unknown as NodeJS.Timeout;
-
-    return () => {
-      if (callDurationIntervalRef.current) {
-        clearInterval(callDurationIntervalRef.current);
-      }
-    };
-  }, [joined]);
-
-  // === FONCTIONNALITÉ 3: QUALITÉ RÉSEAU ===
-  useEffect(() => {
-    if (!joined) return;
-
-    const checkNetworkQuality = async () => {
-      const qualityMap = new Map<string, NetworkQuality>();
-      
-      for (const [peerId, pc] of peerConnectionsRef.current.entries()) {
-        try {
-          const stats = await pc.getStats();
-          let packetsLost = 0;
-          let packetsReceived = 0;
-          
-          stats.forEach((report) => {
-            if (report.type === 'inbound-rtp' && report.kind === 'audio') {
-              packetsLost += report.packetsLost || 0;
-              packetsReceived += report.packetsReceived || 0;
-            }
-          });
-
-          const total = packetsLost + packetsReceived;
-          const lossRate = total > 0 ? packetsLost / total : 0;
-
-          if (lossRate < 0.01) qualityMap.set(peerId, 'excellent');
-          else if (lossRate < 0.03) qualityMap.set(peerId, 'good');
-          else if (lossRate < 0.1) qualityMap.set(peerId, 'fair');
-          else qualityMap.set(peerId, 'weak');
-        } catch {
-          qualityMap.set(peerId, 'offline');
-        }
-      }
-
-      setPeerNetworkQuality(qualityMap);
-    };
-
-    networkStatsIntervalRef.current = window.setInterval(checkNetworkQuality, 3000) as unknown as NodeJS.Timeout;
-    
-    // Qualité réseau locale
-    const checkLocalQuality = () => {
-      const nav = navigator as any;
-      if (nav.connection) {
-        const conn = nav.connection;
-        const effectiveType = conn.effectiveType || '4g';
-        if (effectiveType === '4g') setNetworkQuality('excellent');
-        else if (effectiveType === '3g') setNetworkQuality('good');
-        else if (effectiveType === '2g') setNetworkQuality('fair');
-        else setNetworkQuality('weak');
-      }
-    };
-    
-    checkLocalQuality();
-
-    return () => {
-      if (networkStatsIntervalRef.current) {
-        clearInterval(networkStatsIntervalRef.current);
-      }
-    };
-  }, [joined]);
+  // Network quality is now managed by useNetworkQuality hook
 
   useEffect(() => {
     if (!joined) return;
@@ -1931,6 +1911,38 @@ export default function CommunityGroupCall({
                        )}
 
                        <div className="mb-4 flex items-center justify-between">
+                           {/* === FONCTIONNALITÉ 7: PRIÈRE EN DIRECT === */}
+                           <button
+                             onClick={isPrayerFlowOpen ? onStopPrayerFlow : onStartPrayerFlow}
+                             className={`group relative flex items-center gap-4 overflow-hidden rounded-[20px] border p-4 transition-all duration-500 mb-6 ${
+                               isPrayerFlowOpen 
+                                 ? 'border-orange-500/30 bg-orange-500/10' 
+                                 : 'border-white/10 bg-white/5 hover:border-orange-500/20 hover:bg-white/10'
+                             }`}
+                           >
+                             <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all duration-500 ${
+                               isPrayerFlowOpen ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30' : 'bg-white/5 text-orange-400 group-hover:scale-110'
+                             }`}>
+                               <Hand size={18} />
+                             </div>
+                             <div className="flex flex-col items-start gap-0.5">
+                               <span className={`text-[11px] font-black uppercase tracking-widest transition-colors ${
+                                 isPrayerFlowOpen ? 'text-orange-400' : 'text-white/90'
+                               }`}>
+                                 {isPrayerFlowOpen ? 'Prière en cours' : 'Prière en Direct'}
+                               </span>
+                               <span className="text-[9px] font-bold text-white/40">
+                                 {isPrayerFlowOpen ? `Phase ${prayerFlowStepIndex + 1}/5` : 'Lancer un flow guidé collectif'}
+                               </span>
+                             </div>
+                             {isPrayerFlowOpen && (
+                               <div className="absolute right-4 flex h-2 w-2">
+                                 <div className="absolute inset-0 animate-ping rounded-full bg-orange-500 opacity-75" />
+                                 <div className="relative h-2 w-2 rounded-full bg-orange-500" />
+                               </div>
+                             )}
+                           </button>
+
                           <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40">Programme du jour</h4>
                           <span className="text-[9px] font-extrabold text-[#D4FF33]">{sessionTasks.filter(t => t.done).length}/{sessionTasks.length} FINI</span>
                        </div>
@@ -2239,6 +2251,22 @@ export default function CommunityGroupCall({
         isOpen={showStrongViewer}
         onClose={() => setShowStrongViewer(false)}
         strongNumber={currentStrongNumber || undefined}
+      />
+
+      <GuidedPrayerFlow
+        isOpen={isPrayerFlowOpen}
+        steps={prayerFlowSteps}
+        planId="live-call"
+        dayIndex={0}
+        readings={[]}
+        isLive={true}
+        externalStepIndex={prayerFlowStepIndex}
+        onStepChange={onPrayerStepChange}
+        onComplete={() => {
+          setIsPrayerFlowOpen(false);
+          onStopPrayerFlow();
+        }}
+        onClose={onStopPrayerFlow}
       />
     </section>
   );

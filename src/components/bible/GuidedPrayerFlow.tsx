@@ -95,6 +95,10 @@ interface GuidedPrayerFlowProps {
   readings: PlanReading[];
   onComplete: () => void;
   onClose: () => void;
+  // Live Sync Props
+  isLive?: boolean;
+  externalStepIndex?: number;
+  onStepChange?: (index: number) => void;
 }
 
 function formatTimer(sec: number) {
@@ -112,9 +116,22 @@ export default function GuidedPrayerFlow({
   readings,
   onComplete,
   onClose,
+  isLive = false,
+  externalStepIndex,
+  onStepChange,
 }: GuidedPrayerFlowProps) {
   const [steps, setSteps] = useState<PrayerFlowStep[]>(initialSteps);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [localIndex, setLocalIndex] = useState(0);
+  
+  const currentIndex = isLive && externalStepIndex !== undefined ? externalStepIndex : localIndex;
+  const setCurrentIndex = useCallback((updater: number | ((prev: number) => number)) => {
+    if (isLive && onStepChange) {
+      const next = typeof updater === 'function' ? updater(currentIndex) : updater;
+      onStepChange(next);
+    } else {
+      setLocalIndex(updater);
+    }
+  }, [currentIndex, isLive, onStepChange]);
   const [finished, setFinished] = useState(false);
   const [finishing, setFinishing] = useState(false);
   const [sessionDurationSec, setSessionDurationSec] = useState(0);

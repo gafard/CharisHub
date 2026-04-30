@@ -3,6 +3,39 @@ import { BIBLE_BOOKS } from './bibleCatalog';
 import fs from 'fs';
 import path from 'path';
 
+function splitAtNaturalPauses(text: string, maxLen: number): string[] {
+  const chunks: string[] = [];
+  let current = '';
+  
+  // Split by sentences using lookbehind for punctuation
+  const sentences = text.split(/(?<=[.!?;])\s+/);
+  
+  for (const sentence of sentences) {
+    if (current.length + sentence.length > maxLen) {
+      if (current) chunks.push(current.trim());
+      
+      // If a single sentence is still longer than maxLen, split it by spaces or chars
+      if (sentence.length > maxLen) {
+        let remaining = sentence;
+        while (remaining.length > maxLen) {
+          const subChunk = remaining.slice(0, maxLen);
+          const lastSpace = subChunk.lastIndexOf(' ');
+          const breakPoint = lastSpace > maxLen * 0.8 ? lastSpace : maxLen;
+          chunks.push(remaining.slice(0, breakPoint).trim());
+          remaining = remaining.slice(breakPoint);
+        }
+        current = remaining;
+      } else {
+        current = sentence;
+      }
+    } else {
+      current += (current ? ' ' : '') + sentence;
+    }
+  }
+  if (current) chunks.push(current.trim());
+  return chunks;
+}
+
 // Empêcher l'exécution côté client pour protéger la clé SERVICE_ROLE
 if (typeof window !== 'undefined') {
   throw new Error('This module can only be executed on the server.');
@@ -76,18 +109,15 @@ export async function getOrGenerateChapterAudio(
 
   if (!chapterText) return null;
 
-  // 3. Call ElevenLabs with Chunking support
-  // Max characters per request is ~5000. Some chapters are longer.
+  // 3. Call ElevenLabs with Smart Chunking
   const CHUNK_SIZE = 4800;
-  const textSegments: string[] = [];
-  for (let i = 0; i < chapterText.length; i += CHUNK_SIZE) {
-    textSegments.push(chapterText.slice(i, i + CHUNK_SIZE));
-  }
+  const textSegments = splitAtNaturalPauses(chapterText, CHUNK_SIZE);
 
-  try {
-    const audioBuffers: Buffer[] = [];
+    console.log(`Generating audio for ${translation} ${book} ${chapter} in ${textSegments.length} segments (Parallel)...`);
     
-    for (const segment of textSegments) {
+    const segmentPromises = textSegments.map(async (segment, i) => {
+      console.log(`Calling ElevenLabs for segment ${i + 1}/${textSegments.length}...`);
+      
       const elRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${ELEVENLABS_VOICE_ID}`, {
         method: 'POST',
         headers: {
@@ -106,15 +136,22 @@ export async function getOrGenerateChapterAudio(
       });
 
       if (!elRes.ok) {
-        throw new Error(`ElevenLabs API error: ${await elRes.text()}`);
+        const errText = await elRes.text();
+        console.error(`ElevenLabs API error (Segment ${i + 1}):`, errText);
+        throw new Error(`ElevenLabs API error: ${errText}`);
       }
 
       const segmentBuffer = await elRes.arrayBuffer();
-      audioBuffers.push(Buffer.from(segmentBuffer));
-    }
+      console.log(`Segment ${i + 1} generated successfully.`);
+      return Buffer.from(segmentBuffer);
+    });
+
+    const audioBuffers = await Promise.all(segmentPromises);
+
 
     // Concaténer les segments
     const finalBuffer = Buffer.concat(audioBuffers);
+    console.log(`Concatenated ${audioBuffers.length} segments. Total size: ${finalBuffer.length} bytes.`);
 
     // 4. Cache in Supabase
     const { error: uploadError } = await supabaseAdmin.storage
@@ -125,7 +162,9 @@ export async function getOrGenerateChapterAudio(
       });
 
     if (uploadError) {
-      console.warn('Failed to cache audio in Supabase:', uploadError);
+      console.error('Failed to cache audio in Supabase:', uploadError);
+    } else {
+      console.log('Audio cached successfully in Supabase:', fileName);
     }
 
     return { 

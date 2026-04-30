@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSelahAudioCandidates } from '../../../../lib/bibleAudio';
 
 export const runtime = 'nodejs';
-const AUDIO_CACHE_CONTROL = 'public, max-age=3600, s-maxage=3600';
+export const maxDuration = 60; // For ElevenLabs TTS generation
+export const dynamic = 'force-dynamic';
+
+const AUDIO_CACHE_CONTROL = 'public, max-age=31536000, immutable';
 
 const PASSTHROUGH_HEADERS = [
   'content-type',
@@ -130,11 +133,13 @@ async function proxyAudio(req: NextRequest, method: 'GET' | 'HEAD') {
   }
 
   // FALLBACK: ElevenLabs TTS + Global Cache
+  console.log(`No upstream audio found for ${translation} ${bookId} ${chapter}. Falling back to ElevenLabs...`);
   try {
     const { getOrGenerateChapterAudio } = await import('../../../../lib/elevenlabs');
     const result = await getOrGenerateChapterAudio(translation, bookId, chapter);
     
     if (result) {
+      console.log(`ElevenLabs audio generated/retrieved for ${translation} ${bookId} ${chapter}. Returning buffer...`);
       return new NextResponse(result.buffer, {
         status: 200,
         headers: {
@@ -143,10 +148,15 @@ async function proxyAudio(req: NextRequest, method: 'GET' | 'HEAD') {
           'x-bible-audio-source': 'elevenlabs-cache',
         },
       });
+    } else {
+      console.error(`ElevenLabs generation returned null for ${translation} ${bookId} ${chapter}.`);
     }
   } catch (err) {
-    console.error('TTS Fallback Error:', err);
+    console.error(`Critical error during ElevenLabs fallback for ${translation} ${bookId} ${chapter}:`, err);
+    errors.push(`TTS Fallback Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
   }
+
+  console.log(`Audio request failed for ${translation} ${bookId} ${chapter}. Errors:`, errors);
   return NextResponse.json(
     {
       error: 'Audio source unavailable for this chapter.',
