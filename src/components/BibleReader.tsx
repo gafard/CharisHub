@@ -898,14 +898,7 @@ export default function BibleReader({
     chapters: [chapter]
   }), [bookId, chapter]);
 
-  useEffect(() => {
-    return () => {
-      clearHoldTimer();
-      clearVerseTapTimer();
-      clearSuppressedVerseClick();
-      lastVerseTapRef.current = null;
-    };
-  }, []);
+
 
   const translation = useMemo(
     () => LOCAL_BIBLE_TRANSLATIONS.find((item) => item.id === translationId) ?? LOCAL_BIBLE_TRANSLATIONS[0],
