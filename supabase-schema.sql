@@ -796,5 +796,71 @@ DROP POLICY IF EXISTS "Users can view their own badges" ON user_badges;
 CREATE POLICY "Users can view their own badges" ON user_badges FOR SELECT USING (auth.uid()::text = user_id::text OR device_id IS NOT NULL);
 
 -- ============================================================
+-- 16. charishub_challenges
+-- ============================================================
+CREATE TABLE IF NOT EXISTS charishub_challenges (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    group_id UUID NOT NULL REFERENCES charishub_groups(id) ON DELETE CASCADE,
+    created_by UUID REFERENCES auth.users(id),
+    title TEXT NOT NULL,
+    description TEXT,
+    start_date TIMESTAMPTZ DEFAULT NOW(),
+    end_date TIMESTAMPTZ,
+    target_type TEXT NOT NULL DEFAULT 'bible_reading', -- 'bible_reading', 'prayer', 'custom'
+    target_config JSONB NOT NULL DEFAULT '{}', -- e.g., { "bookId": "GEN", "chapters": [1,2,3] }
+    status TEXT NOT NULL DEFAULT 'active', -- 'active', 'completed', 'cancelled'
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_challenges_group_id ON charishub_challenges(group_id);
+
+ALTER TABLE charishub_challenges ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Challenges are readable by group members" ON charishub_challenges;
+CREATE POLICY "Challenges are readable by group members" ON charishub_challenges
+  FOR SELECT USING (EXISTS (
+    SELECT 1 FROM charishub_group_members m 
+    WHERE m.group_id = charishub_challenges.group_id 
+    AND (m.user_id::text = auth.uid()::text OR m.device_id IS NOT NULL)
+  ));
+
+DROP POLICY IF EXISTS "Admins can manage challenges" ON charishub_challenges;
+CREATE POLICY "Admins can manage challenges" ON charishub_challenges
+  FOR ALL USING (EXISTS (
+    SELECT 1 FROM charishub_groups g 
+    WHERE g.id = charishub_challenges.group_id 
+    AND (g.user_id::text = auth.uid()::text OR auth.uid()::text = ANY(g.admin_ids))
+  ));
+
+-- ============================================================
+-- 17. charishub_challenge_participants
+-- ============================================================
+CREATE TABLE IF NOT EXISTS charishub_challenge_participants (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    challenge_id UUID NOT NULL REFERENCES charishub_challenges(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES auth.users(id),
+    device_id TEXT,
+    progress JSONB NOT NULL DEFAULT '{}', -- e.g., { "completed_chapters": [1,2] }
+    progress_percent INT DEFAULT 0,
+    completed_at TIMESTAMPTZ,
+    joined_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(challenge_id, user_id),
+    UNIQUE(challenge_id, device_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_participants_challenge_id ON charishub_challenge_participants(challenge_id);
+
+ALTER TABLE charishub_challenge_participants ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Participants can view their own progress" ON charishub_challenge_participants;
+CREATE POLICY "Participants can view their own progress" ON charishub_challenge_participants
+  FOR SELECT USING (true); -- Everyone in the group can see progress for community aspect
+
+DROP POLICY IF EXISTS "Users can join and update their own progress" ON charishub_challenge_participants;
+CREATE POLICY "Users can join and update their own progress" ON charishub_challenge_participants
+  FOR ALL USING (auth.uid()::text = user_id::text OR device_id IS NOT NULL);
+
+-- ============================================================
 -- FIN DU SCHÉMA
 -- ============================================================

@@ -107,7 +107,39 @@ export type CommunityGroup = {
   is_paid?: boolean;
   price?: number;
   pass_code?: string;
+  pass_code?: string;
   session_tasks?: string[];
+  challenges_count?: number;
+};
+
+export type CommunityChallengeType = 'bible_reading' | 'prayer' | 'custom';
+
+export type CommunityChallenge = {
+  id: string;
+  group_id: string;
+  created_by?: string | null;
+  title: string;
+  description?: string | null;
+  start_date?: string | null;
+  end_date?: string | null;
+  target_type: CommunityChallengeType;
+  target_config: any;
+  status: 'active' | 'completed' | 'cancelled';
+  created_at: string;
+  participants_count?: number;
+  my_progress?: CommunityChallengeParticipant | null;
+};
+
+export type CommunityChallengeParticipant = {
+  id: string;
+  challenge_id: string;
+  user_id?: string | null;
+  device_id: string;
+  progress: any;
+  progress_percent: number;
+  completed_at?: string | null;
+  joined_at: string;
+  updated_at: string;
 };
 
 export type CommunityGroupMemberStatus = 'pending' | 'approved' | 'rejected';
@@ -2480,4 +2512,183 @@ export async function logGroupCallEvent(payload: {
 export async function syncCommunityData() {
   // HARD DISABLED TO STOP INFINITE RECREATION
   return;
+}
+/**
+ * CHALLENGES
+ */
+
+export async function fetchChallenges(groupId: string, actor?: { userId?: string | null; deviceId: string }): Promise<CommunityChallenge[]> {
+  if (!supabase) return [];
+  
+  const { data, error } = await supabase
+    .from('charishub_challenges')
+    .select(`
+      *,
+      participants_count:charishub_challenge_participants(count)
+    `)
+    .eq('group_id', groupId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    logger.error('Failed to fetch challenges:', error);
+    return [];
+  }
+
+  const challenges = data.map((row: any) => ({
+    ...row,
+    participants_count: row.participants_count?.[0]?.count ?? 0
+  }));
+
+  if (actor) {
+    const { data: myProgress } = await supabase
+      .from('charishub_challenge_participants')
+      .select('*')
+      .in('challenge_id', challenges.map(c => c.id))
+      .or(`user_id.eq.${actor.userId},device_id.eq.${actor.deviceId}`);
+    
+    if (myProgress) {
+      challenges.forEach(c => {
+        c.my_progress = myProgress.find(p => p.challenge_id === c.id) || null;
+      });
+    }
+  }
+
+  return challenges;
+}
+
+export async function createChallenge(payload: {
+  group_id: string;
+  title: string;
+  description?: string;
+  target_type: CommunityChallengeType;
+  target_config: any;
+  end_date?: string;
+}) {
+  if (!supabase) throw new Error('Supabase client not initialized');
+
+  const { data: userData } = await supabase.auth.getUser();
+  
+  const { data, error } = await supabase
+    .from('charishub_challenges')
+    .insert({
+      ...payload,
+      created_by: userData.user?.id
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as CommunityChallenge;
+}
+
+export async function joinChallenge(challengeId: string, actor: { userId?: string | null; deviceId: string }) {
+  if (!supabase) throw new Error('Supabase client not initialized');
+
+  const { data, error } = await supabase
+    .from('charishub_challenge_participants')
+    .insert({
+      challenge_id: challengeId,
+      user_id: actor.userId,
+      device_id: actor.deviceId,
+      progress: {},
+      progress_percent: 0
+    })
+    .select()
+    .single();
+
+  if (error) {
+    if (error.code === '23505') return null; // Already joined
+    throw error;
+  }
+  return data as CommunityChallengeParticipant;
+}
+
+export async function updateChallengeProgress(
+  challengeId: string, 
+  actor: { userId?: string | null; deviceId: string },
+  progress: any,
+  percent: number
+) {
+  if (!supabase) throw new Error('Supabase client not initialized');
+
+  const { data, error } = await supabase
+    .from('charishub_challenge_participants')
+    .update({
+      progress,
+      progress_percent: percent,
+      updated_at: new Date().toISOString(),
+      completed_at: percent >= 100 ? new Date().toISOString() : null
+    })
+    .or(`user_id.eq.${actor.userId},device_id.eq.${actor.deviceId}`)
+    .eq('challenge_id', challengeId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as CommunityChallengeParticipant;
+}
+
+export async function fetchChallengeParticipants(challengeId: string): Promise<CommunityChallengeParticipant[]> {
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from('charishub_challenge_participants')
+    .select('*')
+    .eq('challenge_id', challengeId)
+    .order('progress_percent', { ascending: false });
+
+  if (error) {
+    logger.error('Failed to fetch challenge participants:', error);
+    return [];
+  }
+
+  return data;
+}
+
+export async function updateBibleReadingChallenges(actor: { userId?: string | null; deviceId: string }, bookId: string, chapter: number) {
+  if (!supabase) return;
+
+  // 1. Trouver les participations actives à des défis de lecture
+  const { data: participations, error } = await supabase
+    .from('charishub_challenge_participants')
+    .select(`
+      *,
+      challenge:charishub_challenges!inner(*)
+    `)
+    .or(`user_id.eq.${actor.userId},device_id.eq.${actor.deviceId}`)
+    .eq('challenge.target_type', 'bible_reading')
+    .eq('challenge.status', 'active');
+
+  if (error || !participations) return;
+
+  for (const part of participations) {
+    const config = part.challenge.target_config || {};
+    // Si le défi est spécifique à un livre et que ce n'est pas celui-ci, on skip
+    if (config.bookId && config.bookId !== bookId) continue;
+
+    const progress = part.progress || {};
+    const completedChapters = new Set(progress.completed_chapters || []);
+    
+    const chapterKey = `${bookId}_${chapter}`;
+    if (!completedChapters.has(chapterKey)) {
+      completedChapters.add(chapterKey);
+      
+      // Calcul du pourcentage (très basique pour l'instant)
+      // Si on a une liste de chapitres cibles
+      let percent = part.progress_percent || 0;
+      if (config.total_chapters) {
+        percent = Math.min(100, Math.round((completedChapters.size / config.total_chapters) * 100));
+      } else {
+        // Progression incrémentale par chapitre (ex: 5% par chapitre lu)
+        percent = Math.min(100, (part.progress_percent || 0) + 5);
+      }
+
+      await updateChallengeProgress(part.challenge_id, actor, {
+        ...progress,
+        completed_chapters: Array.from(completedChapters)
+      }, percent);
+      
+      logger.info(`Challenge progress updated: ${part.challenge.title} (${percent}%)`);
+    }
+  }
 }

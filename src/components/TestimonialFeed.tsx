@@ -291,6 +291,7 @@ function RecorderModal({
     durationSec?: number;
   }) => Promise<void>;
 }) {
+  const { identity } = useCommunityIdentity();
   const [mode, setMode] = useState<RecordMode>('text');
   const [category, setCategory] = useState<TestimonialCategory>('grace');
   const [text, setText] = useState('');

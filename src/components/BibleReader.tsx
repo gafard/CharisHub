@@ -4,6 +4,12 @@ import logger from '@/lib/logger';
 import dynamic from 'next/dynamic';
 
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  updateGroup,
+  deleteGroup,
+  updateBibleReadingChallenges,
+  type CommunityGroup,
+} from './communityApi';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Volume2, ChevronLeft, ChevronRight, Link2, Search, Star, X, Settings, Maximize, Play, Pause, Bookmark, ListVideo, AlignLeft, BookmarkCheck, AlertCircle, Heart, Shield, Flame, User as UserIcon,
@@ -1438,6 +1444,12 @@ export default function BibleReader({
             userId: identity.userId,
             deviceId: identity.deviceId
           });
+
+          // Community: Update active challenges
+          void updateBibleReadingChallenges({
+            userId: identity.userId,
+            deviceId: identity.deviceId
+          }, book.id, chapter);
         }
         setSelectedVerse((prev) => {
           if (!rows.length) return null;

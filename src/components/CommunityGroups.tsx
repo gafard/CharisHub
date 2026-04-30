@@ -18,6 +18,7 @@ import dynamic from 'next/dynamic';
 
 const GroupPepitesFeed = dynamic(() => import('./GroupPepitesFeed'), { ssr: false });
 const TestimonialFeed = dynamic(() => import('./TestimonialFeed'), { ssr: false });
+const GroupChallenges = dynamic(() => import('./GroupChallenges'), { ssr: false });
 import {
   createGroup,
   fetchActiveGroupCall,
@@ -41,6 +42,7 @@ import {
 } from './communityApi';
 import CommunityGroupChat from './CommunityGroupChat';
 import CommunityGroupCall from './CommunityGroupCall';
+import { Trophy } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useCommunityIdentity } from '../lib/useCommunityIdentity';
 import { useI18n } from '../contexts/I18nContext';
@@ -51,7 +53,7 @@ import { RefreshCw } from 'lucide-react';
 
 type CreateState = 'idle' | 'saving';
 type GroupListMode = 'all' | 'joined' | 'discover';
-type GroupDetailTab = 'salon' | 'programme' | 'pepites' | 'testimonials' | 'members' | 'about';
+type GroupDetailTab = 'salon' | 'defis' | 'programme' | 'pepites' | 'testimonials' | 'members' | 'about';
 type TranslateFn = (key: string, params?: Record<string, string | number>) => string;
 type GroupAccent = {
   border: string;
@@ -585,6 +587,7 @@ function GroupDetailTabs({
             <div className="flex border-b border-border-soft bg-surface-strong/50 overflow-x-auto">
               {[
                 { key: 'salon', label: 'Salon' },
+                { key: 'defis', label: 'Défis', icon: <Trophy size={11} className="inline-block mr-1 text-amber-500" /> },
                 { key: 'programme', label: 'Programme' },
                 { key: 'pepites', label: 'Pépites', icon: <Star size={11} className="inline-block mr-1" /> },
                 { key: 'testimonials', label: 'Témoignages', icon: <Heart size={11} className="inline-block mr-1" /> },
@@ -634,6 +637,18 @@ function GroupDetailTabs({
                     <CommunityGroupChat groupId={selectedGroup.id} actor={actor} />
                   )
                 )
+              )}
+
+              {activeTab === 'defis' && (
+                <div className="p-1 sm:p-4">
+                  {selectedGroup.joined && currentUserStatus !== 'pending' ? (
+                    <GroupChallenges groupId={selectedGroup.id} isAdmin={isAdmin} actor={actor} />
+                  ) : (
+                    <div className="p-8 text-center text-sm text-muted">
+                      Rejoins le groupe pour relever des défis avec les autres membres.
+                    </div>
+                  )}
+                </div>
               )}
 
               {activeTab === 'programme' && (
