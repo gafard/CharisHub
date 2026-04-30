@@ -2340,9 +2340,6 @@ export default function BibleReader({
     setRadarOpen(false);
     setRadarRefsSheetOpen(false);
     setRadarPreferredBubble(null);
-    clearVerseTapTimer();
-    clearSuppressedVerseClick();
-    lastVerseTapRef.current = null;
   }, [book.id, chapter, translation?.id, tool]);
 
   useEffect(() => {
