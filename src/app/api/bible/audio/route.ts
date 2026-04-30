@@ -69,10 +69,6 @@ async function proxyAudio(req: NextRequest, method: 'GET' | 'HEAD') {
   }
 
   const candidates = getSelahAudioCandidates(translation, bookId, chapter);
-  if (candidates.length === 0) {
-    return NextResponse.json({ error: 'No audio candidates for this reference.' }, { status: 404 });
-  }
-
   const errors: string[] = [];
   const requestedRange = req.headers.get('range');
   const safeTranslation = sanitizeFilenamePart(translation);

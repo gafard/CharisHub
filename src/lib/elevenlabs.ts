@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { BIBLE_BOOKS } from './bibleCatalog';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
@@ -97,20 +98,64 @@ export async function getOrGenerateChapterAudio(
 }
 
 function extractChapterText(bibleJson: any, bookId: string, chapterNum: number): string {
-    const books = bibleJson.books || [];
+    // Cas 1: Structure indexée par chiffres (ex: KJF)
+    // bibleJson = { "1": { "1": { "1": "v1 text", "2": "v2 text" } } }
+    const bookIndex = BIBLE_BOOKS.findIndex(b => b.id.toLowerCase() === bookId.toLowerCase());
+    if (bookIndex !== -1) {
+        const bookKey = (bookIndex + 1).toString();
+        const bookObj = bibleJson[bookKey];
+        if (bookObj && !Array.isArray(bookObj)) {
+            const chapterObj = bookObj[chapterNum.toString()];
+            if (chapterObj && !Array.isArray(chapterObj)) {
+                // Si chapterObj est un objet de versets { "1": "text", "2": "text" }
+                // On trie les clés pour être sûr de l'ordre
+                const verseKeys = Object.keys(chapterObj).sort((a, b) => Number(a) - Number(b));
+                return verseKeys.map(k => chapterObj[k]).join(' ');
+            }
+        }
+    }
+
+    // Cas 2: Structure avec "Testaments" (ex: MARTIN)
+    if (bibleJson.Testaments) {
+        for (const test of bibleJson.Testaments) {
+            const books = test.Books || [];
+            // Dans ce format, on cherche souvent par index ou par nom. 
+            // On va essayer de trouver le livre dans la liste globale.
+            const book = books[bookIndex] || books.find((b: any) => 
+                b.Name?.toLowerCase() === bookId.toLowerCase() || 
+                b.Abbreviation?.toLowerCase() === bookId.toLowerCase()
+            );
+
+            if (book && book.Chapters) {
+                const chapter = book.Chapters[chapterNum - 1] || book.Chapters.find((c: any) => c.ID === chapterNum);
+                if (chapter && chapter.Verses) {
+                    return chapter.Verses.map((v: any) => v.Text || v.text || "").join(' ');
+                }
+            }
+        }
+    }
+
+    // Cas 3: Structure standard avec tableau "books" (ex: LSG, BDS)
+    const books = bibleJson.books || bibleJson.Books || [];
     const book = books.find((b: any) => 
+        b.id?.toLowerCase() === bookId.toLowerCase() ||
         b.abbreviation?.toLowerCase() === bookId.toLowerCase() || 
-        b.name?.toLowerCase() === bookId.toLowerCase() ||
-        b.id?.toLowerCase() === bookId.toLowerCase()
-    );
-    if (!book) return '';
-    
-    // Some bibles are 0-indexed, some are 1-indexed.
-    // We try to find the chapter matching chapterNum OR chapterNum - 1 if it's 0-indexed.
-    const chapter = book.chapters.find((c: any) => 
-        c.chapter === chapterNum || (c.chapter === 0 && chapterNum === 1)
+        b.name?.toLowerCase() === bookId.toLowerCase()
     );
     
-    if (!chapter) return '';
-    return chapter.verses.map((v: any) => v.text).join(' ');
+    if (book) {
+        const chapters = book.chapters || book.Chapters || [];
+        const chapter = chapters.find((c: any) => 
+            c.chapter === chapterNum || c.ID === chapterNum || (c.chapter === 0 && chapterNum === 1)
+        );
+        
+        if (chapter) {
+            const verses = chapter.verses || chapter.Verses || [];
+            if (Array.isArray(verses)) {
+                return verses.map((v: any) => v.text || v.Text || v).join(' ');
+            }
+        }
+    }
+    
+    return '';
 }
