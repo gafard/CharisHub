@@ -114,6 +114,7 @@ export default function ReflectionSheet({
   const [loadingPrayer, setLoadingPrayer] = useState(false);
 
   const prayerRequestRef = useRef(0);
+  const prayerAbortRef = useRef<AbortController | null>(null);
 
   const effectiveReadings = useMemo(
     () => readings ?? (activeReading ? [activeReading] : []),
@@ -267,10 +268,18 @@ export default function ReflectionSheet({
     };
   }, [isOpen, finalChapter, versesExpanded, verses.length, loadVerses]);
 
+  const handleCancelPrayer = useCallback(() => {
+    prayerAbortRef.current?.abort();
+    prayerAbortRef.current = null;
+    setLoadingPrayer(false);
+  }, []);
+
   const handleStartPrayer = useCallback(async () => {
     if (loadingPrayer) return;
 
     const requestId = ++prayerRequestRef.current;
+    const abortController = new AbortController();
+    prayerAbortRef.current = abortController;
     const dailyPrompts = planId && dayIndex !== undefined ? getDayDailyPrompts(planId, dayIndex) : {};
     const insights = reflectionInsights;
 
@@ -284,6 +293,7 @@ export default function ReflectionSheet({
         const res = await fetch('/api/bible/prayer-prompts', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
+          signal: abortController.signal,
           body: JSON.stringify({
             chapterLabel: readingSummary,
             reflectionInsights: insights,
@@ -573,8 +583,14 @@ export default function ReflectionSheet({
                       </button>
 
                       {loadingPrayer ? (
-                        <div className="flex-1 flex items-center justify-center">
-                          <AILoader />
+                        <div className="flex-1 rounded-[24px] border border-amber-400/10 bg-white/[0.02] overflow-hidden">
+                          <AILoader
+                            variant="compact"
+                            type="prayer"
+                            context={focus ? `${focus.reading.bookName} ${focus.chapter}` : undefined}
+                            showProgress
+                            onCancel={handleCancelPrayer}
+                          />
                         </div>
                       ) : (
                         <button

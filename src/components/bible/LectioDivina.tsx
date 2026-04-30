@@ -3,6 +3,8 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { BookOpen, Check, ChevronRight, Loader2, Mic, Pencil, Wind, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import AILoader from './AILoader';
+import TypewriterText from './TypewriterText';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -142,7 +144,7 @@ function MeditatioPane({ reference, verseText, onNext }: { reference: string; ve
 
       {loading ? (
         <div className="flex-1 flex items-center justify-center">
-          <Loader2 size={24} className="animate-spin text-white/40" />
+          <AILoader variant="compact" type="lectio" context={reference} />
         </div>
       ) : error ? (
         <p className="text-center text-sm text-white/40">Impossible de charger les questions. Continue quand même.</p>
@@ -214,12 +216,16 @@ function OratioPane({ reference, verseText, onNext }: { reference: string; verse
 
       {loading ? (
         <div className="flex-1 flex items-center justify-center">
-          <Loader2 size={24} className="animate-spin text-white/40" />
+          <AILoader variant="compact" type="lectio" context={reference} />
         </div>
       ) : (
         <div className="flex-1 flex flex-col gap-4">
           {invitation && (
-            <p className="text-sm text-white/60 italic leading-relaxed text-center">{invitation}</p>
+            <TypewriterText
+              text={invitation}
+              speed={50}
+              className="text-sm text-white/60 italic leading-relaxed text-center"
+            />
           )}
           <textarea
             value={prayer}

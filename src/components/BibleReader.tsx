@@ -2790,132 +2790,148 @@ export default function BibleReader({
       <div className={`mx-auto w-full ${embedded ? 'h-full min-h-0 flex flex-col' : 'max-w-6xl space-y-6'}`}>
         {/* Header Section (Flexible for both standard and embedded mode) */}
         <header className={`bible-paper transition-all duration-500 sm:rounded-[32px] sm:border sm:border-border-soft sm:bg-surface sm:shadow-sm
-          ${embedded ? 'p-4 mb-2' : 'sticky top-0 z-40 w-full bg-surface/85 backdrop-blur-2xl border-b border-border-soft/50 py-2 sm:static sm:z-auto sm:border sm:border-border-soft sm:bg-surface sm:p-6 md:p-10 lg:p-14 mb-0 sm:mb-6'}`} 
-
+          ${embedded ? 'p-4 mb-2' : 'sticky top-0 z-40 w-full bg-surface/90 backdrop-blur-3xl border-b border-border-soft/50 py-3 sm:static sm:z-auto sm:border sm:border-border-soft sm:bg-surface sm:p-8 md:p-12 mb-0 sm:mb-8'}`} 
         >
-          <div className={`${embedded ? 'flex flex-wrap items-center justify-between gap-4' : 'space-y-4'}`}>
+          <div className={`${embedded ? 'flex flex-wrap items-center justify-between gap-4' : 'flex flex-col gap-8'}`}>
+            {/* 1. Identity & Status Row (Desktop) */}
             {!embedded && (
-              <div className="hidden sm:block">
-                <div className="text-[10px] font-black uppercase tracking-[0.3em] text-accent">
-                  Parole
+              <div className="hidden sm:flex items-end justify-between gap-6">
+                <div className="space-y-1">
+                  <div className="text-[11px] font-black uppercase tracking-[0.4em] text-accent/80 flex items-center gap-2">
+                    <div className="h-px w-4 bg-accent/40" />
+                    Parole
+                  </div>
+                  <h1 className="text-3xl sm:text-5xl font-black leading-tight tracking-tight text-foreground md:text-6xl font-display">
+                    La Parole <span className="text-accent/90 italic">vivante</span>
+                  </h1>
+                  <p className="max-w-xl text-sm sm:text-base font-medium leading-relaxed text-muted opacity-80">
+                    Lis, médite et laisse la Parole te transformer.
+                  </p>
                 </div>
-                <h1 className="text-2xl sm:text-4xl font-black leading-tight tracking-tight text-foreground md:text-6xl font-display">
-                  La Parole vivante
-                </h1>
-                <p className="max-w-2xl text-base sm:text-lg font-medium leading-relaxed text-muted">
-                  Lis, médite et laisse la Parole te transformer.
-                </p>
+
+                <div className="flex flex-col items-end gap-3 pb-2">
+                  {!embedded && streakData.current > 0 && (
+                    <div className="flex items-center gap-2.5 rounded-2xl bg-accent/5 px-4 py-2 ring-1 ring-accent/10 shadow-sm transition-all hover:bg-accent/8">
+                      <span className="text-[11px] font-black uppercase tracking-widest text-accent flex items-center gap-2">
+                        <Flame size={14} className="fill-current animate-pulse" />
+                        {streakData.current} jour{streakData.current > 1 ? 's' : ''} de feu
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2 whitespace-nowrap text-[10px] font-black uppercase tracking-[0.15em] text-amber-500 bg-amber-500/5 px-4 py-2 rounded-2xl border border-amber-500/10 shadow-inner">
+                      <Sparkles size={12} className="text-amber-400" />
+                      Pleine Puissance
+                  </div>
+                </div>
               </div>
             )}
 
-            <div className={`flex flex-wrap items-center justify-center sm:justify-start gap-1 sm:gap-4 ${embedded ? 'flex-1' : 'mt-0 sm:mt-8'}`}>
-              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar w-full sm:w-auto touch-pan-x pb-1 sm:pb-0">
-                <select
-                  value={translationId}
-                  onChange={(e) => setTranslationId(e.target.value)}
-                  className="cursor-pointer appearance-none rounded-full sm:rounded-xl border border-transparent bg-foreground/5 sm:bg-background px-3 sm:px-4 py-1.5 sm:py-2 text-[12px] sm:text-sm font-bold text-foreground outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors whitespace-nowrap"
-                >
-                  {LOCAL_BIBLE_TRANSLATIONS.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.id}
-                    </option>
-                  ))}
-                </select>
+            {/* 2. Main Navigation & Selection Control Center */}
+            <div className={`flex flex-col sm:flex-row items-center gap-4 ${embedded ? 'flex-1' : ''}`}>
+              {/* Selectors Group */}
+              <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-foreground/5 sm:bg-background/50 border border-border-soft/30 w-full sm:w-auto overflow-x-auto no-scrollbar">
+                <div className="relative group/select">
+                  <select
+                    value={translationId}
+                    onChange={(e) => setTranslationId(e.target.value)}
+                    className="cursor-pointer appearance-none rounded-xl bg-transparent px-3 py-2 text-[12px] sm:text-[13px] font-bold text-foreground outline-none transition-colors hover:text-accent"
+                  >
+                    {LOCAL_BIBLE_TRANSLATIONS.map((t) => (
+                      <option key={t.id} value={t.id} className="bg-surface text-foreground">{t.id}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className="h-4 w-[1px] bg-border-soft/50" />
 
-                <select
-                  value={book.id}
-                  onChange={(e) => {
-                    setBookId(e.target.value);
-                    setChapter(1);
-                  }}
-                  className="cursor-pointer appearance-none rounded-full sm:rounded-xl border border-transparent bg-foreground/5 sm:bg-background px-3 sm:px-4 py-1.5 sm:py-2 text-[12px] sm:text-sm font-bold text-foreground outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors whitespace-nowrap"
-                >
-                  {BIBLE_BOOKS.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.name}
-                    </option>
-                  ))}
-                </select>
-
-                <select
-                  value={chapter}
-                  onChange={(e) => setChapter(Number(e.target.value))}
-                  className="cursor-pointer appearance-none rounded-full sm:rounded-xl border border-transparent bg-foreground/5 sm:bg-background px-3 sm:px-4 py-1.5 sm:py-2 text-[12px] sm:text-sm font-bold text-foreground outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors whitespace-nowrap"
-                >
-                  {Array.from({ length: book.chapters }, (_, i) => i + 1).map((c) => (
-                    <option key={c} value={c}>
-                      Chap. {c}
-                    </option>
-                  ))}
-                </select>
-
-                <div className="shrink-0">
-                  <ReadingPlanWidget variant="button" />
+                <div className="relative group/select">
+                  <select
+                    value={book.id}
+                    onChange={(e) => {
+                      setBookId(e.target.value);
+                      setChapter(1);
+                    }}
+                    className="cursor-pointer appearance-none rounded-xl bg-transparent px-3 py-2 text-[12px] sm:text-[13px] font-bold text-foreground outline-none transition-colors hover:text-accent"
+                  >
+                    {BIBLE_BOOKS.map((b) => (
+                      <option key={b.id} value={b.id} className="bg-surface text-foreground">{b.name}</option>
+                    ))}
+                  </select>
                 </div>
 
-                {/* Profile Avatar in App Bar (Mobile) */}
-                <Link 
-                  href="/profile" 
-                  className="ml-auto flex sm:hidden h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border-soft bg-surface-strong/60 overflow-hidden"
-                >
-                  {profile?.avatar_url ? (
-                    <img src={profile.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
-                  ) : (
-                    <UserIcon size={16} className="text-accent" />
-                  )}
-                </Link>
+                <div className="h-4 w-[1px] bg-border-soft/50" />
+
+                <div className="relative group/select">
+                  <select
+                    value={chapter}
+                    onChange={(e) => setChapter(Number(e.target.value))}
+                    className="cursor-pointer appearance-none rounded-xl bg-transparent px-3 py-2 text-[12px] sm:text-[13px] font-bold text-foreground outline-none transition-colors hover:text-accent"
+                  >
+                    {Array.from({ length: book.chapters }, (_, i) => i + 1).map((c) => (
+                      <option key={c} value={c} className="bg-surface text-foreground">Chap. {c}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3 ml-auto">
-                <div className="flex items-center gap-1.5 rounded-xl border border-border-soft bg-background p-1">
+              {/* Player Navigation Group */}
+              <div className="flex items-center gap-2 bg-foreground/5 sm:bg-background/50 p-1.5 rounded-2xl border border-border-soft/30 w-full sm:w-auto justify-between sm:justify-start">
+                <div className="flex items-center gap-1">
                   <button
                     type="button"
                     onClick={prevChapter}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-surface-strong transition-colors text-foreground/70"
+                    className="flex h-9 w-9 items-center justify-center rounded-xl hover:bg-surface-strong transition-all active:scale-90 text-foreground/60 hover:text-foreground"
                     title="Chapitre précédent"
                   >
-                    <ChevronLeft size={16} />
+                    <ChevronLeft size={18} />
                   </button>
-                  
-                  <div className="h-4 w-[1px] bg-[color:var(--border-soft)] mx-0.5" />
                   
                   <button
                     type="button"
                     onClick={togglePlayer}
                     disabled={!audioAvailable}
-                    className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all ${
+                    className={`flex h-9 w-14 items-center justify-center rounded-xl transition-all ${
                       playerPlaying 
-                        ? 'bg-accent text-white shadow-lg shadow-accent/20' 
-                        : 'hover:bg-surface-strong text-foreground/70 disabled:opacity-30'
+                        ? 'bg-accent text-white shadow-[0_8px_20px_rgba(var(--accent-rgb),0.3)]' 
+                        : 'bg-foreground/5 hover:bg-foreground/10 text-foreground/70 disabled:opacity-30'
                     }`}
                     title={playerPlaying ? "Pause" : "Lire l'audio"}
                   >
-                    {playerPlaying ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}
+                    {playerPlaying ? <Pause size={18} fill="currentColor" stroke="none" /> : <Play size={18} fill="currentColor" stroke="none" />}
                   </button>
-
-                  <div className="h-4 w-[1px] bg-[color:var(--border-soft)] mx-0.5" />
 
                   <button
                     type="button"
                     onClick={nextChapter}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-surface-strong transition-colors text-foreground/70"
+                    className="flex h-9 w-9 items-center justify-center rounded-xl hover:bg-surface-strong transition-all active:scale-90 text-foreground/60 hover:text-foreground"
                     title="Chapitre suivant"
                   >
-                    <ChevronRight size={16} />
+                    <ChevronRight size={18} />
                   </button>
                 </div>
 
-                {!embedded && streakData.current > 0 && (
-                  <div className="flex items-center gap-2 rounded-full bg-accent/10 px-4 py-1.5 ring-1 ring-accent/20">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-accent">
-                      🔥 {streakData.current} jour{streakData.current > 1 ? 's' : ''}
-                    </span>
+                <div className="flex sm:hidden h-9 w-px bg-border-soft/30 mx-2" />
+
+                {/* Mobile Profile Avatar */}
+                <Link 
+                  href="/profile" 
+                  className="flex sm:hidden h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border-soft bg-surface-strong/60 overflow-hidden"
+                >
+                  {profile?.avatar_url ? (
+                    <img src={profile.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
+                  ) : (
+                    <UserIcon size={18} className="text-accent" />
+                  )}
+                </Link>
+              </div>
+
+              {/* Journey (Parcours) Group - Highlighted */}
+              <div className="w-full sm:w-auto sm:ml-auto">
+                <div className="relative group/parcours">
+                  <div className="absolute -inset-0.5 bg-gradient-to-r from-accent/20 to-amber-500/20 rounded-2xl blur opacity-30 group-hover/parcours:opacity-60 transition duration-500"></div>
+                  <div className="relative flex items-center h-full">
+                    <ReadingPlanWidget variant="button" />
                   </div>
-                )}
-                
-                <div className="hidden sm:flex items-center gap-2 whitespace-nowrap text-[9px] font-black uppercase tracking-[0.1em] text-amber-400 bg-amber-500/5 px-3 py-1.5 rounded-full border border-amber-500/10">
-                    <Flame size={12} className="fill-current" />
-                    Pleine Puissance
                 </div>
               </div>
             </div>

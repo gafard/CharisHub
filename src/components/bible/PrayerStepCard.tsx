@@ -83,6 +83,7 @@ export default function PrayerStepCard({
             <div className="h-0.5 w-12 rounded-full opacity-30" style={{ backgroundColor: theme.accent }} />
             <TypewriterText
               text={step.prompt}
+              instant={step.completed}
               className="whitespace-pre-line text-2xl font-black leading-relaxed tracking-tight text-white sm:text-3xl"
             />
           </div>

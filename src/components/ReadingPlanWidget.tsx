@@ -225,11 +225,11 @@ export default function ReadingPlanWidget({
             <>
                 <button
                     onClick={() => router.push(primaryHref)}
-                    className="flex h-8 items-center justify-center gap-1.5 rounded-lg sm:rounded-xl border border-transparent bg-foreground/5 sm:bg-background px-2.5 sm:px-4 text-[11px] sm:text-sm font-bold text-foreground outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors hover:bg-foreground/10"
+                    className="flex h-9 w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-transparent bg-foreground/5 sm:bg-background/80 backdrop-blur-md px-4 sm:px-6 text-[11px] sm:text-[13px] font-black uppercase tracking-widest text-foreground outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-all hover:bg-foreground/10 hover:shadow-lg active:scale-95"
                     title={title}
                 >
-                    <PlanSymbol symbolId={teaserPresentation.art.symbolId} size={14} />
-                    <span className="hidden sm:inline">Parcours</span>
+                    <PlanSymbol symbolId={teaserPresentation.art.symbolId} size={16} className="text-accent" />
+                    <span>Parcours</span>
                     {activePlan && !todayDone && (
                         <span className="ml-1 h-1.5 w-1.5 rounded-full bg-accent" />
                     )}
