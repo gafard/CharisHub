@@ -139,12 +139,14 @@ const PLAN_SYMBOLS: Record<PlanSymbolId, typeof BookOpen> = {
 export function PlanSymbol({
   symbolId,
   size,
+  className,
 }: {
   symbolId: PlanSymbolId;
   size: number;
+  className?: string;
 }) {
   const Icon = PLAN_SYMBOLS[symbolId] ?? BookOpen;
-  return <Icon size={size} />;
+  return <Icon size={size} className={className} />;
 }
 
 export function getEntriesForCategory(category: CategoryFilter): PlanEntry[] {
