@@ -1,4 +1,4 @@
-import { BibleBook } from '../../bibleData';
+import { BibleBook } from '../../bibleCatalog';
 import { BibleParser, VerseRow } from './types';
 import { StandardJsonParser } from './standard';
 import { IndexedParser } from './indexed';
