@@ -4,8 +4,10 @@ import { StandardJsonParser } from './standard';
 import { IndexedParser } from './indexed';
 import { SimpleArrayParser } from './simple-array';
 import { OsisParser } from './osis';
+import { TestamentsParser } from './testaments';
 
 const parsers: BibleParser[] = [
+  new TestamentsParser(),
   new StandardJsonParser(),
   new IndexedParser(),
   new SimpleArrayParser(),
